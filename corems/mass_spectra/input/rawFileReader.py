@@ -400,7 +400,7 @@ class ThermoBaseClass():
                         ax.plot(data.time[apex_index], data.tic[apex_index], marker='x', linewidth=0)
                     
                 
-                # plt.show()
+               # plt.show()
                 return data, ax
             
             return data, None
