@@ -43,6 +43,8 @@ test = alignedMS(icpf,esif)
 test.getMSData()
 subicp = test.subset_icpdata()
 
-mzs, avms = test.subset_esidata()
-
+#mzs, avms = test.subset_esidata()
+test.timestart = 8.0
+test.timestop = 10.0
 results = test.assignFormulas()
+results

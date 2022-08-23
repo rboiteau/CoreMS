@@ -14,6 +14,8 @@ sys.path.append("./")
 
 from pathlib import Path
 
+import tqdm
+
 import matplotlib.pyplot as plt
 # from PySide2.QtWidgets import QFileDialog, QApplication
 # from PySide2.QtCore import Qt
@@ -67,29 +69,31 @@ class Aligned_ICP_ESI:
         tic_df=pd.DataFrame({'time': tic.time,'scan': tic.scans})
         scans=tic_df[tic_df.time.between(self.timestart,self.timestop)].scan.tolist()
         AverageMS = self.esi_parser.get_average_mass_spectrum_by_scanlist(scans)
-        AverageMS.plot_mz_domain_profile()
+        #AverageMS.plot_mz_domain_profile()
         #plt.show()
-        print('here1')
         ### print(AverageMS.mz_exp.size)
         ### The correct assignment should be 381m/z
 
         EICdic = {}
-        for mz in AverageMS.mz_exp:
+        pbar = tqdm.tqdm(AverageMS.mz_exp, desc="Getting EICs")
+        for mz in pbar:
             EIC=self.esi_parser.get_eics(target_mzs=[mz],tic_data={},peak_detection=False,smooth=False)
             EICdic[mz]=EIC[0][mz]
-        print('here2')
+
         ###Interpolate LC-ICPMS data to obtain times matching ESI data
         times=tic_df[tic_df.time.between(self.timestart,self.timestop)].time.tolist()
         icpsubset2 = self.subset_icpdata()
-        for i in times:
+        pbar = tqdm.tqdm(times, desc="Subsetting ICPMS data" )
+        for i in pbar:
             icpsubset2.loc[-1]=['NaN',i]
             icpsubset2 = icpsubset2.sort_index().reset_index(drop=True)
         icpsubset2=icpsubset2.sort_values(by=etime)
         icpsubset2=icpsubset2.astype(float)
         icpsubset3=icpsubset2.interpolate()
-        print('here3')
+        
         icp_interp=pd.DataFrame()
-        for i in times:
+        pbar = tqdm.tqdm(times,desc="Interpolating ICPMS data")
+        for i in pbar:
             icp_interp=icp_interp.append(icpsubset3[icpsubset3[etime]==i])
 
         mscorr={}
@@ -98,7 +102,8 @@ class Aligned_ICP_ESI:
         EICcurr=pd.DataFrame(index=icp_interp[etime],columns=['EIC',element])
         EICcurr[element]=icp_interp[element].array
 
-        for mz in EICdic.keys():
+        pbar = tqdm.tqdm(EICdic.keys(),desc="Running correlation")
+        for mz in pbar:
             EIC=pd.DataFrame({'EIC':EICdic[mz].eic,'Time':EICdic[mz].time})
             EIC_sub=EIC[EIC['Time'].between(self.timestart,self.timestop)]
             #print(EIC_sub['EIC'])
@@ -109,7 +114,7 @@ class Aligned_ICP_ESI:
             mscorr[mz]=corvalue.EIC[element]**2
 
         mzs_corr = pd.DataFrame.from_dict(mscorr,orient='index',columns=['corr'])
-        print('here4')
+        
         return mzs_corr, AverageMS
 
     def assignFormulas(self):
@@ -149,13 +154,23 @@ class Aligned_ICP_ESI:
         mass_spectrum.molecular_search_settings.output_score_method = "prob_score"
 
         mass_spectrum_by_classes = HeteroatomsClassification(mass_spectrum, choose_molecular_formula=True)
-
-        mass_spectrum_by_classes.plot_ms_assigned_unassigned()
-        plt.show()
-        mass_spectrum_by_classes.plot_mz_error()
-        plt.show()
-        mass_spectrum_by_classes.plot_ms_class("O2")
-        plt.show()
+        try:
+            mass_spectrum_by_classes.plot_ms_assigned_unassigned()
+            plt.show()
+        except (RuntimeError, TypeError, NameError):
+            pass
+        
+        try:
+            mass_spectrum_by_classes.plot_mz_error()
+            plt.show()
+        except (RuntimeError, TypeError, NameError):
+            pass       
+    
+        try:
+            mass_spectrum_by_classes.plot_ms_class("O2")
+            plt.show()
+        except (RuntimeError, TypeError, NameError):
+            pass
 
         assignments=mass_spectrum.to_dataframe()
         assignments=assignments.sort_values(by=['m/z'])
