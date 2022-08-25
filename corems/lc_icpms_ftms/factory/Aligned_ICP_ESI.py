@@ -117,7 +117,8 @@ class Aligned_ICP_ESI:
         
         return mzs_corr, AverageMS
 
-    def assignFormulas(self):
+    def assignFormulas(self,elementDict):
+        # elementDict = {'C': (1,50), 'H':(4,100), etc}
         threshold = self.threshold
         mzs_corr, mass_spectrum = self.subset_esidata()
 
@@ -130,6 +131,11 @@ class Aligned_ICP_ESI:
         mass_spectrum.molecular_search_settings.url_database = None
         mass_spectrum.molecular_search_settings.min_dbe = 0
         mass_spectrum.molecular_search_settings.max_dbe = 20
+
+        elementList = elementDict.items()
+
+        for e in elementList:
+            mass_spectrum.molecular_search_settings.usedAtoms[e] = elementDict[e]
 
         mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
         mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
