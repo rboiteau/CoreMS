@@ -48,7 +48,7 @@ class MainCtrl:
 
 	def _buildExpression(self, sub_exp):
 		"""Build expression."""
-		expression = self._mainview.displayText() + sub_exp
+		expression = sub_exp
 		self._mainview.setDisplayText(expression)
 
 	def _showPeriodicTable(self):

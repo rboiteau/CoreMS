@@ -29,7 +29,7 @@ class PTView(QWidget):
 		self._elementLabels = []
     	# self.setLayout(mainLayout)
 		self.setWindowTitle('Periodic Table')
-		self.setGeometry(100, 60, 1000, 600)
+		self.setGeometry(100, 60, 800, 600)
 		# Set the central widget
 		self.generalLayout = QVBoxLayout()
 		self.topLayout = QVBoxLayout()

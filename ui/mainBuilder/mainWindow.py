@@ -244,7 +244,7 @@ class MainView(QMainWindow):
 		optionsLayout = QHBoxLayout()
 
 		if self._activeElementList == []:
-			icpms_elements = self.all_icpms_elementss
+			icpms_elements = self.all_icpms_elements
 			for m in icpms_elements:
 				cbox = QCheckBox(m)
 				icp_checkBoxes[m] = cbox
