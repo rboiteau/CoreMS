@@ -10,9 +10,9 @@ import pandas as pd
 from functools import partial
 import json
 
-from PTBuilder.PTView import *
-from PTBuilder.PTCtrl import *
-from PTBuilder.PTModel import *
+from ui.PTBuilder.PTView import *
+from ui.PTBuilder.PTCtrl import *
+from ui.PTBuilder.PTModel import *
 
 __version__ = '0.1'
 __author__ = 'Christian Dewey'
@@ -23,7 +23,7 @@ LCICPMS data GUI
 2022-04-21
 Christian Dewey
 '''
-from PTBuilder.PTView import *
+from ui.PTBuilder.PTView import *
 
 # Create a Controller class to connect the GUI and the model
 class PTCtrl:

@@ -16,33 +16,33 @@ import csv
 
 from .mainChroma import *
 
+import corems
+from corems.mass_spectra.input import rawFileReader
+from corems.molecular_id.factory.classification import HeteroatomsClassification, Labels
+from corems.molecular_id.search.priorityAssignment import OxygenPriorityAssignment
+from corems.molecular_id.search.molecularFormulaSearch import SearchMolecularFormulas
+from corems.encapsulation.factory.parameters import MSParameters
+
 __version__ = '0.1'
 __author__ = 'Christian Dewey'
 
 '''
-LCICPMS data GUI
+LC ICP/ESIMS data GUI
 
-2022-04-21
+2022-08-24
 Christian Dewey
 '''
 
 
 class MainModel:
-	''' model class for LCICPMS functions'''
 
 	def __init__(self, mainview):
 		"""Controller initializer."""
 		self._mainview = mainview
 		self.intColors = sns.color_palette(n_colors = 6, as_cmap = True)
-		self.minline = None
-		self.maxline = None
+
+		self.esi_parser = self._mainview.esi_parser
 		
-	def importData(self):
-		'''imports LCICPMS .csv file'''
-		print(self._view.listwidget.currentItem().text())
-		if self._view.listwidget.currentItem() is not None:
-			self.fdir = self._view.homeDir + self._view.listwidget.currentItem().text()
-			self._data = pd.read_csv(self.fdir,sep=';',skiprows = 0, header = 1)
 
 	def importData_generic(self,fdir):
 		'''imports LCICPMS .csv file'''

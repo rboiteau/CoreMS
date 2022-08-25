@@ -11,6 +11,13 @@ from functools import partial
 
 from .mainChroma import *
 
+import corems
+from corems.mass_spectra.input import rawFileReader
+from corems.molecular_id.factory.classification import HeteroatomsClassification, Labels
+from corems.molecular_id.search.priorityAssignment import OxygenPriorityAssignment
+from corems.molecular_id.search.molecularFormulaSearch import SearchMolecularFormulas
+from corems.encapsulation.factory.parameters import MSParameters
+
 __version__ = '0.1'
 __author__ = 'Christian Dewey'
 
@@ -34,6 +41,8 @@ class MainView(QMainWindow):
 		self.generalLayout = QVBoxLayout()
 		self.topLayout = QFormLayout()
 		self.ICPMS_layout = QVBoxLayout()
+		self.ESIMS_layout = QVBoxLayout()
+		self.EIC_layout = QVBoxLayout()
 		self._centralWidget = QWidget(self)
 		self.setCentralWidget(self._centralWidget)
 		self._centralWidget.setLayout(self.generalLayout)
@@ -43,8 +52,10 @@ class MainView(QMainWindow):
 		self.icpms_data = None
 		self.icpms_elements_for_plotting = []
 		self.all_icpms_elements = []
-		self.esims_filepath = None
 		
+		self.esims_filepath = None
+		self.esi_parser = None
+
 		self.filepath = ''
 		self.normAvIndium = -999.99
 		self.homeDir = '' #/Users/christiandewey/'# '/Users/christiandewey/presentations/DOE-PI-22/day6/day6/'
@@ -61,7 +72,8 @@ class MainView(QMainWindow):
 		
 		self._createDisplay()
 		self._createICPMSPlot()
-		self._createIntegrateCheckBoxes()
+		self._createEICPlot()
+		self._createESIMSPlot()
 		self._createResizeHandle()
 
 	def _createResizeHandle(self):
@@ -194,34 +206,34 @@ class MainView(QMainWindow):
 			}
 
 	def _createICPMSPlot(self):
-		self.plotSpace = pg.PlotWidget()
-		self.plotSpace.setBackground('w')
+		self.ICPMS_PlotSpace = pg.PlotWidget()
+		self.ICPMS_PlotSpace.setBackground('w')
 		styles = { 'font-size':'15px'}
-		self.plotSpace.setLabel('left', 'ICP-MS signal (1000s cps)', **styles)
-		self.plotSpace.setLabel('bottom', "Retention time (min)", **styles)
-		self.icpms_chroma = self.plotSpace
-		self.ICPMS_layout.addWidget(self.plotSpace)
+		self.ICPMS_PlotSpace.setLabel('left', 'ICP-MS signal (1000s cps)', **styles)
+		self.ICPMS_PlotSpace.setLabel('bottom', "Retention time (min)", **styles)
+		self.icpms_chroma = self.ICPMS_PlotSpace
+		self.ICPMS_layout.addWidget(self.ICPMS_PlotSpace)
 		self.generalLayout.addLayout(self.ICPMS_layout)
 
 	def _createESIMSPlot(self):
-		self.plotSpace = pg.PlotWidget()
-		self.plotSpace.setBackground('w')
+		self.ESIMS_PlotSpace = pg.PlotWidget()
+		self.ESIMS_PlotSpace.setBackground('w')
 		styles = { 'font-size':'15px'}
-		self.plotSpace.setLabel('left', 'ICP-MS signal (1000s cps)', **styles)
-		self.plotSpace.setLabel('bottom', "Retention time (min)", **styles)
-		self.icpms_chroma = self.plotSpace
-		self.ICPMS_layout.addWidget(self.plotSpace)
-		self.generalLayout.addLayout(self.ICPMS_layout)
+		self.ESIMS_PlotSpace.setLabel('left', 'ESI-MS signal (1000s cps)', **styles)
+		self.ESIMS_PlotSpace.setLabel('bottom', "m/z", **styles)
+		self.esims = self.ESIMS_PlotSpace
+		self.ESIMS_layout.addWidget(self.ESIMS_PlotSpace)
+		self.generalLayout.addLayout(self.ESIMS_layout)
 
 	def _createEICPlot(self):
-		self.plotSpace = pg.PlotWidget()
-		self.plotSpace.setBackground('w')
+		self.EIC_PlotSpace = pg.PlotWidget()
+		self.EIC_PlotSpace.setBackground('w')
 		styles = { 'font-size':'15px'}
-		self.plotSpace.setLabel('left', 'ESI-MS signal (1000s cps)', **styles)
-		self.plotSpace.setLabel('bottom', "Retention time (min)", **styles)
-		self.icpms_chroma = self.plotSpace
-		self.EIC_layout.addWidget(self.plotSpace)
-		self.generalLayout.addLayout(self.ESI_layout)
+		self.EIC_PlotSpace.setLabel('left', 'ESI-MS signal (1000s cps)', **styles)
+		self.EIC_PlotSpace.setLabel('bottom', "Retention time (min)", **styles)
+		self.eic = self.EIC_PlotSpace
+		self.EIC_layout.addWidget(self.EIC_PlotSpace)
+		self.generalLayout.addLayout(self.EIC_layout)
 
 	def _createDirEntry(self):
 		self.DirEntry = QLineEdit()
@@ -244,12 +256,11 @@ class MainView(QMainWindow):
 		optionsLayout = QHBoxLayout()
 
 		if self._activeElementList == []:
-			icpms_elements = self.all_icpms_elementss
+			icpms_elements = self.all_icpms_elements
 			for m in icpms_elements:
 				cbox = QCheckBox(m)
 				icp_checkBoxes[m] = cbox
 				optionsLayout.addWidget(cbox)
-		# optionwidget.stateChanged.connect(self.clickBox)
 
 		else:
 			icpms_elements = []
@@ -324,6 +335,9 @@ class MainView(QMainWindow):
 	def _makeICPMSPlot(self):
 		self.icpms_chroma = plotChroma(self, self.icpms_elements_for_plotting, self.icpms_data, self.activeMetals)._plotICPMSChroma()
 
+	def _makeTICPlot(self):
+		self.tic_plot = plotChroma(self, self.icpms_elements_for_plotting, self.icpms_data, self.activeMetals)._plotTIC(self.esi_parser)
+
 	def ICPMSClickBox(self, cbox, state):
 		if state == Qt.Checked:
 			print('checked: ' + cbox.text())
@@ -337,7 +351,7 @@ class MainView(QMainWindow):
 			print(self.activeMetals)
 			self.activeMetals.remove(cbox.text())
 			if self.activeMetals == []:
-				self.plotSpace.clear()
+				self.ICPMS_PlotSpace.clear()
 			else:
 				self._makeICPMSPlot()
 			
