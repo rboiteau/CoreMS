@@ -1,4 +1,4 @@
-#!/Users/christiandewey/CoreMS/env/bin/python3.8
+#!/Users/christiandewey/CoreMS/env/bin/python
 
 import sys
 import json

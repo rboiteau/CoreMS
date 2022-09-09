@@ -7,7 +7,6 @@ import os
 import pandas as pd
 import numpy as np
 import warnings
-import re
 warnings.filterwarnings("ignore")
 
 import sys
@@ -32,59 +31,44 @@ class Aligned_ICP_ESI:
     classdocs
     """
 
-    def __init__(self, icp_file_location,esi_file_location, heteroatom):
+    def __init__(self, icp_file_location,esi_file_location):
         self._icpfile = icp_file_location
         self._esifile = esi_file_location
         self.esi_parser = None 
         self.icp_parser = None 
-        self.offset = -0
-        self.timestart = 0 # min
-        self.timestop = 0 # min
+        self.offset = -27
+        self.timestart = 8.2 # min
+        self.timestop = 9.3 # min
         #self.elements = ['63Cu']
         #self.etime = ['Time ' + m for m in self.elements]
-        self.heteroAtom = heteroatom
-        self.etime = 'Time ' + self.heteroAtom
+        self.element = '63Cu'
+        self.etime = 'Time ' + self.element
         self.threshold = 0.8
 
-    def getMSData(self,icpms_data=None, esims_data=None):    
-        if esims_data:
-            self.esi_parser = esims_data
-        else:
-            MSParameters.mass_spectrum.threshold_method = 'signal_noise'
-            MSParameters.mass_spectrum.s2n_threshold = 6
-            MSParameters.ms_peak.peak_min_prominence_percent = 0.1
-            self.esi_parser = rawFileReader.ImportMassSpectraThermoMSFileReader(self._esifile)
-            
-        if icpms_data.empty:
-            self.icp_data = pd.read_csv(self._icpfile)
-        else:
-            self.icp_data = icpms_data
+    def getMSData(self):    
+        MSParameters.mass_spectrum.threshold_method = 'signal_noise'
+        MSParameters.mass_spectrum.s2n_threshold = 6
+        MSParameters.ms_peak.peak_min_prominence_percent = 0.1
+        self.esi_parser = rawFileRear.ImportMassSpectraThermoMSFileReader(self._esifile)
+        self.icp_data = pd.read_csv(self._icpfile)
 
     def subset_icpdata(self):
-        element = self.heteroAtom
+        element = self.element
         etime = self.etime
         icp_subset = self.icp_data[[element,etime]]
         icp_subset[etime] = (icp_subset[etime] + self.offset) / 60 
         icp_subset = icp_subset[icp_subset[etime].between(self.timestart,self.timestop)]
-
-       # print('icp subset shape: ', np.shape(icp_subset))
-
-      #  fig, ax = plt.subplots()
-      #  ax.plot(icp_subset[etime],icp_subset[element])
-       #icp_subset.plot.line(x=etime,y=element)
-       # plt.show()
+        icp_subset.plot.line(x=etime,y=element)
+        #plt.show()
         return icp_subset
     
     def subset_esidata(self):
-        element = self.heteroAtom
+        element = self.element
         etime = self.etime
         tic = self.esi_parser.get_tic(ms_type = 'MS')[0]
         tic_df=pd.DataFrame({'time': tic.time,'scan': tic.scans})
         scans=tic_df[tic_df.time.between(self.timestart,self.timestop)].scan.tolist()
         AverageMS = self.esi_parser.get_average_mass_spectrum_by_scanlist(scans)
-
-     #   print('mz_exp')
-    #    print(AverageMS.mz_exp)
         #AverageMS.plot_mz_domain_profile()
         #plt.show()
         ### print(AverageMS.mz_exp.size)
@@ -92,42 +76,33 @@ class Aligned_ICP_ESI:
 
         EICdic = {}
         pbar = tqdm.tqdm(AverageMS.mz_exp, desc="Getting EICs")
-        
         for mz in pbar:
             EIC=self.esi_parser.get_eics(target_mzs=[mz],tic_data={},peak_detection=False,smooth=False)
             EICdic[mz]=EIC[0][mz]
-            
 
         ###Interpolate LC-ICPMS data to obtain times matching ESI data
         times=tic_df[tic_df.time.between(self.timestart,self.timestop)].time.tolist()
         icpsubset2 = self.subset_icpdata()
         pbar = tqdm.tqdm(times, desc="Subsetting ICPMS data" )
-        
         for i in pbar:
             icpsubset2.loc[-1]=['NaN',i]
             icpsubset2 = icpsubset2.sort_index().reset_index(drop=True)
-
-        
         icpsubset2=icpsubset2.sort_values(by=etime)
         icpsubset2=icpsubset2.astype(float)
         icpsubset3=icpsubset2.interpolate()
         
         icp_interp=pd.DataFrame()
         pbar = tqdm.tqdm(times,desc="Interpolating ICPMS data")
-        
         for i in pbar:
             icp_interp=icp_interp.append(icpsubset3[icpsubset3[etime]==i])
-            
-        
 
         mscorr={}
-        #EICcurr=pd.DataFrame(index=icp_interp[etime],columns=['EIC',element])
+        EICcurr=pd.DataFrame(index=icp_interp[etime],columns=['EIC',element])
 
         EICcurr=pd.DataFrame(index=icp_interp[etime],columns=['EIC',element])
         EICcurr[element]=icp_interp[element].array
 
         pbar = tqdm.tqdm(EICdic.keys(),desc="Running correlation")
-        
         for mz in pbar:
             EIC=pd.DataFrame({'EIC':EICdic[mz].eic,'Time':EICdic[mz].time})
             EIC_sub=EIC[EIC['Time'].between(self.timestart,self.timestop)]
@@ -137,19 +112,14 @@ class Aligned_ICP_ESI:
 
             corvalue=EICcurr.corr(method='pearson')
             mscorr[mz]=corvalue.EIC[element]**2
-            
-
-        
 
         mzs_corr = pd.DataFrame.from_dict(mscorr,orient='index',columns=['corr'])
-        
         
         return mzs_corr, AverageMS
 
     def assignFormulas(self, elementDict):
         # elementDict = {'C': (1,50), 'H':(4,100), etc}
         threshold = self.threshold
-
         mzs_corr, mass_spectrum = self.subset_esidata()
 
         #Get molecular formula of average mass spectrum. 
@@ -162,12 +132,21 @@ class Aligned_ICP_ESI:
         mass_spectrum.molecular_search_settings.min_dbe = 0
         mass_spectrum.molecular_search_settings.max_dbe = 20
 
-        self.elementDict = elementDict
-        elementList = elementDict.keys()
+        elementList = elementDict.items()
 
-        for e in elementList:
-            mass_spectrum.molecular_search_settings.usedAtoms[e] = self.elementDict[e]
+        #for e in elementList:
+        #    mass_spectrum.molecular_search_settings.usedAtoms[e] = elementDict[e]
 
+        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
+        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
+        mass_spectrum.molecular_search_settings.usedAtoms['O'] = (1, 20)
+        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 4)
+        mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['Cl'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['Br'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['Na'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['Cu'] = (0,1)
 
         mass_spectrum.molecular_search_settings.isProtonated = True
         mass_spectrum.molecular_search_settings.isRadical = False
@@ -201,72 +180,41 @@ class Aligned_ICP_ESI:
 
         assignments=mass_spectrum.to_dataframe()
         assignments=assignments.sort_values(by=['m/z'])
-        mz_col_assignments = assignments['m/z']
 
-        i = 0 # for indexing correlation data 
-        j = 0 # for indexing holder 
-        holder = pd.DataFrame(index = assignments['Index'], columns = ['m/z', 'corr'])
-
-        for r in range(len(holder.index)-1):
-            
-            mz_r = mz_col_assignments.iloc[r,0]
-            mz_r_next = mz_col_assignments.iloc[r+1,0]
-
-            corr_r = mzs_corr.iloc[r,1]
-
-            if mz_r_next == mz_r:
-                holder.iloc[r,0] = mz_r
-                holder.iloc[r+1,0] = mz_r
-                holder.iloc[r,1] = corr_r
-                holder.iloc[r+1,1] = corr_r
-
-        for r in mz_col_assignments:
-            if r is True: 
-                temp = mzs_corr.iloc[i,0]
-                print(temp)
-                holder.iloc[j,0] = mzs_corr.index[i]
-                holder.iloc[j,1] = mzs_corr.iloc[i,0]
-                
-              #  holder = pd.concat([mzs_corr.iloc[:i], temp, mzs_corr.iloc[i:]]).reset_index(drop=True)
-                i = i - 1
-            else:
-                temp = mzs_corr.iloc[i,0]
-                print(temp)
-                holder.iloc[j,0] = mzs_corr.index[i]
-                holder.iloc[j,1] = mzs_corr.iloc[i,0]
-                
-            i = i + 1 
-            j = j + 1 
-
-        mzs_corr = holder
-
-        mzs_corr.to_csv('/Users/christiandewey/Downloads/mzs_corr.csv')
-
-        assignments.to_csv('/Users/christiandewey/Downloads/assignments.csv')
-
-        print('shape mzs_corr: ')
-        print(np.shape(mzs_corr))
-        print(mzs_corr)
-
-
-        print('shape assignments: ')
-        print(np.shape(assignments))
-        print(assignments)
-
+        #print(len(mzs_corr['corr']))
+        
         assignments.insert(4,'corr',mzs_corr['corr'].values)
 
         threshold=0.8
-        match = re.findall(r'[A-Za-z]+|\d+', self.heteroAtom)
-        heteroAtom = match[1]
-
-        results=assignments[assignments['corr']>threshold].filter(['m/z','corr','Peak Height','Confidence Score','Molecular Formula',heteroAtom])
-
-     #   bestresults=results[(results[heteroAtom]==1) | (results[self.heteroAtom]==1)]
-
-        bestresults=results[(results[heteroAtom]==1)]
+        results=assignments[assignments['corr']>threshold].filter(['m/z','corr','Peak Height','Confidence Score','Molecular Formula','Cu'])
+        bestresults=results[results['Cu']==1]
+        return assignments #bestresults
 
 
-        #print(bestresults)
-        return bestresults
+esif = '/Users/christiandewey/CoreMS/tests/tests_data/ftms/rmb_161221_kansas_h2o_2.raw'
+icpf = '/Users/christiandewey/CoreMS/tests/tests_data/icpms/161220_soils_hypercarb_3_kansas_qH2O.csv'
+
+test = Aligned_ICP_ESI(icpf,esif)
+
+test.getMSData()
+subicp = test.subset_icpdata()
+test.timestart = 8.2
+test.timestop = 9.2
+elementDict = {}
+
+results = test.assignFormulas(elementDict)
 
 
+
+mzc, averagems = test.subset_esidata()
+
+test.subset_icpdata()
+forms = test.assignFormulas(elementDict)
+
+ms1 = ms1[0]
+
+fig, ax = plt.subplots()
+x = eic1.time
+y = eic1.eic
+ax.plot(x,y)
+plt.show()

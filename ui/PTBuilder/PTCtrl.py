@@ -41,8 +41,26 @@ class PTCtrl:
 
 	def _saveElementList(self):
 		self._mainview._activeElementList = self._activeElementList
+
 		#QCoreApplication.instance().quit()
+		self._mainview._createAssignBoxes()
+
+		if self._mainview.firstSave is True:
+		
+			self._mainview._createAssignForm_active()
+
+			self._mainview._plotParams()
+
+			self._mainview.firstSave = False
+		
+		else:
+			
+			self._mainview._updateElementList()
+
+			self._mainview._updateICPMS_elementList()
+			
 		self._view.close()
+		
 
 	def _resetPeriodicTable(self):
 		self._mainview._activeElementList = []
@@ -63,7 +81,7 @@ class PTCtrl:
 			#self._view._elementLabels.append(element)
 			self._view.periodicTable[element].setStyleSheet('background-color : lightgray')
 			self._mainview._activeElementList.append(split_el)
-			print(self._mainview._activeElementList)
+			
 
 		elif isActive == 1:
 
@@ -72,7 +90,7 @@ class PTCtrl:
 			col = self._mainview.periodicTableDict[element][2]
 			self._view.periodicTable[element].setStyleSheet('background-color : ' + col)
 			self._mainview._activeElementList.remove(split_el)
-			print(self._mainview._activeElementList)
+			
 
 	def _connectSignals(self):
 		"""Connect signals and slots."""

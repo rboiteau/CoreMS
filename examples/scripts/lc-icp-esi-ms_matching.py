@@ -44,7 +44,9 @@ test.getMSData()
 subicp = test.subset_icpdata()
 
 #mzs, avms = test.subset_esidata()
-test.timestart = 8.0
-test.timestop = 10.0
-results = test.assignFormulas()
+test.timestart = 8.2
+test.timestop = 9.3
+
+elementDict = {'C':(1,50), 'H':(4,100), 'O':(1,20), 'N':(0,4), 'S':(0,0), 'Cl':(0,0), 'Br':(0,0), 'P':(0,0), 'Na':(0,0), 'Cu':(0,1) }
+results = test.assignFormulas(elementDict)
 results

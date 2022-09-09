@@ -1,5 +1,5 @@
 import sys 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import * 
 from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
@@ -21,9 +21,11 @@ Christian Dewey
 # Create a subclass of QMainWindow to setup the periodic table gui
 class PTView(QWidget):
 	
+	window_closed = pyqtSignal()
+
 	def __init__(self,mainview):
 		"""View initializer."""
-		super().__init__()
+		super(PTView,self).__init__()
 		# Set some main window's properties
 		self._mainview = mainview
 		self._elementLabels = []
@@ -43,6 +45,10 @@ class PTView(QWidget):
 
 		self._createPeriodicTable()
 		self._createButtons()
+	
+	def closeEvent(self, event):
+		self.window_closed.emit()
+		event.accept()
 
 	def _createButtons(self):
 		"""Create the buttons."""
@@ -77,10 +83,17 @@ class PTView(QWidget):
 		for element, attr in self._mainview.periodicTableDict.items():
 			self.periodicTable[element] = QPushButton(element)
 			self.periodicTable[element].setFixedSize(50, 50)
-			if attr[3] == 0:
-				self.periodicTable[element].setStyleSheet('background-color : ' + attr[2])
-			elif attr[3] == 1:
+
+			if element.split('\n')[1] in self._mainview._requiredElements:
+				self.periodicTable[element].setEnabled(False)
 				self.periodicTable[element].setStyleSheet('background-color : lightgray')
+
+			else:
+				if attr[3] == 0:
+					self.periodicTable[element].setStyleSheet('background-color : ' + attr[2])
+				elif attr[3] == 1:
+					self.periodicTable[element].setStyleSheet('background-color : lightgray')
+
 			ptLayout.addWidget(self.periodicTable[element], attr[0], attr[1])
 		# Add buttonsLayout to the general layout
 		self.topLayout.addLayout(ptLayout)

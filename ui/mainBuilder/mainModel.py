@@ -14,9 +14,8 @@ from functools import partial
 import seaborn as sns
 import csv
 
-from .mainChroma import *
+from ui.mainBuilder.mainChroma import *
 
-import corems
 from corems.mass_spectra.input import rawFileReader
 from corems.molecular_id.factory.classification import HeteroatomsClassification, Labels
 from corems.molecular_id.search.priorityAssignment import OxygenPriorityAssignment

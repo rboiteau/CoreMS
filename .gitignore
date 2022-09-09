@@ -1,4 +1,6 @@
 env/
+env3.8/
+env-arm64/
 venv/ 
 venvwsl/
 tmp_data/ 

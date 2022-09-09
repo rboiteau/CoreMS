@@ -12,7 +12,7 @@ psycopg2-binary>=2.8.3
 xlrd>=1.2.0
 h5py>=2.10.0
 beautifulsoup4>=4.8.1
-lxml>=4.4.1
+lxml>=4.4.1pi
 pymc3>=3.8
 netCDF4==1.5.3
 lmfit>=1.0.0
