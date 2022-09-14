@@ -24,26 +24,34 @@ class plotChroma:
 		color_dict = {c_keys[i]: colors[i] for i in range(len(c_keys))}
 		self._view.ICPMS_PlotSpace.clear()
 		
+
+		print(self.activeMetals)
+		print(self.metalList)
 		
 		for m in self.activeMetals:
+			
 			icpms_time = self.icpms_data['Time ' + m] / 60
-			#print(icpms_time.head())
+			
 			icpms_signal = self.icpms_data[m] / 1000
+			
 
 			if self.max_icp <= max(icpms_signal):
 				self.max_icp = max(icpms_signal)
 
-			msize = len(m)
-			mass = m[:msize-2]
-			element = m[msize-2:]
+	
 			self._view.ICPMS_PlotSpace.setBackground('w')
 			pen = color_dict[m]
 			self._view.ICPMS_PlotSpace.addLegend(offset = [-1,1])
-			#chromaPlot = pg.PlotItem(icpms_time, icpms_signal,pen=pen,width = 2,name = m)
+
+			print(offset)
+			x = icpms_time + offset/60
+			x = x.to_numpy()
+			y = icpms_signal.to_numpy()
+
 			self._view.ICPMS_PlotSpace.setXRange(self.min_time,self.max_time,padding = None)
 			self._view.ICPMS_PlotSpace.setYRange(0,self.max_icp*1.1,padding = None)
 
-			chromaPlot = self._view.ICPMS_PlotSpace.plot(icpms_time + offset/60, icpms_signal,pen=pen,width = 2,name = m)
+			chromaPlot = self._view.ICPMS_PlotSpace.plot(x, y, pen=pen,width = 2,name = m)
 			#viewPlot = self._view.ICPMS_PlotSpace.addItem(chromaPlot)
 			#self._view.ICPMS_PlotSpace.plot(icpms_time, icpms_signal,pen=pen,width = 2,name = m)
 			#chromaplots.append(chromaPlot)

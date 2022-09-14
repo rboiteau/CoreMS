@@ -44,7 +44,7 @@ class Aligned_ICP_ESI:
         #self.etime = ['Time ' + m for m in self.elements]
         self.heteroAtom = heteroatom
         self.etime = 'Time ' + self.heteroAtom
-        self.threshold = 0.8
+      #  self.threshold = threshold
 
     def getMSData(self,icpms_data=None, esims_data=None):    
         if esims_data:
@@ -55,10 +55,10 @@ class Aligned_ICP_ESI:
             MSParameters.ms_peak.peak_min_prominence_percent = 0.1
             self.esi_parser = rawFileReader.ImportMassSpectraThermoMSFileReader(self._esifile)
             
-        if icpms_data.empty:
-            self.icp_data = pd.read_csv(self._icpfile)
-        else:
+        if icpms_data:
             self.icp_data = icpms_data
+        else:
+            self.icp_data = pd.read_csv(self._icpfile)
 
     def subset_icpdata(self):
         element = self.heteroAtom
@@ -75,7 +75,7 @@ class Aligned_ICP_ESI:
        # plt.show()
         return icp_subset
     
-    def subset_esidata(self):
+    def subset_esidata(self,icpsub=None):
         element = self.heteroAtom
         etime = self.etime
         tic = self.esi_parser.get_tic(ms_type = 'MS')[0]
@@ -93,14 +93,19 @@ class Aligned_ICP_ESI:
         EICdic = {}
         pbar = tqdm.tqdm(AverageMS.mz_exp, desc="Getting EICs")
         
-        for mz in pbar:
+        for mz in pbar:   
+         #   print('AverageMS mz:' + str(mz))
             EIC=self.esi_parser.get_eics(target_mzs=[mz],tic_data={},peak_detection=False,smooth=False)
             EICdic[mz]=EIC[0][mz]
             
 
         ###Interpolate LC-ICPMS data to obtain times matching ESI data
         times=tic_df[tic_df.time.between(self.timestart,self.timestop)].time.tolist()
-        icpsubset2 = self.subset_icpdata()
+        if icpsub:
+            icpsubset2 = icpsub
+        else:
+            icpsubset2 = self.subset_icpdata()
+
         pbar = tqdm.tqdm(times, desc="Subsetting ICPMS data" )
         
         for i in pbar:
@@ -129,6 +134,7 @@ class Aligned_ICP_ESI:
         pbar = tqdm.tqdm(EICdic.keys(),desc="Running correlation")
         
         for mz in pbar:
+           # print('EICdic mz: ' + str(mz))
             EIC=pd.DataFrame({'EIC':EICdic[mz].eic,'Time':EICdic[mz].time})
             EIC_sub=EIC[EIC['Time'].between(self.timestart,self.timestop)]
             #print(EIC_sub['EIC'])
@@ -146,10 +152,11 @@ class Aligned_ICP_ESI:
         
         return mzs_corr, AverageMS
 
-    def assignFormulas(self, elementDict):
+    def assignFormulas(self, elementDict, threshold):
         # elementDict = {'C': (1,50), 'H':(4,100), etc}
-        threshold = self.threshold
-
+       # threshold = self.threshold
+        print('threshold: ' + str(threshold))
+        print('offset: ' + str(self.offset))
         mzs_corr, mass_spectrum = self.subset_esidata()
 
         #Get molecular formula of average mass spectrum. 
@@ -160,7 +167,7 @@ class Aligned_ICP_ESI:
 
         mass_spectrum.molecular_search_settings.url_database = None
         mass_spectrum.molecular_search_settings.min_dbe = 0
-        mass_spectrum.molecular_search_settings.max_dbe = 20
+        mass_spectrum.molecular_search_settings.max_dbe = 100
 
         self.elementDict = elementDict
         elementList = elementDict.keys()
@@ -201,69 +208,53 @@ class Aligned_ICP_ESI:
 
         assignments=mass_spectrum.to_dataframe()
         assignments=assignments.sort_values(by=['m/z'])
-        mz_col_assignments = assignments['m/z']
 
-        i = 0 # for indexing correlation data 
-        j = 0 # for indexing holder 
-        holder = pd.DataFrame(index = assignments['Index'], columns = ['m/z', 'corr'])
 
-        for r in range(len(holder.index)-1):
-            
-            mz_r = mz_col_assignments.iloc[r,0]
-            mz_r_next = mz_col_assignments.iloc[r+1,0]
+        holder = pd.DataFrame( index = range(len(assignments['m/z'])), columns = ['m/z', 'corr'])  #index = assignments['Index'],
 
-            corr_r = mzs_corr.iloc[r,1]
+        holder = np.zeros((len(assignments['m/z']),2))
 
-            if mz_r_next == mz_r:
-                holder.iloc[r,0] = mz_r
-                holder.iloc[r+1,0] = mz_r
-                holder.iloc[r,1] = corr_r
-                holder.iloc[r+1,1] = corr_r
 
-        for r in mz_col_assignments:
-            if r is True: 
-                temp = mzs_corr.iloc[i,0]
-                print(temp)
-                holder.iloc[j,0] = mzs_corr.index[i]
-                holder.iloc[j,1] = mzs_corr.iloc[i,0]
-                
-              #  holder = pd.concat([mzs_corr.iloc[:i], temp, mzs_corr.iloc[i:]]).reset_index(drop=True)
-                i = i - 1
-            else:
-                temp = mzs_corr.iloc[i,0]
-                print(temp)
-                holder.iloc[j,0] = mzs_corr.index[i]
-                holder.iloc[j,1] = mzs_corr.iloc[i,0]
-                
-            i = i + 1 
-            j = j + 1 
+        for mz,row in zip(assignments['m/z'], range(len(assignments['m/z']))):
 
-        mzs_corr = holder
+            holder[row,1] = mzs_corr[mzs_corr.index == mz].iloc[0]['corr']
+            holder[row,0] = mz
+ 
+        pdholder = pd.DataFrame(holder, columns = ['m/z', 'corr'])
 
-        mzs_corr.to_csv('/Users/christiandewey/Downloads/mzs_corr.csv')
+       # for i, j, mzi, mzj in zip(assignments['Index'],pdholder.index,assignments['m/z'], pdholder['m/z']):
+        #    print(i, j, mzi, mzj)
+        pdholder.to_csv('/Users/christiandewey/Downloads/mzs_corr.csv')
+
+        
+
+       # print('shape mzs_corr: ')
+       # print(np.shape(holder))
+       # print(holder)
+
+
+        #print('shape assignments: ')
+        ##print(np.shape(assignments))
+        #print(assignments)
+        
+
+
+        assignments.insert(4,'corr',pdholder['corr'].values)
+
+        assignments.insert(5,'mz2',pdholder['m/z'].values)
 
         assignments.to_csv('/Users/christiandewey/Downloads/assignments.csv')
 
-        print('shape mzs_corr: ')
-        print(np.shape(mzs_corr))
-        print(mzs_corr)
-
-
-        print('shape assignments: ')
-        print(np.shape(assignments))
-        print(assignments)
-
-        assignments.insert(4,'corr',mzs_corr['corr'].values)
-
-        threshold=0.8
+       
         match = re.findall(r'[A-Za-z]+|\d+', self.heteroAtom)
         heteroAtom = match[1]
-
+        
+        
         results=assignments[assignments['corr']>threshold].filter(['m/z','corr','Peak Height','Confidence Score','Molecular Formula',heteroAtom])
 
-     #   bestresults=results[(results[heteroAtom]==1) | (results[self.heteroAtom]==1)]
+        print(results)
 
-        bestresults=results[(results[heteroAtom]==1)]
+        bestresults=results[(results[heteroAtom]>=1)]
 
 
         #print(bestresults)

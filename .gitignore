@@ -36,6 +36,12 @@ neg_esi_srfa_1ppm_test.xlsx
 tests/tests_data/ftms/ESFA_100k_9767-13548_chB.A_re_pc_Averaged1min.h5
 tests/tests_data/ftms/rmb_161221_kansas_h2o_2.raw
 NEG_ESI_SRFA_CoreMS.csv
+tests/tests_data/marine-iodine/220822_CTD27_600m.raw
+tests/tests_data/marine-iodine/220822_CTD27_600m2.raw
+tests/tests_data/marine-iodine/220822_CTD27_1000m.raw
+tests/tests_data/marine-iodine/220822_CTD27_1000m2.raw
+tests/tests_data/marine-iodine/220822_CTD27_600m.csv
+tests/tests_data/marine-iodine/220822_CTD27_1000m.csv
 NEG_ESI_SRFA_CoreMS.hdf5
 NEG_ESI_SRFA_CoreMS.json
 NEG_ESI_SRFA_CoreMS.xlsx

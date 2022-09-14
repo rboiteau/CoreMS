@@ -104,8 +104,14 @@ class MainCtrl:
 			print(self._mainview.icpms_filepath)
 
 			'''imports LCICPMS .csv file'''
-			self._mainview.icpms_data = pd.read_csv(self._mainview.icpms_filepath,sep=';|,',skiprows = 0, header = 0)
+			
+			self._mainview.icpms_data = pd.read_csv(self._mainview.icpms_filepath,sep=';|,|\t',skiprows = 0, header = 0)
+			self._mainview.icpms_data.dropna(inplace=True)	
+			print(self._mainview.icpms_data.head())
+			self._mainview.icpms_data.set_index(self._mainview.icpms_data['Number'], inplace=True)
+			print(self._mainview.icpms_data.head())
 			icpms_header = list(self._mainview.icpms_data.columns.values)
+			print(icpms_header)
 			icpms_elements = []
 			for v in icpms_header:
 				if ('Time ' in v) or ('Number' in v) or (' ' in v):
@@ -138,9 +144,9 @@ class MainCtrl:
 		icpesi_obj = alignedMS(icpf, esif,self._mainview.heteroatom)
 
 		icpesi_obj.offset = self._mainview.offset_float
-		icpesi_obj.threshold = self._mainview.threshold_float
-		icpesi_obj.timestart = 9.7413 #self._range[0]
-		icpesi_obj.timestop = 10.57657 #self._range[1]
+	#	icpesi_obj.threshold = self._mainview.threshold_float
+		icpesi_obj.timestart =  self._range[0]  #9.7413  #
+		icpesi_obj.timestop = self._range[1]  # #10.57657 #
 
 		#self._mainview.heteroatom = '63Cu'
 
@@ -153,12 +159,15 @@ class MainCtrl:
 
 		#elementDict = {'C':(1,50), 'H':(4,100), 'O':(1,20), 'N':(0,4), 'S':(0,0), 'Cl':(0,0), 'Br':(0,0), 'P':(0,0), 'Na':(0,0), 'Cu':(0,1) }
 
+		self._getThreshold()
+		self._getOffset()
+
 		elementDict = {}
 
 		for element in self._mainview._currentElements:
 			elementDict[element] = (int(self._mainview._elementMins[element].text()), int(self._mainview._elementMaxs[element].text()))
 
-		self.best_results = icpesi_obj.assignFormulas(elementDict)
+		self.best_results = icpesi_obj.assignFormulas(elementDict,0.4)
 
 		print(self.best_results)
 
@@ -176,10 +185,10 @@ class MainCtrl:
 
 		print('Current offset: ' + str(self._mainview.offset_float) + ' s') 
 
-		try:
-			self._mainview._makeICPMSPlot()
-		except:
-			print('No ICPMS data to plot')
+		#try:
+		self._mainview._makeICPMSPlot()
+		#except:
+		#	print('No ICPMS data to plot')
 		
 		if self._mainview.eic_plotted is True:
 		
@@ -276,7 +285,7 @@ class MainCtrl:
 		
 		self._mainview.offset.editingFinished.connect(self._getOffset)
 
-		self._mainview.offset.editingFinished.connect(self._getThreshold)
+		self._mainview.threshold.editingFinished.connect(self._getThreshold)
 
 		self._mainview.setMouseTracking(True)
 
