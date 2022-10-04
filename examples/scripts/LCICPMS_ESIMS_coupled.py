@@ -17,22 +17,24 @@ import matplotlib.pyplot as plt
 # from PySide2.QtCore import Qt
 
 from corems.mass_spectra.input import rawFileReader
-from corems.molecular_id.factory.classification import HeteroatomsClassification, Labels
+from corems.molecular_id.factory.classification import HeteroatomsClassification, Labels, Atoms
 from corems.molecular_id.search.priorityAssignment import OxygenPriorityAssignment
 from corems.molecular_id.search.molecularFormulaSearch import SearchMolecularFormulas
 from corems.encapsulation.factory.parameters import MSParameters
 
 from corems.lc_icpms_ftms.factory.Aligned_ICP_ESI import Aligned_ICP_ESI as alignedMS
 
+default_valences = Atoms.atoms_covalence
+
 esifile = '/Users/christiandewey/CoreMS/tests/tests_data/cobalt-wastewater/rmb_20220627_fp_1uM_stdmix_45.raw'
 icpmsfile = '/Users/christiandewey/CoreMS/tests/tests_data/cobalt-wastewater/cwd_220627_3_biozen_1uMstdmix_50uL.csv'
 
-esifile = '/Users/christiandewey/CoreMS/tests/tests_data/cobalt-wastewater/rmb_20220627_fp_CWD_wastewater_43.raw'
-icpmsfile = '/Users/christiandewey/CoreMS/tests/tests_data/cobalt-wastewater/cwd_220627_42_biozen_wastewater_50uL.csv'
+#esifile = '/Users/christiandewey/CoreMS/tests/tests_data/cobalt-wastewater/rmb_20220627_fp_CWD_wastewater_43.raw'
+#icpmsfile = '/Users/christiandewey/CoreMS/tests/tests_data/cobalt-wastewater/cwd_220627_42_biozen_wastewater_50uL.csv'
 
-heteroatom = '59Co'
+heteroatom = 'Fe'
 
-alignedData = alignedMS(icpmsfile,esifile,heteroatom)
+#alignedData = alignedMS(icpmsfile,esifile,heteroatom)
 
 MSParameters.mass_spectrum.threshold_method = 'signal_noise'
 MSParameters.mass_spectrum.s2n_threshold = 6
@@ -40,8 +42,9 @@ MSParameters.ms_peak.peak_min_prominence_percent = 0.1
 
 esi_parser = rawFileReader.ImportMassSpectraThermoMSFileReader(esifile)
 
-alignedData.timestart = 14  #8.0
-alignedData.timestop = 15 #8.5
+'''
+alignedData.timestart = 8.0
+alignedData.timestop = 8.5
 alignedData.offset = 35.5
 
 alignedData.getMSData()
@@ -49,14 +52,22 @@ icpsub = alignedData.subset_icpdata()
 icp_subset = icpsub
 
 
-fig, ax = plt.subplots()
-ax.plot(icp_subset['Time '+heteroatom],icp_subset[heteroatom])
-plt.show()
+#fig, ax = plt.subplots()
+#ax.plot(icp_subset['Time '+heteroatom],icp_subset[heteroatom])
+#plt.show()
 
 mzcorr, mass_spectrum = alignedData.subset_esidata()
+'''
 
+timestart = 5
+timestop = 10
 
-elementDict = {'C': (0,70), 'H':(0,90), 'O':(0,15), 'N':(0,15), 'P':(0,1), 'Co':(0,1)} 
+tic = esi_parser.get_tic(ms_type = 'MS')[0]
+tic_df=pd.DataFrame({'time': tic.time,'scan': tic.scans})
+scans=tic_df[tic_df.time.between(timestart,timestop)].scan.tolist()
+mass_spectrum  =esi_parser.get_average_mass_spectrum_by_scanlist(scans)
+
+elementDict = {'C': (0,70), 'H':(0,90), 'O':(0,15), 'N':(0,15), 'P':(0,1), 'Cl': (0, 0), 'I':(0,1)} 
 threshold = 0.3
 
 #results = alignedData.assignFormulas(elements, threshold)
@@ -73,7 +84,16 @@ mass_spectrum.molecular_search_settings.max_dbe = 100
 elementList = elementDict.keys()
 
 for e in elementList:
+   
     mass_spectrum.molecular_search_settings.usedAtoms[e] = elementDict[e]
+    
+    if e == 'Co':
+
+        mass_spectrum.molecular_search_settings.used_atom_valences[e] = (3)
+
+    else:
+
+        mass_spectrum.molecular_search_settings.used_atom_valences[e] = default_valences[e]
 
 
 mass_spectrum.molecular_search_settings.isProtonated = True
@@ -82,7 +102,7 @@ mass_spectrum.molecular_search_settings.isAdduct = False
 
 
 mass_spectrum.molecular_search_settings.ion_charge = 1
-
+mass_spectrum.molecular_search_settings.ion_charge
 
 # mass_spectrum.filter_by_max_resolving_power(15, 2)
 SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
@@ -114,7 +134,7 @@ except (RuntimeError, TypeError, NameError):
 assignments=mass_spectrum.to_dataframe()
 assignments=assignments.sort_values(by=['m/z'])
 
-
+'''
 holder = pd.DataFrame( index = range(len(assignments['m/z'])), columns = ['m/z', 'corr'])  #index = assignments['Index'],
 
 holder = np.zeros((len(assignments['m/z']),2))
@@ -144,18 +164,37 @@ pdholder.to_csv('/Users/christiandewey/Downloads/mzs_corr.csv')
 
 
 
-assignments.insert(4,'corr',pdholder['corr'].values)
+#assignments.insert(4,'corr',pdholder['corr'].values)
 
-assignments.insert(5,'mz2',pdholder['m/z'].values)
+#assignments.insert(5,'mz2',pdholder['m/z'].values)
+
+'''
+assignments[50:55]
+
+
+
+
+
 
 assignments.to_csv('/Users/christiandewey/Downloads/assignments.csv')
+
+
+
+
+
+
+
+
+
+
 
 
 match = re.findall(r'[A-Za-z]+|\d+', heteroatom)
 heteroAtom = match[1]
 
+#results=assignments[assignments['corr']>threshold].filter(['m/z','corr','Peak Height','Confidence Score','Molecular Formula',heteroAtom])
 
-results=assignments[assignments['corr']>threshold].filter(['m/z','corr','Peak Height','Confidence Score','Molecular Formula',heteroAtom])
+results=assignments[assignments['corr']>threshold].filter(['m/z','Peak Height','Confidence Score','Molecular Formula']) #,heteroAtom])
 
 print(results)
 

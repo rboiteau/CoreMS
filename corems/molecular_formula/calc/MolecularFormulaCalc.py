@@ -369,17 +369,19 @@ class MolecularFormulaCalc:
                     else:
                         valencia = MSParameters.molecular_search.used_atom_valences.get(clean_atom)
                     #valencia = Atoms.atoms_covalence.get(atom)
-                    
+                   
+                   
                     if type(valencia) is tuple:
                         valencia = valencia[0]
+                        
                     if valencia > 0:
                         #print atom, valencia, n_atom, individual_dbe
                         individual_dbe = individual_dbe + (n_atom * (valencia - 2))
                     else:
+                        
                         continue
             
             dbe = 1 + (0.5 * individual_dbe)
-            
             
             
             if self.ion_type == Labels.adduct_ion:

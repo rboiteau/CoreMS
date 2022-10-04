@@ -42,6 +42,11 @@ tests/tests_data/marine-iodine/220822_CTD27_1000m.raw
 tests/tests_data/marine-iodine/220822_CTD27_1000m2.raw
 tests/tests_data/marine-iodine/220822_CTD27_600m.csv
 tests/tests_data/marine-iodine/220822_CTD27_1000m.csv
+tests/tests_data/cobalt-wastewater/rmb_20220627_fp_CWD_wastewater_43.raw
+tests/tests_data/cobalt-wastewater/rmb_20220627_fp_1uM_stdmix_45.raw
+tests/tests_data/marine-iodine/assignments.csv
+b12_qcs.pdf
+b12_eics.pdf
 NEG_ESI_SRFA_CoreMS.hdf5
 NEG_ESI_SRFA_CoreMS.json
 NEG_ESI_SRFA_CoreMS.xlsx

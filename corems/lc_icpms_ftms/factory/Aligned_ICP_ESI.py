@@ -55,10 +55,11 @@ class Aligned_ICP_ESI:
             MSParameters.ms_peak.peak_min_prominence_percent = 0.1
             self.esi_parser = rawFileReader.ImportMassSpectraThermoMSFileReader(self._esifile)
             
-        if icpms_data:
-            self.icp_data = icpms_data
-        else:
+        if icpms_data is None:
             self.icp_data = pd.read_csv(self._icpfile)
+        else:
+            self.icp_data = icpms_data
+            
 
     def subset_icpdata(self):
         element = self.heteroAtom
