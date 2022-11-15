@@ -101,7 +101,7 @@ class lc_icr_assign:
             
         stdEIC=parser.get_eics(target_mzs=b12_mass,tic_data={},peak_detection=False,smooth=False)
 
-        fig,ax = plt.subplots()
+        _,ax = plt.subplots()
 
         max_std_intensity = 0
 
@@ -219,9 +219,8 @@ class lc_icr_assign:
 
 
     def _assign_formula(self, parser, interval, timerange, refmasslist=None):
-    #Function to build formula assignment lists
-    #Retrieve TIC for MS1 scans over the time range between 'timestart' and 'timestop' 
-
+        #Function to build formula assignment lists
+        #Retrieve TIC for MS1 scans over the time range between 'timestart' and 'timestop' 
         tic=parser.get_tic(ms_type='MS')[0]
         tic_df=pd.DataFrame({'time': tic.time,'scan': tic.scans})
 
@@ -230,11 +229,11 @@ class lc_icr_assign:
         results=[]
         
         for timestart in times:
-
+            print('timestart: %s' %timestart )
             scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
 
             mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)    
-            
+            mass_spectrum.molecular_search_settings.ion_charge = 1
             #mass_spectrum.mass_spectrum.settings.calib_sn_threshold
             #mass_spectrum.mass_spectrum.settings.calib_pol_order
             #mass_spectrum.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=2)
@@ -271,13 +270,18 @@ class lc_icr_assign:
     def assign_formula(self, interval = None, timerange = None, refmasslist = None):
 
         self.complete_results = {}
-
+        ii = 1
         for file in self.master_data_holder:
+
+            print('\n\n' + file)
+            print("%s of %s files" %(ii, len(self.master_data_holder.keys())))
 
             results = self._assign_formula(self.master_data_holder[file]['parser'], interval, timerange, refmasslist=refmasslist)
             results['file'] = file 
             self.master_data_holder[file]['results'] = results
             self.complete_results[file] = results
+
+            ii = ii + 1 
 
 
     def plot_reqd_resolving_power(self, onlysamples=True):
@@ -417,7 +421,7 @@ class lc_icr_assign:
         plt.show()
         
 
-    def determine_unique_features(self):
+    def determine_unique_features(self,blankfile,blnk_thresh):
         self._unique_run = True
         #Create a list of all unique features and describe their intensity. 
         print('total # results: %s' %len(self.all_results))
@@ -438,8 +442,8 @@ class lc_icr_assign:
 
         self.unique_results=pd.concat(uniquelist,ignore_index=True)
         self.unique_results['N/C']=self.unique_results['N']/self.unique_results['C']
-        self.unique_results['blank']=self.unique_results['rmb_20220627_fp_blank1_22.raw']/self.unique_results['Peak Height']
-        #self.unique_results=self.unique_results[self.unique_results['blank']<0.95]
+        self.unique_results['blank']=self.unique_results[blankfile]/self.unique_results['Peak Height']
+        self.unique_results=self.unique_results[self.unique_results['blank']<blnk_thresh]
 
         print('# unique results: %s' %len(self.unique_results))
 
