@@ -218,7 +218,7 @@ class lc_icr_assign:
             plt.show()
 
 
-    def _assign_formula(self, parser, interval, timerange, refmasslist=None):
+    def _assign_formula(self, parser, interval, timerange, refmasslist=None,corder=2):
         #Function to build formula assignment lists
         #Retrieve TIC for MS1 scans over the time range between 'timestart' and 'timestop' 
         tic=parser.get_tic(ms_type='MS')[0]
@@ -246,10 +246,10 @@ class lc_icr_assign:
                 ref_mass_list_fmt = calfn.load_ref_mass_list(refmasslist)
 
                 imzmeas, mzrefs = calfn.find_calibration_points(mass_spectrum, ref_mass_list_fmt,
-                                                            calib_ppm_error_threshold=(0, 2.0),
+                                                            calib_ppm_error_threshold=(-1, 1),
                                                             calib_snr_threshold=3)
 
-                calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=2)
+                calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=corder)
 
 
             SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
@@ -267,7 +267,7 @@ class lc_icr_assign:
         return(results)    
 
 
-    def assign_formula(self, interval = None, timerange = None, refmasslist = None):
+    def assign_formula(self, interval = None, timerange = None, refmasslist = None, calorder = 2):
 
         self.complete_results = {}
         ii = 1
@@ -276,7 +276,7 @@ class lc_icr_assign:
             print('\n\n' + file)
             print("%s of %s files" %(ii, len(self.master_data_holder.keys())))
 
-            results = self._assign_formula(self.master_data_holder[file]['parser'], interval, timerange, refmasslist=refmasslist)
+            results = self._assign_formula(self.master_data_holder[file]['parser'], interval, timerange, refmasslist=refmasslist, corder=calorder)
             results['file'] = file 
             self.master_data_holder[file]['results'] = results
             self.complete_results[file] = results
