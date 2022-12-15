@@ -471,3 +471,33 @@ def normMS(df,fulldf):
     df['Normalized Peak Height'] = df['Peak Height'] / max_i
 
     return df
+
+def blankSubtract(df, blnkthresh = 0.9):
+    
+    holder = []
+    for file in df['file'].unique():
+        
+        #if file == 
+        sub = df[df['file'] == file]
+
+        blkf = sub['blank file'].iloc[0]
+
+
+        sub[sub[file]== np.nan] = 0
+
+        nom = sub[file]
+        den = sub[blkf]
+
+        nom = nom.replace(np.nan,0)
+        den = den.replace(np.nan,1)
+
+        if file != blkf:
+            nom = nom
+        elif file == blkf:
+            nom = nom * (blnkthresh*0.8)
+
+        sub['blank subtract'] = nom/den
+        holder.append(sub)
+    df_end = pd.concat(holder)
+    df_end = df_end[df_end['blank subtract'] > blnkthresh]
+    return df_end
