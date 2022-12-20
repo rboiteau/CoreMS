@@ -246,17 +246,19 @@ def filterMzRange(results, mz_range):
 
 def pltMZerror(results, bins=50):
     ## assignment error distribution
-    _, ax = plt.subplots()
-    for mol_class in sorted(results['mol_class'].unique()):
+    #_, ax = plt.subplots()
+    #for mol_class in sorted(results['mol_class'].unique()):
 
-        counts, bins = np.histogram(np.asarray(results[results['mol_class']==mol_class]['m/z Error (ppm)']),bins = bins)
+        #counts, bins = np.histogram(np.asarray(results[results['mol_class']==mol_class]['m/z Error (ppm)']),bins = bins)
 
-        ax.plot(bins[:-1], counts, label = mol_class)
+        #ax.plot(bins[:-1], counts, label = mol_class)
 
-    ax.set_xlim(-0.5,0.5)
-    ax.legend(frameon=False)
-    ax.set_xlabel('m/z assignment error (ppm)')
-    ax.set_ylabel('# assigned features')
+    sns.kdeplot(data=results, x="m/z Error (ppm)", hue="mol_class")
+
+    #ax.set_xlim(-0.5,0.5)
+    #ax.legend(frameon=False)
+    #ax.set_xlabel('m/z assignment error (ppm)')
+    #ax.set_ylabel('Density')
 
     return ax
 
@@ -306,43 +308,148 @@ def assignMolClass(resultsdf, mz_cutoff = 800, sn_lim = 3):
 
     return results
 
+def assign_mol_class(complete_results_df,molclasses):
+
+    all_results=complete_results_df[(complete_results_df['m/z']<800) & (complete_results_df['S/N']>3)]
+
+    all_results['mol_class']='Unassigned'
+
+    #all_results['mol_class'][all_results['C']>0]='CHO'
+    
+    for m in molclasses:
+
+        elements = get_elements(m)
+
+        try: 
+
+            inds = get_inds_molclass(elements, all_results)
+
+            all_results.loc[inds,'mol_class'] = m
+
+        except: pass
+
+    return all_results 
+
+
+def get_mol_classes(add):
+    
+    base = 'CHO'
+
+    new = []
+    remain = []
+
+    new.append(base)
+
+    for i in range(len(add)):
+
+        new.append(base + add[i])
+
+        new2 = []
+
+        remain = add[i+1:]
+
+       # print(new,remain)
+
+        for j in remain:
+
+            new2 = add[i] + j
+
+            new.append(base + new2)
+
+    return(new)
+
+
+def get_elements(molclass):
+    
+    elements = [] 
+
+    for i in range(len(molclass)):
+
+        letter = molclass[i]
+
+        if letter.islower() == True:
+
+            element = molclass[i-1]+letter
+
+        else:
+
+            element = letter
+
+        elements.append(element)
+    
+    return elements
+
+
+
+def get_inds_molclass(elements,all_results):
+
+    temp = all_results
+
+    for e in elements:
+
+        temp[e]=temp[e].fillna(0)
+
+        temp = temp[temp[e] > 0]
+
+    return temp.index
+
+
+def get_ratios(results):
+    #results['H/C'] = 0
+    ##results['O/C'] = 0
+    #results['N/C'] = 0
+
+    results[results['Is Isotopologue']==0]['O/C'] = results['O'] / results['C']
+    results[results['Is Isotopologue']==0]['H/C'] = results['H'] / results['C']
+    results[results['Is Isotopologue']==0]['N/C'] = results['N'] / results['C']
+
+    return results 
 
 def add_mzwindow_col(df):    
 
     df['m/z window'] = df.index
-    
+    df['m/z Window Size'] = df.index
     
     for file, r in zip(df['file'], range(len(df['file']))):
 
         if ('400_500' in file) or ('400-500' in file):
 
             df['m/z window'].iloc[r] = '400-500 m/z'
+            df['m/z Window Size'].iloc[r] = '100 m/z'
 
         elif ('500_600' in file) or ('500-600' in file):
 
             df['m/z window'].iloc[r] = '500-600 m/z'
+            df['m/z Window Size'].iloc[r] = '100 m/z'
     
         elif ('600_700' in file) or ('600-700' in file):
 
             df['m/z window'].iloc[r] = '600-700 m/z'
+            df['m/z Window Size'].iloc[r] = '100 m/z'
 
         elif ('700_800' in file) or ('700-800' in file):
 
             df['m/z window'].iloc[r] = '700-800 m/z'
+            df['m/z Window Size'].iloc[r] = '100 m/z'
 
         elif ('400_600' in file) or ('400-600' in file):
 
             df['m/z window'].iloc[r] = '400-600 m/z'
+            df['m/z Window Size'].iloc[r] = '200 m/z'
         
         elif ('600_800' in file) or ('600-800' in file):
 
             df['m/z window'].iloc[r] = '600-800 m/z'
+            df['m/z Window Size'].iloc[r] = '200 m/z'
             
         elif 'full' in file:
 
             df['m/z window'].iloc[r] = '200-1200 m/z'
+            df['m/z Window Size'].iloc[r] = '1000 m/z'
 
     return df 
+
+
 
 
 def getUniqueFeatures(df):    
@@ -376,7 +483,7 @@ def getUniqueFeatures(df):
 
 
 
-def plotUnique(df,ps=50,includeBlanks=False, xlim = [400,600]):
+def plotUnique1(df,ps=50,includeBlanks=False, xlim = [400,600]):
     xmin = xlim[0]
     xmax = xlim[1]
     if includeBlanks != True:
@@ -384,12 +491,18 @@ def plotUnique(df,ps=50,includeBlanks=False, xlim = [400,600]):
         df=df[mask]
     else:
         df=df
-    fig, ((ax2, ax4),(ax3, ax1)) = plt.subplots(2,2,figsize = (12,12))
+    fig, ((ax2, ax4),(ax3, ax1)) = plt.subplots(2,2)
     sns.scatterplot(x='m/z',y='m/z Error (ppm)',data=df[df['Cu']>0],hue='m/z window', s=ps*4, ax=ax1)
+    plt.legend(frameon=False)
+
     sns.scatterplot(x='m/z',y='m/z Error (ppm)', hue='m/z window', data=df, ax=ax2,s=ps)
+    plt.legend(frameon=False)
+
     ax1.set_xlim(xmin,xmax)
     ax2.set_xlim(xmin,xmax)
     sns.scatterplot(x='m/z',y='m/z Error (ppm)',hue='N',data=df,ax=ax3,s=ps)
+    plt.legend(frameon=False)
+
     sns.scatterplot(x='m/z',y='Resolving Power',hue='mol_class',data=df,ax=ax4)
     
     ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
@@ -404,6 +517,48 @@ def plotUnique(df,ps=50,includeBlanks=False, xlim = [400,600]):
     #fig.savefig('unique_results.pdf', bbox_to_inches='tight')
 
     return fig
+
+
+def plotUnique(df,ps=50,includeBlanks=False, xlim = [400,600]):
+
+    import matplotlib as mpl
+    from matplotlib.colors import ListedColormap, LinearSegmentedColormap
+    cmap = sns.color_palette(["darkorange", "firebrick", "lightseagreen", "black"])
+    #cmap = sns.color_palette("cubehelix_r")
+    xmin = xlim[0]
+    xmax = xlim[1]
+
+    if includeBlanks != True:
+        mask = ~df['file'].str.contains('qh2o', case=False, na=False)
+        df=df[mask]
+    else:
+        df=df
+    fig, (ax2, ax4, ax3) = plt.subplots(3,1,figsize = (12,12))
+    sns.scatterplot(x='m/z',y='m/z Error (ppm)', hue='m/z window', data=df.sort_values(by='m/z window'), ax=ax2,s=ps)
+
+    df['N'] = df['N'].fillna(0)
+    df = df.astype({"N":'int'}) 
+
+    print(np.sort(df['N'].unique()))
+    sns.scatterplot(x='m/z',y='m/z Error (ppm)',hue='N',data=df[df['N']>0].sort_values(by='N'),palette = cmap,ax=ax3,s=ps)
+
+    sns.scatterplot(x='m/z',y='Resolving Power',hue='mol_class',data=df,ax=ax4)
+
+    
+    ax2.legend(loc='center left', bbox_to_anchor=(1, 0.5), frameon = False, title = 'm/z Window')
+    ax2.set_title('Overall assignment error')
+
+
+
+    ax3.legend(loc='center left', bbox_to_anchor=(1, 0.5), frameon = False, title = 'N Atoms')
+    ax3.set_title('Assignment error, N features')
+    ax4.legend(loc='center left', bbox_to_anchor=(1, 0.5), frameon = False, title = 'Mol. Class')
+    ax4.set_title('Resolving power v. m/z')
+
+    #fig.savefig('unique_results.pdf', bbox_to_inches='tight')
+
+    return fig
+
 
 
 def addRepCol(data_df):
@@ -434,7 +589,7 @@ def addRepCol(data_df):
     return data_df 
 
 
-def blankSubtract(df, blnkthresh = 0.9):
+def blankSubtract(df, blnkthresh = 0.8):
     
     holder = []
     for file in df['file'].unique():
@@ -443,24 +598,27 @@ def blankSubtract(df, blnkthresh = 0.9):
 
         blkf = sub['blank file'].iloc[0]
 
-
-        sub[sub[file]== np.nan] = 0
+        sub[sub[file]== np.nan] = 0  # each file column contains intensities of feature; if feature is not present, nan assigned; need to convert to zero for blank subtract
 
         nom = sub[file]
         den = sub[blkf]
 
-        nom = nom.replace(np.nan,0)
-        den = den.replace(np.nan,1)
+        nom = nom.replace(np.nan,0)  # features not present in sample
+        den = den.replace(np.nan,1)  # features not present in blank
 
         if file != blkf:
             nom = nom
         elif file == blkf:
-            nom = nom * (blnkthresh*0.8)
+            nom = nom * (blnkthresh * 0.8)  # multiplication enables removal of these features from blank file 
 
-        sub['blank subtract'] = nom/den
+        sub['blank subtract'] = nom/den  # ratio of intensities of features in sample and blank
+
         holder.append(sub)
+
     df_end = pd.concat(holder)
-    df_end = df_end[df_end['blank subtract'] > blnkthresh]
+
+    df_end = df_end[df_end['blank subtract'] > blnkthresh]  # only select features that do not appear in blanks
+
     return df_end
 
 
@@ -501,3 +659,6 @@ def blankSubtract(df, blnkthresh = 0.9):
     df_end = pd.concat(holder)
     df_end = df_end[df_end['blank subtract'] > blnkthresh]
     return df_end
+
+
+

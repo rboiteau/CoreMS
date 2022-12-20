@@ -283,6 +283,8 @@ class lc_icr_assign:
 
             ii = ii + 1 
 
+        only_samples = {k: self.complete_results[k] for k in self.complete_results.keys() if ( 'stdmix' not in k) }
+        self.complete_results_df=pd.concat(only_samples.values())
 
     def plot_reqd_resolving_power(self, onlysamples=True):
 
@@ -355,11 +357,12 @@ class lc_icr_assign:
         
         plt.show()
 
+    
 
     def assess_all_results(self):
 
-        only_samples = {k: self.complete_results[k] for k in self.complete_results.keys() if ( 'stdmix' not in k) }
-        self.complete_results_df=pd.concat(only_samples.values())
+        #only_samples = {k: self.complete_results[k] for k in self.complete_results.keys() if ( 'stdmix' not in k) }
+        #self.complete_results_df=pd.concat(only_samples.values())
 
         self.all_results=self.complete_results_df[(self.complete_results_df['m/z']<800) & (self.complete_results_df['S/N']>3)]
 
