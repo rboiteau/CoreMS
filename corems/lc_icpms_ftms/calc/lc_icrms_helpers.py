@@ -260,7 +260,7 @@ def pltMZerror(results, bins=50):
     #ax.set_xlabel('m/z assignment error (ppm)')
     #ax.set_ylabel('Density')
 
-    return ax
+    #return ax
 
 
 def pltMZerror_pts(results):
@@ -314,21 +314,38 @@ def assign_mol_class(complete_results_df,molclasses):
 
     all_results['mol_class']='Unassigned'
 
+    all_results['ID'] = range(0,len(all_results))
     #all_results['mol_class'][all_results['C']>0]='CHO'
     
-    for m in molclasses:
+    times = all_results['Time'].unique()
 
-        elements = get_elements(m)
+    holder = []
 
-        try: 
+    for t in times:
+        print('Time ', t)
+        time_average = all_results[all_results['Time'] == t]
+        print('here',np.shape(time_average))
+        for m in molclasses:
 
-            inds = get_inds_molclass(elements, all_results)
+            elements = get_elements(m)
 
-            all_results.loc[inds,'mol_class'] = m
+            try: 
 
-        except: pass
+                print(m, elements)
 
-    return all_results 
+                rowIDs = get_inds_molclass(elements, time_average)  ## THIS DOESN'T WORK; NEED TO EXCLUDE OTHER ELEMENTS -- NOT JUST SELECT ELEMENTS IN LIST; CURRENTLY DOUBLE COUNTING 
+
+                #for i in inds.values:
+                print(len(rowIDs))
+                time_average[time_average['ID'].isin(rowIDs)]['mol_class'] = m
+
+            except: pass
+
+        holder.append(time_average)
+
+    results = pd.concat(holder)
+    
+    return results 
 
 
 def get_mol_classes(add):
@@ -348,14 +365,12 @@ def get_mol_classes(add):
 
         remain = add[i+1:]
 
-       # print(new,remain)
-
         for j in remain:
 
             new2 = add[i] + j
 
             new.append(base + new2)
-
+    
     return(new)
 
 
@@ -383,15 +398,15 @@ def get_elements(molclass):
 
 def get_inds_molclass(elements,all_results):
 
-    temp = all_results
-
+    temp = all_results.copy()
+    
     for e in elements:
 
         temp[e]=temp[e].fillna(0)
 
         temp = temp[temp[e] > 0]
 
-    return temp.index
+    return temp['ID']
 
 
 def get_ratios(results):
@@ -662,3 +677,50 @@ def blankSubtract(df, blnkthresh = 0.9):
 
 
 
+def assign_formula(parser, interval, timerange, refmasslist=None,calorder=2):
+    #Function to build formula assignment lists
+    #Retrieve TIC for MS1 scans over the time range between 'timestart' and 'timestop' 
+    tic=parser.get_tic(ms_type='MS')[0]
+    tic_df=pd.DataFrame({'time': tic.time,'scan': tic.scans})
+
+    times=list(range(timerange[0],timerange[1],interval))
+
+    results=[]
+    
+    for timestart in times:
+        print('timestart: %s' %timestart )
+        scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
+
+        mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)    
+        mass_spectrum.molecular_search_settings.ion_charge = 1
+        #mass_spectrum.mass_spectrum.settings.calib_sn_threshold
+        #mass_spectrum.mass_spectrum.settings.calib_pol_order
+        #mass_spectrum.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=2)
+        #MzDomainCalibration(mass_spectrum, ref_file_location).run()
+
+        if refmasslist:
+            mass_spectrum.settings.min_calib_ppm_error = 10
+            mass_spectrum.settings.max_calib_ppm_error = -10
+            calfn = MzDomainCalibration(mass_spectrum, refmasslist)
+            ref_mass_list_fmt = calfn.load_ref_mass_list(refmasslist)
+
+            imzmeas, mzrefs = calfn.find_calibration_points(mass_spectrum, ref_mass_list_fmt,
+                                                        calib_ppm_error_threshold=(-1, 1),
+                                                        calib_snr_threshold=3)
+
+            calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=calorder)
+
+
+        SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
+
+        mass_spectrum.percentile_assigned(report_error=True)
+
+        assignments=mass_spectrum.to_dataframe()
+
+        assignments['Time']=timestart
+
+        results.append(assignments)
+    
+    results=pd.concat(results,ignore_index=True)
+
+    return(results)   
