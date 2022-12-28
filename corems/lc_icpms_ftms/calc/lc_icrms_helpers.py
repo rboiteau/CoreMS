@@ -312,6 +312,25 @@ def assign_mol_class(complete_results_df,molclasses):
 
     all_results=complete_results_df[(complete_results_df['m/z']<800) & (complete_results_df['S/N']>3)]
 
+    i = 0 # iterable 
+    p = 0 # max len holder
+    j = 0 # index of max len mol class
+
+    for i in range(0,len(molclasses)):
+
+        mc = molclasses[i]
+        
+        if len(mc) > p:
+
+            p = len(mc)
+
+            j = i
+
+    all_elements = get_elements(molclasses[j])
+
+    print(all_elements)
+    print('hhhh')
+
     all_results['mol_class']='Unassigned'
 
     all_results['ID'] = range(0,len(all_results))
@@ -322,26 +341,23 @@ def assign_mol_class(complete_results_df,molclasses):
     holder = []
 
     for t in times:
-        print('Time ', t)
         time_average = all_results[all_results['Time'] == t]
-        print('here',np.shape(time_average))
         for m in molclasses:
 
             elements = get_elements(m)
 
             try: 
 
-                print(m, elements)
+                sub = get_molclass_subset(elements, all_elements, time_average) 
 
-                rowIDs = get_inds_molclass(elements, time_average)  ## THIS DOESN'T WORK; NEED TO EXCLUDE OTHER ELEMENTS -- NOT JUST SELECT ELEMENTS IN LIST; CURRENTLY DOUBLE COUNTING 
+                sub['mol_class'] = m
 
-                #for i in inds.values:
-                print(len(rowIDs))
-                time_average[time_average['ID'].isin(rowIDs)]['mol_class'] = m
+                holder.append(sub)
 
-            except: pass
 
-        holder.append(time_average)
+            except: 
+                pass
+
 
     results = pd.concat(holder)
     
@@ -394,19 +410,26 @@ def get_elements(molclass):
     
     return elements
 
-
-
-def get_inds_molclass(elements,all_results):
-
-    temp = all_results.copy()
+def get_molclass_subset(included_elements, all_elements, all_results):
     
-    for e in elements:
 
-        temp[e]=temp[e].fillna(0)
+    tdf = all_results.copy()
+    excluded_elements = [e for e in all_elements if e not in included_elements]
+    
+    for e in included_elements:
+        tdf[e] = tdf[e].fillna(0)
+        tdf = tdf[tdf[e]>0]
 
-        temp = temp[temp[e] > 0]
+    print('included: ', included_elements, np.shape(tdf))
 
-    return temp['ID']
+    for e in excluded_elements:
+
+        tdf[e] = tdf[e].fillna(0)
+        tdf = tdf[tdf[e]==0]
+
+    print('excluded: ' , excluded_elements, np.shape(tdf))
+
+    return tdf
 
 
 def get_ratios(results):
@@ -469,7 +492,7 @@ def add_mzwindow_col(df):
 
 def getUniqueFeatures(df):    
     #Create a list of all unique features and describe their intensity. 
-    print('total # results: %s' %len(df))
+    #print('total # results: %s' %len(df))
     #define a list of unique features (time, formula) with 'areas' determined for each sample. There may be a slight bug that causes the unique list to grow...
     uniquelist=[]
     for time in df.Time.unique():
@@ -492,7 +515,7 @@ def getUniqueFeatures(df):
     #unique_results=unique_results[unique_results['blank']<blnk_thresh]
 
 
-    print('# unique results: %s' %len(unique_results))
+    #print('# unique results: %s' %len(unique_results))
 
     return unique_results
 
