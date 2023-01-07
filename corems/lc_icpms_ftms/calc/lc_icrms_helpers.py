@@ -134,7 +134,9 @@ def plot_ms(df1, start_mz, end_mz, tstart=None, df2=None,df3=None, assignment= N
 
         ms_df2 = ms_t_int2[(abs(ms_t_int2['Calibrated m/z']-start_mz)<mzrange)& ((ms_t_int2['Calibrated m/z']-start_mz)>0)]
         
-        _, stemlines2, _ =ax.stem('Calibrated m/z',pltcol,data=ms_df2,  markerfmt=' ', basefmt=' ', linefmt=cols[1], label = labels[1])
+        _, stemlines2, _ =ax.stem('Calibrated m/z',pltcol,data=ms_df2,  markerfmt=' ', basefmt=' ', linefmt=cols[1],label = labels[1])
+
+         #markerline, stemlines, baseline = plt.stem(x, y)
     else:
         pltdf2 = False 
 
@@ -226,7 +228,7 @@ def plot_ms(df1, start_mz, end_mz, tstart=None, df2=None,df3=None, assignment= N
     ax.axhline(y=0.0, color='black')
     plt.setp(stemlines1,'color', cols[0], 'linewidth', 2)
     if pltdf2 is True:
-        plt.setp(stemlines2, 'color', cols[1],'linewidth', 2, 'linestyle', '--')
+        plt.setp(stemlines2, 'color', cols[1],'linewidth', 1.75, 'linestyle', '--')
     if pltdf3 is True:
         plt.setp(stemlines3, 'color', cols[2],'linewidth', 2)
     plt.tight_layout()
@@ -308,9 +310,9 @@ def assignMolClass(resultsdf, mz_cutoff = 800, sn_lim = 3):
 
     return results
 
-def assign_mol_class(complete_results_df,molclasses):
+def assign_mol_class(complete_results_df,molclasses,sn_threshold=3,mz_threshold=800):
 
-    all_results=complete_results_df[(complete_results_df['m/z']<800) & (complete_results_df['S/N']>3)]
+    all_results=complete_results_df[(complete_results_df['m/z']<mz_threshold) & (complete_results_df['S/N']>sn_threshold)]
 
     i = 0 # iterable 
     p = 0 # max len holder
@@ -320,43 +322,61 @@ def assign_mol_class(complete_results_df,molclasses):
 
         mc = molclasses[i]
         
-        if len(mc) > p:
-
+        if (len(mc) > p) and (mc != 'Unassigned'):
+            
             p = len(mc)
-
+            
             j = i
+
+
+
 
     all_elements = get_elements(molclasses[j])
 
-    print(all_elements)
-    print('hhhh')
-
-    all_results['mol_class']='Unassigned'
+    #all_results['mol_class']='Unassiadfgned'
 
     all_results['ID'] = range(0,len(all_results))
     #all_results['mol_class'][all_results['C']>0]='CHO'
     
     times = all_results['Time'].unique()
 
-    holder = []
 
+    holder = []
+    sizenp = 0
     for t in times:
+        print('\ntime:',t)
         time_average = all_results[all_results['Time'] == t]
+
+        sizenp = sizenp + len(time_average)
+
+        print('unassigned: ', len(time_average[time_average['Molecular Formula'].isna()]))
+        print('assigned: ', len(time_average[~time_average['Molecular Formula'].isna()]))
+
         for m in molclasses:
 
-            elements = get_elements(m)
+            if m != 'Unassigned':
+                elements = get_elements(m)
 
-            try: 
-
-                sub = get_molclass_subset(elements, all_elements, time_average) 
-
+                #try: 
+                
+                sub = get_molclass_subset(elements, all_elements,time_average[~time_average['Molecular Formula'].isna()]) 
+               # print('Sub assigned size: ', len(sub))
                 sub['mol_class'] = m
+                
 
-                holder.append(sub)
+ 
+            elif m == 'Unassigned':
+                sub = time_average[time_average['Molecular Formula'].isna()] 
+                sub['mol_class'] = m
+               # print('\t%s: %s' %(m,len(sub)))
+
+            print('\t%s: %s' %(m,len(sub)))
+
+            holder.append(sub)
 
 
-            except: 
-                pass
+                #except: 
+                #    pass
 
 
     results = pd.concat(holder)
@@ -364,16 +384,16 @@ def assign_mol_class(complete_results_df,molclasses):
     return results 
 
 
-def get_mol_classes(add):
+def _get_mol_classes(add, base):
     
-    base = 'CHO'
-
+    
     new = []
     remain = []
-
+    
     new.append(base)
 
     for i in range(len(add)):
+        
 
         new.append(base + add[i])
 
@@ -386,48 +406,65 @@ def get_mol_classes(add):
             new2 = add[i] + j
 
             new.append(base + new2)
-    
+
     return(new)
 
 
+def get_mol_class(add):
+    base = 'CHO'
+    molclasses = []
+    for i in range(len(add)):
+        e = add[i]
+        temp = _get_mol_classes(add[i:], base = base)
+        base = base+e
+        molclasses = molclasses + temp
+
+
+    output = []
+    for x in molclasses:
+        if x not in output:
+            output.append(x)
+
+    output.append('Unassigned')
+    return output
+
+
 def get_elements(molclass):
+
+    import re
     
     elements = [] 
 
-    for i in range(len(molclass)):
-
-        letter = molclass[i]
-
-        if letter.islower() == True:
-
-            element = molclass[i-1]+letter
-
-        else:
-
-            element = letter
-
-        elements.append(element)
+    elements = re.findall('[A-Z][^A-Z]*', molclass)
     
     return elements
 
 def get_molclass_subset(included_elements, all_elements, all_results):
     
 
-    tdf = all_results.copy()
+    tdf = all_results
+
+    for e in all_elements:
+        tdf[e].fillna(0, inplace = True)
+
+  #  print('tdf no forms init',len(tdf))
+    #tdf = tdf[tdf['Molecular Formula'].isna()]
+  #  print('tdf no forms after filter',len(tdf))
     excluded_elements = [e for e in all_elements if e not in included_elements]
     
     for e in included_elements:
-        tdf[e] = tdf[e].fillna(0)
+        
         tdf = tdf[tdf[e]>0]
+       # print('included: ', e, np.shape(tdf))
+        for j in excluded_elements:
+          #  print('\texcluded: ' , j, np.shape(tdf))
+            tdf = tdf[tdf[j]==0]
 
-    print('included: ', included_elements, np.shape(tdf))
+    
 
-    for e in excluded_elements:
+    
 
-        tdf[e] = tdf[e].fillna(0)
-        tdf = tdf[tdf[e]==0]
 
-    print('excluded: ' , excluded_elements, np.shape(tdf))
 
     return tdf
 
@@ -561,7 +598,7 @@ def plotUnique(df,ps=50,includeBlanks=False, xlim = [400,600]):
 
     import matplotlib as mpl
     from matplotlib.colors import ListedColormap, LinearSegmentedColormap
-    cmap = sns.color_palette(["darkorange", "firebrick", "lightseagreen", "black"])
+    cmap = sns.color_palette(["darkorange", "firebrick", "lightseagreen", "black","red",'yellow','blue','magenta','green','salmon'])
     #cmap = sns.color_palette("cubehelix_r")
     xmin = xlim[0]
     xmax = xlim[1]
