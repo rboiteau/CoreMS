@@ -63,7 +63,6 @@ class lc_icr_assign:
         for file in self._filelist:
 
             if '.raw' in file:
-
                 parser = rawFileReader.ImportMassSpectraThermoMSFileReader(self.raw_files_location+'/'+file)
 
                 self.master_data_holder[file]={'parser': parser}
@@ -218,7 +217,7 @@ class lc_icr_assign:
             plt.show()
 
 
-    def _assign_formula(self, parser, interval, timerange, refmasslist=None,corder=2):
+    def _assign_formula(self, parser, interval, timerange, refmasslist=None,corder=2,charge=-1):
         #Function to build formula assignment lists
         #Retrieve TIC for MS1 scans over the time range between 'timestart' and 'timestop' 
         tic=parser.get_tic(ms_type='MS')[0]
@@ -233,7 +232,7 @@ class lc_icr_assign:
             scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
 
             mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)    
-            mass_spectrum.molecular_search_settings.ion_charge = 1
+            mass_spectrum.molecular_search_settings.ion_charge = charge
             #mass_spectrum.mass_spectrum.settings.calib_sn_threshold
             #mass_spectrum.mass_spectrum.settings.calib_pol_order
             #mass_spectrum.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=2)
@@ -267,7 +266,7 @@ class lc_icr_assign:
         return(results)    
 
 
-    def assign_formula(self, interval = None, timerange = None, refmasslist = None, calorder = 2):
+    def assign_formula(self, interval = None, timerange = None, refmasslist = None, calorder = 2, charge = -1):
 
         self.complete_results = {}
         ii = 1
@@ -276,7 +275,7 @@ class lc_icr_assign:
             print('\n\n' + file)
             print("%s of %s files" %(ii, len(self.master_data_holder.keys())))
 
-            results = self._assign_formula(self.master_data_holder[file]['parser'], interval, timerange, refmasslist=refmasslist, corder=calorder)
+            results = self._assign_formula(self.master_data_holder[file]['parser'], interval, timerange, refmasslist=refmasslist, corder=calorder, charge = charge)
             results['file'] = file 
             self.master_data_holder[file]['results'] = results
             self.complete_results[file] = results

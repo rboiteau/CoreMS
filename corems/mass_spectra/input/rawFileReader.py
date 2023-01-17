@@ -125,12 +125,12 @@ class ThermoBaseClass():
         polarity_symbol = self.get_filter_for_scan_num(scan_number)[1]
 
         if polarity_symbol == '+':
-
+            print('positive')
             return 1
             # return 'POSITIVE_ION_MODE'
 
         elif polarity_symbol == '-':
-
+            print('negative')
             return -1
 
         else:

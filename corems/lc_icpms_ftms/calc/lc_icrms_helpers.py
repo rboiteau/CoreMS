@@ -41,50 +41,7 @@ def getParser(file):
     return parser
 
 
-def assign_formula(parser, interval, timerange, refmasslist=None):
-    #Function to build formula assignment lists
-    #Retrieve TIC for MS1 scans over the time range between 'timestart' and 'timestop' 
-
-    tic=parser.get_tic(ms_type='MS')[0]
-    tic_df=pd.DataFrame({'time': tic.time,'scan': tic.scans})
-
-    times=list(range(timerange[0],timerange[1],interval))
-
-    results=[]
-    
-    for timestart in times:
-
-        scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
-
-        mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)    
-        mass_spectrum.molecular_search_settings.ion_charge = 1
-
-        if refmasslist:
-            mass_spectrum.settings.min_calib_ppm_error = 10
-            mass_spectrum.settings.max_calib_ppm_error = -10
-            calfn = MzDomainCalibration(mass_spectrum, refmasslist)
-            ref_mass_list_fmt = calfn.load_ref_mass_list(refmasslist)
-
-            imzmeas, mzrefs = calfn.find_calibration_points(mass_spectrum, ref_mass_list_fmt,
-                                                        calib_ppm_error_threshold=(0, 2.0),
-                                                        calib_snr_threshold=3)
-
-            calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=2)
-
-
-        SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
-
-        mass_spectrum.percentile_assigned(report_error=True)
-
-        assignments=mass_spectrum.to_dataframe()
-
-        assignments['Time']=timestart
-
-        results.append(assignments)
-    
-    results=pd.concat(results,ignore_index=True)
-
-    return(results)    
+   
 
 
 def plot_ms(df1, start_mz, end_mz, tstart=None, df2=None,df3=None, assignment= None, ax_ms=None, lbls=None, norm=False, labs=False, colors=None):   
@@ -222,7 +179,7 @@ def plot_ms(df1, start_mz, end_mz, tstart=None, df2=None,df3=None, assignment= N
     if norm: 
         ax.set(xlabel='Calibrated m/z',ylabel='Normalized Intensity')
     else: 
-        ax.set(xlabel='Calibrated m/z',ylabel='Intensity')
+        ax.set(xlabel='Calibrated m/z',ylabel='S/N')
     #ax.set_title('%.2f' %timerange[0] + ' to %.2f' %timerange[1] +' min', fontsize = 'medium')
     ax.legend(bbox_to_anchor = (1.00, 0.5), frameon =False, loc = 'center left')
     ax.axhline(y=0.0, color='black')
@@ -487,38 +444,44 @@ def add_mzwindow_col(df):
     
     for file, r in zip(df['file'], range(len(df['file']))):
 
-        if ('400_500' in file) or ('400-500' in file):
+        if 'StdMix' not in file:
 
-            df['m/z window'].iloc[r] = '400-500 m/z'
-            df['m/z Window Size'].iloc[r] = '100 m/z'
+            if ('400_500' in file) or ('400-500' in file):
 
-        elif ('500_600' in file) or ('500-600' in file):
+                df['m/z window'].iloc[r] = '400-500 m/z'
+                df['m/z Window Size'].iloc[r] = '100 m/z'
 
-            df['m/z window'].iloc[r] = '500-600 m/z'
-            df['m/z Window Size'].iloc[r] = '100 m/z'
-    
-        elif ('600_700' in file) or ('600-700' in file):
+            elif ('500_600' in file) or ('500-600' in file):
 
-            df['m/z window'].iloc[r] = '600-700 m/z'
-            df['m/z Window Size'].iloc[r] = '100 m/z'
-
-        elif ('700_800' in file) or ('700-800' in file):
-
-            df['m/z window'].iloc[r] = '700-800 m/z'
-            df['m/z Window Size'].iloc[r] = '100 m/z'
-
-        elif ('400_600' in file) or ('400-600' in file):
-
-            df['m/z window'].iloc[r] = '400-600 m/z'
-            df['m/z Window Size'].iloc[r] = '200 m/z'
+                df['m/z window'].iloc[r] = '500-600 m/z'
+                df['m/z Window Size'].iloc[r] = '100 m/z'
         
-        elif ('600_800' in file) or ('600-800' in file):
+            elif ('600_700' in file) or ('600-700' in file):
 
-            df['m/z window'].iloc[r] = '600-800 m/z'
-            df['m/z Window Size'].iloc[r] = '200 m/z'
+                df['m/z window'].iloc[r] = '600-700 m/z'
+                df['m/z Window Size'].iloc[r] = '100 m/z'
+
+            elif ('700_800' in file) or ('700-800' in file):
+
+                df['m/z window'].iloc[r] = '700-800 m/z'
+                df['m/z Window Size'].iloc[r] = '100 m/z'
+
+            elif ('400_600' in file) or ('400-600' in file):
+
+                df['m/z window'].iloc[r] = '400-600 m/z'
+                df['m/z Window Size'].iloc[r] = '200 m/z'
             
-        elif 'full' in file:
+            elif ('600_800' in file) or ('600-800' in file):
 
+                df['m/z window'].iloc[r] = '600-800 m/z'
+                df['m/z Window Size'].iloc[r] = '200 m/z'
+                
+            elif 'full' in file:
+
+                df['m/z window'].iloc[r] = '200-1200 m/z'
+                df['m/z Window Size'].iloc[r] = '1000 m/z'
+        
+        else:
             df['m/z window'].iloc[r] = '200-1200 m/z'
             df['m/z Window Size'].iloc[r] = '1000 m/z'
 
@@ -645,7 +608,7 @@ def addRepCol(data_df):
 
         print(file)
 
-        if 'rep2' in file:
+        if ('rep2' in file) or ('_02.' in file):
 
             temp = data_df[data_df['file'] == file]
             temp['Rep'] = 2
@@ -737,7 +700,7 @@ def blankSubtract(df, blnkthresh = 0.9):
 
 
 
-def assign_formula(parser, interval, timerange, refmasslist=None,calorder=2):
+def assign_formula(parser, interval, timerange, refmasslist=None,calorder=2,charge = -1):
     #Function to build formula assignment lists
     #Retrieve TIC for MS1 scans over the time range between 'timestart' and 'timestop' 
     tic=parser.get_tic(ms_type='MS')[0]
@@ -752,7 +715,7 @@ def assign_formula(parser, interval, timerange, refmasslist=None,calorder=2):
         scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
 
         mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)    
-        mass_spectrum.molecular_search_settings.ion_charge = 1
+        mass_spectrum.molecular_search_settings.ion_charge = charge
         #mass_spectrum.mass_spectrum.settings.calib_sn_threshold
         #mass_spectrum.mass_spectrum.settings.calib_pol_order
         #mass_spectrum.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=2)
