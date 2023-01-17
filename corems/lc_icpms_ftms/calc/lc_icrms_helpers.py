@@ -465,7 +465,13 @@ def add_mzwindow_col(df):
 
                 df['m/z window'].iloc[r] = '700-800 m/z'
                 df['m/z Window Size'].iloc[r] = '100 m/z'
+            
+            elif ('300_500' in file) or ('300-500' in file):
 
+                df['m/z window'].iloc[r] = '300-500 m/z'
+                df['m/z Window Size'].iloc[r] = '200 m/z'
+
+            
             elif ('400_600' in file) or ('400-600' in file):
 
                 df['m/z window'].iloc[r] = '400-600 m/z'
