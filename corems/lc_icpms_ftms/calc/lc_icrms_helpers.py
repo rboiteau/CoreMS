@@ -44,7 +44,7 @@ def getParser(file):
    
 
 
-def plot_ms(df1, start_mz, end_mz, tstart=None, df2=None,df3=None, assignment= None, ax_ms=None, lbls=None, norm=False, labs=False, colors=None):   
+def plot_ms(df1, start_mz, end_mz,mfexclude = [],tstart=None, df2=None,df3=None, assignment= None, ax_ms=None, lbls=None, norm=False, labs=False, colors=None):   
     
     if ax_ms == None:
         _, ax = plt.subplots()
@@ -80,7 +80,7 @@ def plot_ms(df1, start_mz, end_mz, tstart=None, df2=None,df3=None, assignment= N
         labels = [None, None, None]
 
  
-    _, stemlines1, _ =ax.stem('Calibrated m/z',pltcol,data=ms_df,  markerfmt=' ', basefmt=' ', linefmt=cols[0], label = labels[0])
+    _, stemlines1, _ =ax.stem('Calibrated m/z',pltcol,data=ms_df[~ms_df['Molecular Formula'].isin(mfexclude)],  markerfmt=' ', basefmt=' ', linefmt=cols[0], label = labels[0])
     
     if (df2 is not None) and (len(df2['Molecular Formula'])>0):
         pltdf2 = True
@@ -91,7 +91,7 @@ def plot_ms(df1, start_mz, end_mz, tstart=None, df2=None,df3=None, assignment= N
 
         ms_df2 = ms_t_int2[(abs(ms_t_int2['Calibrated m/z']-start_mz)<mzrange)& ((ms_t_int2['Calibrated m/z']-start_mz)>0)]
         
-        _, stemlines2, _ =ax.stem('Calibrated m/z',pltcol,data=ms_df2,  markerfmt=' ', basefmt=' ', linefmt=cols[1],label = labels[1])
+        _, stemlines2, _ =ax.stem('Calibrated m/z',pltcol,data=ms_df2[~ms_df2['Molecular Formula'].isin(mfexclude)],  markerfmt=' ', basefmt=' ', linefmt=cols[1],label = labels[1])
 
          #markerline, stemlines, baseline = plt.stem(x, y)
     else:
@@ -107,7 +107,7 @@ def plot_ms(df1, start_mz, end_mz, tstart=None, df2=None,df3=None, assignment= N
         ms_df3 = ms_t_int3[(abs(ms_t_int3['Calibrated m/z']-start_mz)<mzrange)& ((ms_t_int3['Calibrated m/z']-start_mz)>0)]
 
         
-        _, stemlines3, _ =ax.stem('Calibrated m/z',pltcol,data=ms_df3,  markerfmt=' ', basefmt=' ', linefmt=cols[2], label = labels[2])
+        _, stemlines3, _ =ax.stem('Calibrated m/z',pltcol,data=ms_df3[~ms_df3['Molecular Formula'].isin(mfexclude)],  markerfmt=' ', basefmt=' ', linefmt=cols[2], label = labels[2])
     else:
         pltdf3 = False
     #if pltdf3 is True:
