@@ -50,13 +50,10 @@ class Aligned_ICP_ESI:
         if esims_data:
             self.esi_parser = esims_data
         else:
-            MSParameters.mass_spectrum.threshold_method = 'signal_noise'
-            MSParameters.mass_spectrum.s2n_threshold = 6
-            MSParameters.ms_peak.peak_min_prominence_percent = 0.1
             self.esi_parser = rawFileReader.ImportMassSpectraThermoMSFileReader(self._esifile)
             
         if icpms_data is None:
-            self.icp_data = pd.read_csv(self._icpfile)
+            self.icp_data = pd.read_csv(self._icpfile, sep=';',header=1)
         else:
             self.icp_data = icpms_data
             
@@ -146,14 +143,12 @@ class Aligned_ICP_ESI:
             mscorr[mz]=corvalue.EIC[element]**2
             
 
-        
-
         mzs_corr = pd.DataFrame.from_dict(mscorr,orient='index',columns=['corr'])
         
         
         return mzs_corr, AverageMS
 
-    def assignFormulas(self, elementDict, threshold):
+    def assignFormulas(self,  threshold):
         # elementDict = {'C': (1,50), 'H':(4,100), etc}
        # threshold = self.threshold
         print('threshold: ' + str(threshold))
@@ -162,9 +157,9 @@ class Aligned_ICP_ESI:
 
         #Get molecular formula of average mass spectrum. 
 
-        mass_spectrum.molecular_search_settings.error_method = 'None'
-        mass_spectrum.molecular_search_settings.min_ppm_error = -2
-        mass_spectrum.molecular_search_settings.max_ppm_error = 2
+        '''        mass_spectrum.molecular_search_settings.error_method = 'None'
+        mass_spectrum.molecular_search_settings.min_ppm_error = -.25
+        mass_spectrum.molecular_search_settings.max_ppm_error = 0.25
 
         mass_spectrum.molecular_search_settings.url_database = None
         mass_spectrum.molecular_search_settings.min_dbe = 0
@@ -179,7 +174,7 @@ class Aligned_ICP_ESI:
 
         mass_spectrum.molecular_search_settings.isProtonated = True
         mass_spectrum.molecular_search_settings.isRadical = False
-        mass_spectrum.molecular_search_settings.isAdduct = False
+        mass_spectrum.molecular_search_settings.isAdduct = False'''
 
         # mass_spectrum.filter_by_max_resolving_power(15, 2)
         SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()

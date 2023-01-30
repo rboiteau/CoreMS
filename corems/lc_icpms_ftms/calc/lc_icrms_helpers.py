@@ -706,7 +706,7 @@ def blankSubtract(df, blnkthresh = 0.9):
 
 
 
-def assign_formula(parser, interval, timerange, refmasslist=None,calorder=2,charge = -1):
+"""def assign_formula(parser, interval, timerange, refmasslist=None,calorder=2,charge = -1):
     #Function to build formula assignment lists
     #Retrieve TIC for MS1 scans over the time range between 'timestart' and 'timestop' 
     tic=parser.get_tic(ms_type='MS')[0]
@@ -753,3 +753,52 @@ def assign_formula(parser, interval, timerange, refmasslist=None,calorder=2,char
     results=pd.concat(results,ignore_index=True)
 
     return(results)   
+"""
+
+def assign_formula(parser, interval, timerange, refmasslist=None,corder=2,charge=1, cal_ppm_threshold=(-1,1)):
+    #Function to build formula assignment lists
+    #Retrieve TIC for MS1 scans over the time range between 'timestart' and 'timestop' 
+    tic=parser.get_tic(ms_type='MS')[0]
+    tic_df=pd.DataFrame({'time': tic.time,'scan': tic.scans})
+
+    times=list(range(timerange[0],timerange[1],interval))
+
+    results=[]
+    
+    for timestart in times:
+        print('timestart: %s' %timestart )
+        scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
+
+        mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)    
+        mass_spectrum.molecular_search_settings.ion_charge = charge
+        #mass_spectrum.mass_spectrum.settings.calib_sn_threshold
+        #mass_spectrum.mass_spectrum.settings.calib_pol_order
+        #mass_spectrum.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=2)
+        #MzDomainCalibration(mass_spectrum, ref_file_location).run()
+
+        if refmasslist:
+            mass_spectrum.settings.min_calib_ppm_error = 10
+            mass_spectrum.settings.max_calib_ppm_error = -10
+            calfn = MzDomainCalibration(mass_spectrum, refmasslist)
+            ref_mass_list_fmt = calfn.load_ref_mass_list(refmasslist)
+
+            imzmeas, mzrefs = calfn.find_calibration_points(mass_spectrum, ref_mass_list_fmt,
+                                                        calib_ppm_error_threshold=cal_ppm_threshold,
+                                                        calib_snr_threshold=3)
+
+            calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=corder)
+
+
+        SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
+
+        mass_spectrum.percentile_assigned(report_error=True)
+
+        assignments=mass_spectrum.to_dataframe()
+
+        assignments['Time']=timestart
+
+        results.append(assignments)
+    
+    results=pd.concat(results,ignore_index=True)
+
+    return(results)    
