@@ -440,7 +440,7 @@ def get_ratios(results):
 def add_mzwindow_col(df):    
 
     df['m/z window'] = df.index
-    df['m/z Window Size'] = df.index
+    df['Window Size (m/z)'] = df.index
     
     for file, r in zip(df['file'], range(len(df['file']))):
 
@@ -449,47 +449,47 @@ def add_mzwindow_col(df):
             if ('400_500' in file) or ('400-500' in file):
 
                 df['m/z window'].iloc[r] = '400-500 m/z'
-                df['m/z Window Size'].iloc[r] = '100 m/z'
+                df['Window Size (m/z)'].iloc[r] = "100"
 
             elif ('500_600' in file) or ('500-600' in file):
 
                 df['m/z window'].iloc[r] = '500-600 m/z'
-                df['m/z Window Size'].iloc[r] = '100 m/z'
+                df['Window Size (m/z)'].iloc[r] = "100"
         
             elif ('600_700' in file) or ('600-700' in file):
 
                 df['m/z window'].iloc[r] = '600-700 m/z'
-                df['m/z Window Size'].iloc[r] = '100 m/z'
+                df['Window Size (m/z)'].iloc[r] = "100"
 
             elif ('700_800' in file) or ('700-800' in file):
 
                 df['m/z window'].iloc[r] = '700-800 m/z'
-                df['m/z Window Size'].iloc[r] = '100 m/z'
+                df['Window Size (m/z)'].iloc[r] = "100"
             
             elif ('300_500' in file) or ('300-500' in file):
 
                 df['m/z window'].iloc[r] = '300-500 m/z'
-                df['m/z Window Size'].iloc[r] = '200 m/z'
+                df['Window Size (m/z)'].iloc[r] = "200"
 
             
             elif ('400_600' in file) or ('400-600' in file):
 
                 df['m/z window'].iloc[r] = '400-600 m/z'
-                df['m/z Window Size'].iloc[r] = '200 m/z'
+                df['Window Size (m/z)'].iloc[r] = "200"
             
             elif ('600_800' in file) or ('600-800' in file):
 
                 df['m/z window'].iloc[r] = '600-800 m/z'
-                df['m/z Window Size'].iloc[r] = '200 m/z'
+                df['Window Size (m/z)'].iloc[r] = "200"
                 
             elif 'full' in file:
 
                 df['m/z window'].iloc[r] = '200-1200 m/z'
-                df['m/z Window Size'].iloc[r] = '1000 m/z'
+                df['Window Size (m/z)'].iloc[r] = "1000"
         
         else:
             df['m/z window'].iloc[r] = '200-1200 m/z'
-            df['m/z Window Size'].iloc[r] = '1000 m/z'
+            df['Window Size (m/z)'].iloc[r] = "1000"
 
     return df 
 
@@ -513,6 +513,13 @@ def getUniqueFeatures(df):
             current_file=current_file.set_index(['Molecular Formula'],drop=False)
             #current_file[file].fillna(0)
             currentunique=currentunique.join(current_file[file])
+        for mzw in df['Window Size (m/z)'].unique():
+            current_file=current[current['Window Size (m/z)']==mzw].drop_duplicates(subset=['Molecular Formula'])
+            wlbl = mzw + ' m/z window'
+            current_file=current_file.rename(columns={'Peak Height':wlbl})
+            current_file=current_file.set_index(['Molecular Formula'],drop=False)
+            #current_file[file].fillna(0)
+            currentunique=currentunique.join(current_file[wlbl])
         uniquelist.append(currentunique)
 
     unique_results=pd.concat(uniquelist,ignore_index=True)
@@ -631,6 +638,35 @@ def addRepCol(data_df):
 
 
     return data_df 
+
+
+def add_mz_window_colsl(data_df):
+
+    data_df['Rep'] = data_df.index
+
+
+    for file in data_df['file'].unique():
+
+        print(file)
+
+        if ('rep2' in file) or ('_02.' in file):
+
+            temp = data_df[data_df['file'] == file]
+            temp['Rep'] = 2
+            data_df[data_df['file'] == file] = temp
+
+
+        else:
+
+            temp = data_df[data_df['file'] == file]
+            temp['Rep'] = 1
+            data_df[data_df['file'] == file] = temp
+
+    print(data_df['Rep'].unique())
+
+
+    return data_df 
+
 
 
 def blankSubtract(df, blnkthresh = 0.8):
