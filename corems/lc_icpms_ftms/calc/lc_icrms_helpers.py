@@ -237,36 +237,6 @@ def pltMZerror_pts(results):
     return ax
 
 
-def assignMolClass(resultsdf, mz_cutoff = 800, sn_lim = 3):
-
-    filtered_results=resultsdf[(resultsdf['m/z']<mz_cutoff) & (resultsdf['S/N']>sn_lim)]
-
-    filtered_results['N']=filtered_results['N'].fillna(0)
-    filtered_results['O']=filtered_results['O'].fillna(0)
-    #filtered_results['S']=filtered_results['S'].fillna(0)
-    #filtered_results['P']=filtered_results['Fe'].fillna(0)
-    filtered_results['Cu']=filtered_results['Cu'].fillna(0)
-
-    filtered_results['mol_class']='Unassigned'
-    filtered_results['mol_class'][filtered_results['C']>0]='CHO'
-    filtered_results['mol_class'][(filtered_results['C']>0) & (filtered_results['N']>0.5)]='CHON'
-    #filtered_results['mol_class'][(filtered_results['C']>0) & (filtered_results['S']>0.5)]='CHOS'
-    #filtered_results['mol_class'][(filtered_results['C']>0) & (filtered_results['Fe']>0.5)]='CHOFe'
-    filtered_results['mol_class'][(filtered_results['C']>0) & (filtered_results['Cu']>0.5)]='CHOCu'
-    filtered_results['mol_class'][(filtered_results['C']>0) & (filtered_results['Cu']>0.5) & (filtered_results['N']>0.5)]='CHONCu'
-    #filtered_results['mol_class'][(filtered_results['C']>0) & (filtered_results['Cu']>0.5) & (filtered_results['S']>0.5)]='CHOSCu'
-    #filtered_results['mol_class'][(filtered_results['C']>0) & (filtered_results['Cu']>0.5) & (filtered_results['N']>0.5) & (filtered_results['S']>0.5)] ='CHONSCu'
-    #filtered_results['mol_class'][(filtered_results['C']>0) & (filtered_results['Na']>0.5) & (filtered_results['N']>0.5)]='CHONNa'
-    #filtered_results['mol_class'][(filtered_results['C']>0) & (filtered_results['P']>0.5) & (filtered_results['Na']>0.5) & (filtered_results['N']>0.5)]='CHONPNa'
-
-
-    results= filtered_results #[filtered_results['mol_class'] != 'Unassigned'] #[filtered_results['Is Isotopologue']==0]
-    results['N/C']=results['O']/results['C']
-    results['H/C']=results['H']/results['C']
-    results['N/C']=results['N']/results['C']
-
-    return results
-
 def assign_mol_class(complete_results_df,molclasses,sn_threshold=3,mz_threshold=800):
 
     all_results=complete_results_df[(complete_results_df['m/z']<mz_threshold) & (complete_results_df['S/N']>sn_threshold)]
@@ -286,14 +256,9 @@ def assign_mol_class(complete_results_df,molclasses,sn_threshold=3,mz_threshold=
             j = i
 
 
-
-
     all_elements = get_elements(molclasses[j])
 
-    #all_results['mol_class']='Unassiadfgned'
-
     all_results['ID'] = range(0,len(all_results))
-    #all_results['mol_class'][all_results['C']>0]='CHO'
     
     times = all_results['Time'].unique()
 
