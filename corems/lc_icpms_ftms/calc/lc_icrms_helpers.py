@@ -511,24 +511,18 @@ def getUniqueFeatures(df):
             current_file=current[current['file']==file].drop_duplicates(subset=['Molecular Formula'])
             current_file=current_file.rename(columns={'Peak Height':file})
             current_file=current_file.set_index(['Molecular Formula'],drop=False)
-            #current_file[file].fillna(0)
             currentunique=currentunique.join(current_file[file])
         for mzw in df['Window Size (m/z)'].unique():
             current_file=current[current['Window Size (m/z)']==mzw].drop_duplicates(subset=['Molecular Formula'])
             wlbl = mzw + ' m/z window'
             current_file=current_file.rename(columns={'Peak Height':wlbl})
             current_file=current_file.set_index(['Molecular Formula'],drop=False)
-            #current_file[file].fillna(0)
             currentunique=currentunique.join(current_file[wlbl])
         uniquelist.append(currentunique)
 
     unique_results=pd.concat(uniquelist,ignore_index=True)
     unique_results['N/C']=unique_results['N']/unique_results['C']
-    #unique_results['blank']=unique_results[blankfile]/unique_results['Peak Height']
-    #unique_results=unique_results[unique_results['blank']<blnk_thresh]
 
-
-    #print('# unique results: %s' %len(unique_results))
 
     return unique_results
 
