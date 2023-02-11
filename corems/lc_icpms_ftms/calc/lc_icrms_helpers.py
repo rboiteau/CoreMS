@@ -255,7 +255,6 @@ def assign_mol_class(complete_results_df,molclasses,sn_threshold=3,mz_threshold=
             
             j = i
 
-
     all_elements = get_elements(molclasses[j])
 
     all_results['ID'] = range(0,len(all_results))
@@ -278,27 +277,18 @@ def assign_mol_class(complete_results_df,molclasses,sn_threshold=3,mz_threshold=
 
             if m != 'Unassigned':
                 elements = get_elements(m)
-
-                #try: 
                 
                 sub = get_molclass_subset(elements, all_elements,time_average[~time_average['Molecular Formula'].isna()]) 
-               # print('Sub assigned size: ', len(sub))
-                sub['mol_class'] = m
-                
+                sub['mol_class'] = m    
 
  
             elif m == 'Unassigned':
                 sub = time_average[time_average['Molecular Formula'].isna()] 
                 sub['mol_class'] = m
-               # print('\t%s: %s' %(m,len(sub)))
 
             print('\t%s: %s' %(m,len(sub)))
 
             holder.append(sub)
-
-
-                #except: 
-                #    pass
 
 
     results = pd.concat(holder)
@@ -308,7 +298,6 @@ def assign_mol_class(complete_results_df,molclasses,sn_threshold=3,mz_threshold=
 
 def _get_mol_classes(add, base):
     
-    
     new = []
     remain = []
     
@@ -316,7 +305,6 @@ def _get_mol_classes(add, base):
 
     for i in range(len(add)):
         
-
         new.append(base + add[i])
 
         new2 = []
@@ -363,30 +351,18 @@ def get_elements(molclass):
 
 def get_molclass_subset(included_elements, all_elements, all_results):
     
-
     tdf = all_results
 
     for e in all_elements:
         tdf[e].fillna(0, inplace = True)
 
-  #  print('tdf no forms init',len(tdf))
-    #tdf = tdf[tdf['Molecular Formula'].isna()]
-  #  print('tdf no forms after filter',len(tdf))
     excluded_elements = [e for e in all_elements if e not in included_elements]
     
     for e in included_elements:
         
         tdf = tdf[tdf[e]>0]
-       # print('included: ', e, np.shape(tdf))
         for j in excluded_elements:
-          #  print('\texcluded: ' , j, np.shape(tdf))
             tdf = tdf[tdf[j]==0]
-
-    
-
-    
-
-
 
     return tdf
 
@@ -797,3 +773,6 @@ def assign_formula(parser, interval, timerange, refmasslist=None,corder=2,charge
     results=pd.concat(results,ignore_index=True)
 
     return(results)    
+
+
+ 
