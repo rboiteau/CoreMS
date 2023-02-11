@@ -1,22 +1,12 @@
 import os
 from tempfile import tempdir
-from time import time
+import time
 from turtle import color
-from unittest.mock import NonCallableMagicMock
-import pandas as pd
 import numpy as np
 import warnings
 
 
-import seaborn as sns
-warnings.filterwarnings("ignore")
-
-import sys
-sys.path.append("./")
-
-from pathlib import Path
-from copy import copy 
-
+from corems.encapsulation.factory.parameters import MSParameters
 from corems.mass_spectra.input import rawFileReader
 from corems.molecular_id.factory.classification import HeteroatomsClassification, Labels
 from corems.molecular_id.search.priorityAssignment import OxygenPriorityAssignment
@@ -26,10 +16,57 @@ from corems.encapsulation.constant import Atoms
 from corems.mass_spectrum.calc.Calibration import MzDomainCalibration
 import corems.lc_icpms_ftms.calc.lc_icrms_qc_assign as icrms
 import corems.lc_icpms_ftms.calc.lc_icrms_helpers as lcmsfns
+import pandas as pd
+# set assignment parameters
+MSParameters.mass_spectrum.threshold_method = 'signal_noise'
+MSParameters.mass_spectrum.s2n_threshold = 2
+MSParameters.ms_peak.peak_min_prominence_percent = 0.001
 
-from multiprocessing import Pool
+MSParameters.molecular_search.error_method = 'None'
+MSParameters.molecular_search.min_ppm_error = -0.25
+MSParameters.molecular_search.max_ppm_error = 0.25
+
+MSParameters.molecular_search.isProtonated = True
+MSParameters.molecular_search.isRadical = False
+MSParameters.molecular_search.isAdduct = False
+
+MSParameters.molecular_search.score_method = "prob_score"
+MSParameters.molecular_search.output_score_method = "prob_score"
+
+MSParameters.molecular_search.url_database = None
+MSParameters.molecular_search.min_dbe = -1
+MSParameters.molecular_search.max_dbe = 20
+
+MSParameters.molecular_search.usedAtoms['C'] = (1,50)
+MSParameters.molecular_search.usedAtoms['H'] = (4,100)
+MSParameters.molecular_search.usedAtoms['O'] = (1,20)
+MSParameters.molecular_search.usedAtoms['N'] = (0,8)
+MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
+MSParameters.molecular_search.usedAtoms['S'] = (0,2)
+MSParameters.molecular_search.usedAtoms['P'] = (0,2)
+MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
+MSParameters.molecular_search.usedAtoms['Cu'] = (0,0)
+warnings.filterwarnings("ignore")
+from pathlib import Path
+import sys
+sys.path.append("./")
+from corems.mass_spectra.input import rawFileReader
+#from corems.molecular_id.factory.classification import HeteroatomsClassification, Labels
+#from corems.molecular_id.search.priorityAssignment import OxygenPriorityAssignment
+from corems.molecular_id.search.molecularFormulaSearch import SearchMolecularFormulas
+#from corems.encapsulation.factory.parameters import MSParameters
+#from corems.encapsulation.constant import Atoms
+from corems.mass_spectrum.calc.Calibration import MzDomainCalibration
+#import corems.lc_icpms_ftms.calc.lc_icrms_qc_assign as icrms
+#import corems.lc_icpms_ftms.calc.lc_icrms_helpers as lcmsfns
+import pandas as pd
+
+
+from multiprocessing import Pool, Process
 import multiprocessing
-import time
+from multiprocessing import get_context
+from multiprocessing import set_start_method
+set_start_method("spawn")
 
 def _run_eics(esifile, mz):
 
@@ -48,84 +85,57 @@ def _run_eics(esifile, mz):
     return EICdic
 
 
-def _assign_formula(esifile, times, refmasslist=None):
+def assign_formula(esifile, times, refmasslist=None):
 
-    cal_ppm_threshold=(-1,1)
-    charge=1
-    corder=2
-    parser = rawFileReader.ImportMassSpectraThermoMSFileReader(esifile)
-
-    tic=parser.get_tic(ms_type='MS')[0]
-    tic_df=pd.DataFrame({'time': tic.time,'scan': tic.scans})
-
-    results=[]
-    
-    for timestart in times:
-        print('timestart: %s' %timestart )
-        scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
-
-        mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)    
-        mass_spectrum.molecular_search_settings.ion_charge = charge
-
-        if refmasslist:
-            mass_spectrum.settings.min_calib_ppm_error = 10
-            mass_spectrum.settings.max_calib_ppm_error = -10
-            calfn = MzDomainCalibration(mass_spectrum, refmasslist)
-            ref_mass_list_fmt = calfn.load_ref_mass_list(refmasslist)
-
-            imzmeas, mzrefs = calfn.find_calibration_points(mass_spectrum, ref_mass_list_fmt,
-                                                        calib_ppm_error_threshold=cal_ppm_threshold,
-                                                        calib_snr_threshold=3)
-
-            calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=corder)
+    with get_context("spawn").Pool() as pool:
+        print('_assign 1\n')
 
 
-        SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
+        cal_ppm_threshold=(-1,1)
+        charge=1
+        corder=2
 
-        mass_spectrum.percentile_assigned(report_error=True)
+        print('_assign 2\n')
+        parser = rawFileReader.ImportMassSpectraThermoMSFileReader(esifile)
 
-        assignments=mass_spectrum.to_dataframe()
+        tic=parser.get_tic(ms_type='MS')[0]
+        tic_df=pd.DataFrame({'time': tic.time,'scan': tic.scans})
 
-        assignments['Time']=timestart
+        results=[]
+        
+        for timestart in times:
+            print('timestart: %s' %timestart )
+            scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
 
-        results.append(assignments)
-    
-    results=pd.concat(results,ignore_index=True)
+            mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)    
+            mass_spectrum.molecular_search_settings.ion_charge = charge
 
-    return(results)   
+            if refmasslist:
+                mass_spectrum.settings.min_calib_ppm_error = 10
+                mass_spectrum.settings.max_calib_ppm_error = -10
+                calfn = MzDomainCalibration(mass_spectrum, refmasslist)
+                ref_mass_list_fmt = calfn.load_ref_mass_list(refmasslist)
+
+                imzmeas, mzrefs = calfn.find_calibration_points(mass_spectrum, ref_mass_list_fmt,
+                                                            calib_ppm_error_threshold=cal_ppm_threshold,
+                                                            calib_snr_threshold=3)
+
+                calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=corder)
 
 
-def setAssignmentParams():
+            SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
 
-    # set assignment parameters
-    MSParameters.mass_spectrum.threshold_method = 'signal_noise'
-    MSParameters.mass_spectrum.s2n_threshold = 2
-    MSParameters.ms_peak.peak_min_prominence_percent = 0.001
+            mass_spectrum.percentile_assigned(report_error=True)
 
-    MSParameters.molecular_search.error_method = 'None'
-    MSParameters.molecular_search.min_ppm_error = -0.25
-    MSParameters.molecular_search.max_ppm_error = 0.25
+            assignments=mass_spectrum.to_dataframe()
 
-    MSParameters.molecular_search.isProtonated = True
-    MSParameters.molecular_search.isRadical = False
-    MSParameters.molecular_search.isAdduct = False
+            assignments['Time']=timestart
 
-    MSParameters.molecular_search.score_method = "prob_score"
-    MSParameters.molecular_search.output_score_method = "prob_score"
+            results.append(assignments)
+        
+        results=pd.concat(results,ignore_index=True)
 
-    MSParameters.molecular_search.url_database = None
-    MSParameters.molecular_search.min_dbe = -1
-    MSParameters.molecular_search.max_dbe = 20
-
-    MSParameters.molecular_search.usedAtoms['C'] = (1,50)
-    MSParameters.molecular_search.usedAtoms['H'] = (4,100)
-    MSParameters.molecular_search.usedAtoms['O'] = (1,20)
-    MSParameters.molecular_search.usedAtoms['N'] = (0,8)
-    MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['S'] = (0,2)
-    MSParameters.molecular_search.usedAtoms['P'] = (0,2)
-    MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['Cu'] = (0,0)
+        return(results)   
 
 def get_eics(esifile, mz_exp, nprocessors=None):
     
@@ -159,7 +169,8 @@ def get_eics(esifile, mz_exp, nprocessors=None):
     return results
 
 
-def assign(flist, times, mzref, nprocessors=None):
+
+def get_eics(esifile, mz_exp, nprocessors=None):
     
     start_time = time.time()
     
@@ -172,13 +183,13 @@ def assign(flist, times, mzref, nprocessors=None):
     else:
         nps = multiprocessing.cpu_count() 
 
-    for f in flist:
+    for mz in mz_exp:
 
-        args_holder.append((f,times,mzref))
+        args_holder.append((esifile,mz))
     
     with Pool(processes=nps) as pool:
 
-        output = pool.starmap(_assign_formula, args_holder)
+        output = pool.starmap(_run_eics, args_holder)
 
     results = {}
     
@@ -186,9 +197,12 @@ def assign(flist, times, mzref, nprocessors=None):
         results = {**results, **l} 
     
 
-    print("--- %s files extracted in %.2f seconds using %s cores ---" % (len(output), (time.time() - start_time), nps))
+    print("--- %s EICs extracted in %.2f seconds using %s cores ---" % (len(output), (time.time() - start_time), nps))
 
     return results
+
+
+
 
 if __name__ == '__main__':
     
@@ -201,17 +215,18 @@ if __name__ == '__main__':
     time_range = [2,24]
     times = list(range(time_range[0],time_range[1],interval))
 
-    flist=os.listdir(dir)
-    os.chdir(dir)
-
-    setAssignmentParams()
+    flist=os.listdir(data_dir)
+    os.chdir(data_dir)
 
     args_holder = []
-    for f in flist:
-        args_holder.append((flist, times, mzref))
-
+    for esifile in flist:
+        args_holder.append((esifile, times, mzref))
 
     num_processors = 8
     with Pool(processes=num_processors) as pool:
-        results = pool.starmap(assign, args_holder)
+        output = pool.starmap(assign_formula, args_holder)
 
+    results = {}
+        
+    for l in output:
+        results = {**results, **l} 
