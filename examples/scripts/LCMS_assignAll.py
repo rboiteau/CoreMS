@@ -1403,7 +1403,7 @@ MSParameters.ms_peak.peak_min_prominence_percent = 0.05 #0.1
 timestart =44.6
 timestop = 45.6
 
-offset =-38 #-38 #Kansas soil, -27
+offset =-38 #
 
 cwindow = 70
 
