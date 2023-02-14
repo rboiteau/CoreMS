@@ -52,14 +52,6 @@ def plotICPMS(icp_data_file = None, elements = ['115In'], offset = 0, ax = None)
     ax.legend(frameon = False)
     return ax
 
-def mouse_event(event):
-    print('x: {} and y: {}'.format(event.xdata, event.ydata))
-    ix, iy = event.xdata, event.ydata
-    coords.append((ix,iy))
-    if len(coords) == 2:
-        fig.canvas.mpl_disconnect(cid)
-        plt.close('all')
-
 
 def subset_icpdata(icp_data_file = None, heteroAtom = '127I', timerange = [0,1], offset = 0):
 
@@ -196,16 +188,21 @@ def plot_EIC_ICPMS(eic,mz,icp_data,element, trange, ax = None):
     etime = 'Time ' + element
     icp_subset = icp_data[[element,etime]]
     icp_subset[etime] = (icp_subset[etime])
-    ax.plot(icp_subset[etime], icp_subset[element]/max(icp_subset[element]), label=element)
-
-    ax.plot(eic['Time'], eic['EIC'] / max(eic['EIC']), label='%.4f'%mz)
-      
-    ax.set_ylabel('Normalized Intensity')
+    ax.plot(icp_subset[etime], icp_subset[element]/max(icp_subset[element]), label=element, color = 'C0')
+    
+    ax.set_ylabel('ICPMS Intensity (cps)', color = 'C0')
     ax.set_xlabel('Time (min)')
     ax.set_ylim(bottom = 0)
-    ax.legend(frameon = False)
     ax.set_xlim(trange[0],trange[1])
-    return ax
+
+
+    ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
+    ax2.set_ylabel('ESIMS Intensity (cps)', color='C1')  # we already handled the x-label with ax1
+    ax2.plot(eic['Time'], eic['EIC'],color = 'C1', label='%.4f'%mz)    
+    ax2.set_ylim(bottom = 0)
+    ax2.set_xlim(trange[0],trange[1])
+
+    return ax, ax2
     
 
 def assign_formula(esiparser, trange, refmasslist=None,cal_ppm_threshold=(-1,1),charge=1):
@@ -269,14 +266,18 @@ def setAssingmentParams():
     MSParameters.molecular_search.min_dbe = -1
     MSParameters.molecular_search.max_dbe = 20
 
-    MSParameters.molecular_search.usedAtoms['C'] = (1,40)
-    MSParameters.molecular_search.usedAtoms['H'] = (4,80)
-    MSParameters.molecular_search.usedAtoms['O'] = (1,10)
-    MSParameters.molecular_search.usedAtoms['N'] = (0,4)
+    MSParameters.molecular_search.usedAtoms['C'] = (1,50)
+    MSParameters.molecular_search.usedAtoms['H'] = (4,100)
+    MSParameters.molecular_search.usedAtoms['O'] = (1,20)
+    MSParameters.molecular_search.usedAtoms['N'] = (0,6)
     MSParameters.molecular_search.usedAtoms['S'] = (0,4)
     MSParameters.molecular_search.usedAtoms['P'] = (0,4)
     MSParameters.molecular_search.usedAtoms['Cl'] = (0,4)
     MSParameters.molecular_search.usedAtoms['I'] = (0,4)
+    MSParameters.molecular_search.usedAtoms['F'] = (0,4)
+    MSParameters.molecular_search.usedAtoms['Cl'] = (0,4)
+    MSParameters.molecular_search.usedAtoms['Br'] = (0,4)
+
 
 
 
@@ -285,100 +286,74 @@ if __name__ == '__main__':
     startdt = datetime.now()
     start = time.time()  #for duration
    
-    drive_dir = '/Users/christiandewey/Library/CloudStorage/GoogleDrive-christian.w.dewey@gmail.com/My Drive/manuscripts/2023_Dewey-Boiteau-etal-ESI-ICP-align/data/'
-    svdir=drive_dir+'mf_assignments/'
+    data_dir = '/mnt/disks/data/iulia-iodine/neg/'
+    icpdir = '/mnt/disks/data/iulia-iodine/icpms/'
+    svdir= data_dir
     
     mzref = "/Users/christiandewey/CoreMS/db/Hawkes_neg.ref"
     
     heteroAtom = '127I'
 
-    offset =-38 #seconds; seawater
-    #offset =-27.7 # seconds; wastewater 5 uM zorbax
-    
-    '''
-    ### wastewater
+    offset =-38 #seconds; seawater    
+    trange = [44,47]  # determined via plot 
 
-    data_dir = '/Volumes/Samsung_T5/NHMFL/2023_January_Christian/monoisotopic/neg/subset/'
-    esifile = data_dir+'20230113_LBA_Boiteau_Zorbax5um_1500IT_neg_FinalEff_300_500_01.raw'
-    esiparser = rawFileReader.ImportMassSpectraThermoMSFileReader(esifile)
-    icpmsfile = '/Volumes/Samsung_T5/Keck iCAP/2023/January/21Jan/cwd_230121_zorbax5um_janWasteWater_NoDilute_50uL_11.csv'
-    results_fname='assignments_finalEffluent-Jan_001.csv'
-    '''
+    datafiles = {'220822_CTD27_600m2.raw':('assignments_600m2_001.csv','assignments_600m2_001.csv'), '220822_CTD27_1000m2.raw':('CTD27_1000m.csv','assignments_1000m2_001.csv') }
 
-    ### 1000 m depth
-    data_dir = drive_dir
-    esifile = data_dir+'raw_thermo_files/220822_CTD27_1000m2.raw'
-    esiparser = rawFileReader.ImportMassSpectraThermoMSFileReader(esifile)
-    icpmsfile = data_dir + 'icpms/CTD27_1000m.csv'
-    results_fname='assignments_1000m2_001.csv'
+    for f in datafiles.keys():
 
-    '''
-    ### load data, 600 m depth
-    data_dir = drive_dir
-    esifile = data_dir+'raw_thermo_files/220822_CTD27_600m2.raw'
-    esiparser = rawFileReader.ImportMassSpectraThermoMSFileReader(esifile)
-    icpmsfile = data_dir + 'icpms/CTD27_600m.csv
-    results_fname='assignments_600m2_001.csv'
-    '''
-      
-    ### plot offset ICPMS data and select peak for matching 
-    fig, ax = plt.subplots()
-    global coords
-    coords = []
-    cid = fig.canvas.mpl_connect('button_press_event', mouse_event)
-    ax = plotICPMS(icpmsfile,['127I', '59Co'], offset, ax)
-    plt.show()
+        esifile = data_dir + f
+        esiparser = rawFileReader.ImportMassSpectraThermoMSFileReader(esifile)
+        icpmsfile = icpdir + datafiles[f][0]
+        results_fname=data_dir + datafiles[f][1]
 
-    
-    ### subset ICP data 
-    trange = [coords[0][0], coords[1][0]]
-
-    icpsub = subset_icpdata(icp_data_file=icpmsfile, heteroAtom='127I', timerange=trange, offset = offset)
-  
-    
-    ### interpolate ICP data to match ESI data time points
-    interpolated_ICP = interpolate(esi_parser=esiparser,icpsub=icpsub,heteroAtom='127I',timerange=trange)
-
-    
-    ### run formula assignment 
-    setAssingmentParams()
-    print(os.getcwd())
-    assignments = assign_formula(esiparser,trange,mzref,cal_ppm_threshold=(-10,10))
-    assignments.to_csv(svdir+results_fname)
-
-    assignments = pd.read_csv(svdir+results_fname)
-
-    ### get EICS
-    EICs, avMS = get_eics(esi_parser=esiparser,assignments = assignments, timerange=trange)
-
-
-
-    with open(svdir + 'eics_'+results_fname + '.p', 'wb') as fp:
-        pickle.dump(EICs, fp, protocol=pickle.HIGHEST_PROTOCOL)
-
-    with open(svdir + 'eics_'+results_fname + '.p', 'rb') as fp:
-        EICs = pickle.load(fp)
-    ### run correlation and filter assignment results
-    corr_assignments, corr_assignments_with_hetero = correlate(icp_interp=interpolated_ICP,EICdic=EICs,heteroAtom='127I',assignments=assignments,timerange=trange,threshold = 0.2) 
-
-    corr_assignments.to_csv(svdir+'corr_'+results_fname)
-    
-    for mz in corr_assignments['m/z']:
+        ### plot offset ICPMS data and select peak for matching 
         fig, ax = plt.subplots()
-        eic_df=pd.DataFrame({'EIC':EICs[mz].eic,'Time':EICs[mz].time})
-        eic_sub=eic_df[eic_df['Time'].between(trange[0],trange[1])]
-        #def plot_EIC_ICPMS(eic,mz,icp_data,element, trange, ax = None):
-        plot_EIC_ICPMS(eic = eic_sub,mz = mz,icp_data = interpolated_ICP, element='127I', trange=trange, ax=ax)
-        mf = corr_assignments[corr_assignments['m/z'] == mz]['Molecular Formula'].iloc[0]
+        ax = plotICPMS(icpmsfile,['127I', '59Co'], offset, ax)
+        plt.savefig(svdir + icpmsfile.split('.')[0].split('/')[1] + '.pdf')
 
-        if pd.isna(mf):
-            mf = 'Unassigned'
-            mz_err = ''
-        else:
-            mz_err = 'm/z Error (ppm): %.3f' %(corr_assignments[corr_assignments['m/z'] == mz]['m/z Error (ppm)'].iloc[0])
-        ax.text(0.05,0.95, mf, transform=ax.transAxes)
-        ax.text(0.05,0.90, mz_err, transform=ax.transAxes)
-        plt.savefig(svdir + results_fname.split('.')[0] + '_' + mf + '_' +'%.4f.pdf' %(mz))
+        ### subset icp data
+        icpsub = subset_icpdata(icp_data_file=icpmsfile, heteroAtom='127I', timerange=trange, offset = offset)
+    
+        ### interpolate ICP data to match ESI data time points
+        interpolated_ICP = interpolate(esi_parser=esiparser,icpsub=icpsub,heteroAtom='127I',timerange=trange)
+
+        ### run formula assignment 
+        setAssingmentParams()
+        assignments = assign_formula(esiparser,trange,mzref,cal_ppm_threshold=(-10,10))
+        assignments.to_csv(svdir+results_fname)
+        assignments = pd.read_csv(svdir+results_fname)
+
+        ### get EICS and save as pickle
+        EICs, avMS = get_eics(esi_parser=esiparser,assignments = assignments, timerange=trange)
+
+        with open(svdir + 'eics_'+results_fname + '.p', 'wb') as fp:
+            pickle.dump(EICs, fp, protocol=pickle.HIGHEST_PROTOCOL)
+
+        with open(svdir + 'eics_'+results_fname + '.p', 'rb') as fp:
+            EICs = pickle.load(fp)
+
+        ### run correlation and filter assignment results
+        corr_assignments, corr_assignments_with_hetero = correlate(icp_interp=interpolated_ICP,EICdic=EICs,heteroAtom='127I',assignments=assignments,timerange=trange,threshold = 0.2) 
+        corr_assignments.to_csv(svdir+'corr_'+results_fname)
+        
+        for mz in corr_assignments['m/z']:
+            fig, ax = plt.subplots()
+            eic_df=pd.DataFrame({'EIC':EICs[mz].eic,'Time':EICs[mz].time})
+            eic_sub=eic_df[eic_df['Time'].between(trange[0],trange[1])]
+
+            plot_EIC_ICPMS(eic = eic_sub,mz = mz,icp_data = interpolated_ICP, element='127I', trange=trange, ax=ax)
+            mf = corr_assignments[corr_assignments['m/z'] == mz]['Molecular Formula'].iloc[0]
+
+            if pd.isna(mf):
+                mf = 'Unassigned'
+                mz_err = ''
+            else:
+                mz_err = 'm/z Error (ppm): %.3f' %(corr_assignments[corr_assignments['m/z'] == mz]['m/z Error (ppm)'].iloc[0])
+
+            ax.text(0.05,0.95, mf, transform=ax.transAxes)
+            ax.text(0.05,0.90, mz_err, transform=ax.transAxes)
+            fig.tight_layout()
+            plt.savefig(svdir + esifile.split('.')[0].split('/')[1] + '_' + mf + '_' +'%.4f.pdf' %(mz))
 
     elapsed_time_sec = (time.time() - start) 
 
