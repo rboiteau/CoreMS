@@ -293,24 +293,13 @@ if __name__ == '__main__':
     heteroAtom = '127I'
 
     offset =-38 #seconds; seawater
-    #offset =-27.7 # seconds; wastewater 5 uM zorbax
-    
-    '''
-    ### wastewater
-
-    data_dir = '/Volumes/Samsung_T5/NHMFL/2023_January_Christian/monoisotopic/neg/subset/'
-    esifile = data_dir+'20230113_LBA_Boiteau_Zorbax5um_1500IT_neg_FinalEff_300_500_01.raw'
-    esiparser = rawFileReader.ImportMassSpectraThermoMSFileReader(esifile)
-    icpmsfile = '/Volumes/Samsung_T5/Keck iCAP/2023/January/21Jan/cwd_230121_zorbax5um_janWasteWater_NoDilute_50uL_11.csv'
-    results_fname='assignments_finalEffluent-Jan_001.csv'
-    '''
 
     ### 1000 m depth
     data_dir = drive_dir
     esifile = data_dir+'raw_thermo_files/220822_CTD27_1000m2.raw'
     esiparser = rawFileReader.ImportMassSpectraThermoMSFileReader(esifile)
     icpmsfile = data_dir + 'icpms/CTD27_1000m.csv'
-    results_fname='assignments_1000m2_001.csv'
+    results_fname='iulia-iodine_001.csv'
 
     '''
     ### load data, 600 m depth
@@ -321,17 +310,20 @@ if __name__ == '__main__':
     results_fname='assignments_600m2_001.csv'
     '''
       
-    ### plot offset ICPMS data and select peak for matching 
+    '''### plot offset ICPMS data and select peak for matching 
     fig, ax = plt.subplots()
     global coords
     coords = []
     cid = fig.canvas.mpl_connect('button_press_event', mouse_event)
     ax = plotICPMS(icpmsfile,['127I', '59Co'], offset, ax)
-    plt.show()
+    plt.show()'''
 
     
     ### subset ICP data 
-    trange = [coords[0][0], coords[1][0]]
+    #trange = [coords[0][0], coords[1][0]]
+
+    trange = [43, 47]
+
 
     icpsub = subset_icpdata(icp_data_file=icpmsfile, heteroAtom='127I', timerange=trange, offset = offset)
   
@@ -341,12 +333,17 @@ if __name__ == '__main__':
 
     
     ### run formula assignment 
-    setAssingmentParams()
+    '''setAssingmentParams()
     print(os.getcwd())
     assignments = assign_formula(esiparser,trange,mzref,cal_ppm_threshold=(-10,10))
-    assignments.to_csv(svdir+results_fname)
+    assignments.to_csv(svdir+results_fname)'''
+    all_results = pd.read_csv(svdir+results_fname)
+    print(np.shape(all_results))
 
-    assignments = pd.read_csv(svdir+results_fname)
+    assignments = all_results[all_results['file'] == '220822_CTD27_1000m2.raw'].copy()
+
+    print(np.shape(assignments))
+
 
     ### get EICS
     EICs, avMS = get_eics(esi_parser=esiparser,assignments = assignments, timerange=trange)
