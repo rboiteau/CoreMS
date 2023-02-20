@@ -1,0 +1,491 @@
+20221103_LBA_Boiteau_Zorbax3p5_spring_400_500_rep2.raw
+20221103_LBA_Boiteau_Zorbax3p5_qh2o_fullmz_rep2.raw
+20221103_LBA_Boiteau_Zorbax3p5_spring_fullmz.raw
+20221103_LBA_Boiteau_Zorbax3p5_qh2o_500_600.raw
+20221103_LBA_Boiteau_Zorbax3p5_spring_fullmz_rep2.raw
+20221103_LBA_Boiteau_Zorbax3p5_spring_500_600.raw
+20221103_LBA_Boiteau_Zorbax3p5_qh2o_400_500_rep2.raw
+20221103_LBA_Boiteau_Zorbax3p5_qh2o_fullmz.raw
+20221103_LBA_Boiteau_Zorbax3p5_spring_500_600_rep2.raw
+20221103_LBA_Boiteau_Zorbax3p5_spring_400_500.raw
+20221103_LBA_Boiteau_Zorbax3p5_qh2o_500_600_rep2.raw
+20221103_LBA_Boiteau_Zorbax3p5_qh2o_400_500.raw
+20221103_LBA_Boiteau_Zorbax3p5_spring_400_600_rep2.raw
+20221103_LBA_Boiteau_Zorbax3p5_spring_400_600.raw
+[2 1]
+
+time: 4
+unassigned:  833
+assigned:  8443
+	CHO: 1268
+	CHON: 1940
+	CHONNa: 20
+	CHONS: 118
+	CHONP: 226
+	CHONFe: 44
+	CHONCu: 2
+	CHONa: 8
+	CHONaS: 5
+	CHONaP: 2
+	CHONaFe: 0
+	CHONaCu: 44
+	CHOS: 161
+	CHOSP: 116
+	CHOSFe: 65
+	CHOSCu: 0
+	CHOP: 1746
+	CHOPFe: 28
+	CHOPCu: 4
+	CHOFe: 2
+	CHOFeCu: 5
+	CHOCu: 1
+	CHONNaS: 60
+	CHONNaP: 37
+	CHONNaFe: 4
+	CHONNaCu: 0
+	CHONSP: 211
+	CHONSFe: 39
+	CHONSCu: 15
+	CHONPFe: 90
+	CHONPCu: 54
+	CHONFeCu: 2
+	CHONNaSP: 1010
+	CHONNaSFe: 39
+	CHONNaSCu: 3
+	CHONNaPFe: 172
+	CHONNaPCu: 10
+	CHONNaFeCu: 6
+	CHONNaSPFe: 178
+	CHONNaSPCu: 36
+	CHONNaSFeCu: 9
+	CHONNaSPFeCu: 75
+	Unassigned: 833
+
+time: 6
+unassigned:  885
+assigned:  13803
+	CHO: 1983
+	CHON: 4061
+	CHONNa: 26
+	CHONS: 343
+	CHONP: 523
+	CHONFe: 80
+	CHONCu: 6
+	CHONa: 9
+	CHONaS: 5
+	CHONaP: 8
+	CHONaFe: 3
+	CHONaCu: 45
+	CHOS: 213
+	CHOSP: 241
+	CHOSFe: 65
+	CHOSCu: 0
+	CHOP: 2508
+	CHOPFe: 24
+	CHOPCu: 1
+	CHOFe: 2
+	CHOFeCu: 5
+	CHOCu: 1
+	CHONNaS: 68
+	CHONNaP: 48
+	CHONNaFe: 4
+	CHONNaCu: 27
+	CHONSP: 328
+	CHONSFe: 35
+	CHONSCu: 13
+	CHONPFe: 85
+	CHONPCu: 72
+	CHONFeCu: 0
+	CHONNaSP: 2103
+	CHONNaSFe: 21
+	CHONNaSCu: 3
+	CHONNaPFe: 207
+	CHONNaPCu: 2
+	CHONNaFeCu: 0
+	CHONNaSPFe: 86
+	CHONNaSPCu: 19
+	CHONNaSFeCu: 3
+	CHONNaSPFeCu: 62
+	Unassigned: 885
+
+time: 8
+unassigned:  881
+assigned:  17473
+	CHO: 2512
+	CHON: 5142
+	CHONNa: 27
+	CHONS: 453
+	CHONP: 628
+	CHONFe: 75
+	CHONCu: 16
+	CHONa: 9
+	CHONaS: 9
+	CHONaP: 12
+	CHONaFe: 2
+	CHONaCu: 44
+	CHOS: 259
+	CHOSP: 241
+	CHOSFe: 80
+	CHOSCu: 0
+	CHOP: 2964
+	CHOPFe: 32
+	CHOPCu: 2
+	CHOFe: 4
+	CHOFeCu: 1
+	CHOCu: 1
+	CHONNaS: 99
+	CHONNaP: 82
+	CHONNaFe: 15
+	CHONNaCu: 34
+	CHONSP: 473
+	CHONSFe: 66
+	CHONSCu: 12
+	CHONPFe: 119
+	CHONPCu: 65
+	CHONFeCu: 7
+	CHONNaSP: 3044
+	CHONNaSFe: 29
+	CHONNaSCu: 4
+	CHONNaPFe: 217
+	CHONNaPCu: 8
+	CHONNaFeCu: 0
+	CHONNaSPFe: 88
+	CHONNaSPCu: 13
+	CHONNaSFeCu: 2
+	CHONNaSPFeCu: 52
+	Unassigned: 881
+
+time: 10
+unassigned:  888
+assigned:  19046
+	CHO: 3129
+	CHON: 5844
+	CHONNa: 22
+	CHONS: 512
+	CHONP: 568
+	CHONFe: 73
+	CHONCu: 8
+	CHONa: 6
+	CHONaS: 6
+	CHONaP: 5
+	CHONaFe: 0
+	CHONaCu: 53
+	CHOS: 288
+	CHOSP: 192
+	CHOSFe: 69
+	CHOSCu: 0
+	CHOP: 3167
+	CHOPFe: 36
+	CHOPCu: 2
+	CHOFe: 3
+	CHOFeCu: 2
+	CHOCu: 0
+	CHONNaS: 80
+	CHONNaP: 80
+	CHONNaFe: 4
+	CHONNaCu: 23
+	CHONSP: 520
+	CHONSFe: 54
+	CHONSCu: 4
+	CHONPFe: 120
+	CHONPCu: 51
+	CHONFeCu: 1
+	CHONNaSP: 3405
+	CHONNaSFe: 20
+	CHONNaSCu: 3
+	CHONNaPFe: 183
+	CHONNaPCu: 2
+	CHONNaFeCu: 0
+	CHONNaSPFe: 74
+	CHONNaSPCu: 9
+	CHONNaSFeCu: 2
+	CHONNaSPFeCu: 23
+	Unassigned: 888
+
+time: 12
+unassigned:  1158
+assigned:  21084
+	CHO: 3835
+	CHON: 6295
+	CHONNa: 27
+	CHONS: 544
+	CHONP: 569
+	CHONFe: 84
+	CHONCu: 10
+	CHONa: 11
+	CHONaS: 4
+	CHONaP: 7
+	CHONaFe: 4
+	CHONaCu: 70
+	CHOS: 444
+	CHOSP: 173
+	CHOSFe: 59
+	CHOSCu: 1
+	CHOP: 3376
+	CHOPFe: 14
+	CHOPCu: 0
+	CHOFe: 2
+	CHOFeCu: 2
+	CHOCu: 1
+	CHONNaS: 77
+	CHONNaP: 87
+	CHONNaFe: 0
+	CHONNaCu: 32
+	CHONSP: 582
+	CHONSFe: 71
+	CHONSCu: 6
+	CHONPFe: 102
+	CHONPCu: 81
+	CHONFeCu: 2
+	CHONNaSP: 3592
+	CHONNaSFe: 25
+	CHONNaSCu: 3
+	CHONNaPFe: 212
+	CHONNaPCu: 8
+	CHONNaFeCu: 1
+	CHONNaSPFe: 65
+	CHONNaSPCu: 11
+	CHONNaSFeCu: 6
+	CHONNaSPFeCu: 49
+	Unassigned: 1158
+
+time: 14
+unassigned:  1004
+assigned:  22715
+	CHO: 4706
+	CHON: 6901
+	CHONNa: 68
+	CHONS: 570
+	CHONP: 534
+	CHONFe: 55
+	CHONCu: 15
+	CHONa: 11
+	CHONaS: 3
+	CHONaP: 16
+	CHONaFe: 1
+	CHONaCu: 83
+	CHOS: 541
+	CHOSP: 158
+	CHOSFe: 55
+	CHOSCu: 0
+	CHOP: 3513
+	CHOPFe: 14
+	CHOPCu: 0
+	CHOFe: 3
+	CHOFeCu: 1
+	CHOCu: 2
+	CHONNaS: 101
+	CHONNaP: 96
+	CHONNaFe: 2
+	CHONNaCu: 34
+	CHONSP: 579
+	CHONSFe: 84
+	CHONSCu: 7
+	CHONPFe: 128
+	CHONPCu: 69
+	CHONFeCu: 2
+	CHONNaSP: 3532
+	CHONNaSFe: 29
+	CHONNaSCu: 5
+	CHONNaPFe: 232
+	CHONNaPCu: 7
+	CHONNaFeCu: 0
+	CHONNaSPFe: 59
+	CHONNaSPCu: 5
+	CHONNaSFeCu: 1
+	CHONNaSPFeCu: 24
+	Unassigned: 1004
+
+time: 16
+unassigned:  1071
+assigned:  22845
+	CHO: 5247
+	CHON: 7016
+	CHONNa: 70
+	CHONS: 553
+	CHONP: 498
+	CHONFe: 50
+	CHONCu: 12
+	CHONa: 15
+	CHONaS: 1
+	CHONaP: 15
+	CHONaFe: 3
+	CHONaCu: 61
+	CHOS: 618
+	CHOSP: 88
+	CHOSFe: 32
+	CHOSCu: 0
+	CHOP: 3492
+	CHOPFe: 38
+	CHOPCu: 1
+	CHOFe: 4
+	CHOFeCu: 1
+	CHOCu: 2
+	CHONNaS: 105
+	CHONNaP: 94
+	CHONNaFe: 2
+	CHONNaCu: 28
+	CHONSP: 493
+	CHONSFe: 84
+	CHONSCu: 8
+	CHONPFe: 135
+	CHONPCu: 72
+	CHONFeCu: 0
+	CHONNaSP: 3231
+	CHONNaSFe: 55
+	CHONNaSCu: 4
+	CHONNaPFe: 203
+	CHONNaPCu: 3
+	CHONNaFeCu: 0
+	CHONNaSPFe: 62
+	CHONNaSPCu: 5
+	CHONNaSFeCu: 1
+	CHONNaSPFeCu: 31
+	Unassigned: 1071
+
+time: 18
+unassigned:  1003
+assigned:  23465
+	CHO: 5824
+	CHON: 7033
+	CHONNa: 65
+	CHONS: 465
+	CHONP: 525
+	CHONFe: 49
+	CHONCu: 18
+	CHONa: 3
+	CHONaS: 4
+	CHONaP: 12
+	CHONaFe: 2
+	CHONaCu: 81
+	CHOS: 578
+	CHOSP: 68
+	CHOSFe: 38
+	CHOSCu: 0
+	CHOP: 3562
+	CHOPFe: 12
+	CHOPCu: 0
+	CHOFe: 5
+	CHOFeCu: 1
+	CHOCu: 3
+	CHONNaS: 108
+	CHONNaP: 74
+	CHONNaFe: 4
+	CHONNaCu: 21
+	CHONSP: 548
+	CHONSFe: 109
+	CHONSCu: 14
+	CHONPFe: 176
+	CHONPCu: 86
+	CHONFeCu: 0
+	CHONNaSP: 3122
+	CHONNaSFe: 133
+	CHONNaSCu: 6
+	CHONNaPFe: 157
+	CHONNaPCu: 6
+	CHONNaFeCu: 0
+	CHONNaSPFe: 57
+	CHONNaSPCu: 10
+	CHONNaSFeCu: 0
+	CHONNaSPFeCu: 25
+	Unassigned: 1003
+
+time: 20
+unassigned:  1307
+assigned:  23857
+	CHO: 6588
+	CHON: 7427
+	CHONNa: 54
+	CHONS: 369
+	CHONP: 493
+	CHONFe: 39
+	CHONCu: 14
+	CHONa: 14
+	CHONaS: 2
+	CHONaP: 19
+	CHONaFe: 2
+	CHONaCu: 85
+	CHOS: 479
+	CHOSP: 60
+	CHOSFe: 16
+	CHOSCu: 0
+	CHOP: 3502
+	CHOPFe: 21
+	CHOPCu: 2
+	CHOFe: 3
+	CHOFeCu: 2
+	CHOCu: 2
+	CHONNaS: 109
+	CHONNaP: 76
+	CHONNaFe: 3
+	CHONNaCu: 26
+	CHONSP: 459
+	CHONSFe: 127
+	CHONSCu: 14
+	CHONPFe: 169
+	CHONPCu: 55
+	CHONFeCu: 1
+	CHONNaSP: 2849
+	CHONNaSFe: 98
+	CHONNaSCu: 2
+	CHONNaPFe: 128
+	CHONNaPCu: 7
+	CHONNaFeCu: 1
+	CHONNaSPFe: 86
+	CHONNaSPCu: 15
+	CHONNaSFeCu: 1
+	CHONNaSPFeCu: 17
+	Unassigned: 1307
+
+time: 22
+unassigned:  847
+assigned:  20646
+	CHO: 6321
+	CHON: 6766
+	CHONNa: 81
+	CHONS: 236
+	CHONP: 414
+	CHONFe: 35
+	CHONCu: 7
+	CHONa: 6
+	CHONaS: 1
+	CHONaP: 15
+	CHONaFe: 5
+	CHONaCu: 79
+	CHOS: 284
+	CHOSP: 39
+	CHOSFe: 8
+	CHOSCu: 1
+	CHOP: 3033
+	CHOPFe: 14
+	CHOPCu: 2
+	CHOFe: 3
+	CHOFeCu: 0
+	CHOCu: 3
+	CHONNaS: 119
+	CHONNaP: 111
+	CHONNaFe: 2
+	CHONNaCu: 9
+	CHONSP: 235
+	CHONSFe: 128
+	CHONSCu: 7
+	CHONPFe: 145
+	CHONPCu: 20
+	CHONFeCu: 0
+	CHONNaSP: 2021
+	CHONNaSFe: 54
+	CHONNaSCu: 2
+	CHONNaPFe: 87
+	CHONNaPCu: 1
+	CHONNaFeCu: 0
+	CHONNaSPFe: 78
+	CHONNaSPCu: 10
+	CHONNaSFeCu: 0
+	CHONNaSPFeCu: 10
+	Unassigned: 847
+['20221103_LBA_Boiteau_Zorbax3p5_qh2o_400_500_rep2.raw'
+ '20221103_LBA_Boiteau_Zorbax3p5_qh2o_500_600_rep2.raw'
+ '20221103_LBA_Boiteau_Zorbax3p5_qh2o_500_600.raw'
+ '20221103_LBA_Boiteau_Zorbax3p5_qh2o_400_500.raw' 'mz200_400_600_blnk'
+ 'mz200_400_600_blnk_rep2']
+['400-500 m/z' '500-600 m/z' '400-600 m/z']
