@@ -5,6 +5,7 @@ import os
 from matplotlib import style
 import pandas as pd
 import numpy as np
+import tqdm
 
 #Generate clusters of ms features across depth.
 from sklearn.cluster import AgglomerativeClustering
@@ -635,6 +636,93 @@ def blankSubtract(df, blnkthresh = 0.8):
     df_end = df_end[df_end['blank subtract'] > blnkthresh]  # only select features that do not appear in blanks
 
     return df_end
+
+def repCombineOLD(df):
+
+    list_to_concat = []
+
+    rep_list = []
+
+    for rep in df['Rep'].unique():
+
+        temp = df[df['Rep'] == rep]
+
+        rep_list.append(temp)
+
+    pbar = tqdm.tqdm(df['Molecular Formula'], desc="Averaging reps")
+
+    for mf in pbar:
+
+        holder = df[df['Molecular Formula'] == mf].copy()    
+
+        total_intensity = 0
+
+        for rep in rep_list:
+
+            if mf in rep['Molecular Formula']:
+
+                peak_height = rep[rep['Molecular Formula'] == mf].loc['Peak Height'][0]
+
+            else: 
+
+                peak_height = 0
+
+            total_intensity = total_intensity + peak_height
+            
+            rep_int_col = 'Peak Height '+ str(rep)
+            
+            holder[rep_int_col] = peak_height
+        
+        av_intensity = total_intensity / len(rep_list)
+        
+        holder['Average Peak Height'] = av_intensity
+
+        list_to_concat.append(holder)
+
+    df_av = pd.concat(list_to_concat, ignore_index=True)
+
+    return df_av
+
+def repCombine(df):
+    from functools import reduce
+    
+    rep_list = []
+
+    for rep in df['Rep'].unique():
+
+        temp = df[df['Rep'] == rep]
+
+        rep_list.append(temp)
+
+    r1 = rep_list[0]['Molecular Formula']
+    r2 = rep_list[1]['Molecular Formula']
+    r_df = df['Molecular Formula']
+
+    common = df[(df['Molecular Formula'].isin(r1)) & (df['Molecular Formula'].isin(r2))]
+    not_common = df[~df['Molecular Formula'].isin(common['Molecular Formula'])]
+    r1_not_r2 = r1[~r1.isin(r2)]
+    r2_not_r1 = r2[~r2.isin(r1)]
+
+    print('\t%s mfs total (both reps combined)' %len(r_df))
+    print('\t%s mfs in rep 1' %len(r1))
+    print('\t%s mfs in rep 1 not in rep 2' %len(r1_not_r2))
+    print('\t%s mfs in rep 2' %len(r2))
+    print('\t%s mfs in rep 2 not in rep 1' %len(r2_not_r1))
+    print('\t%s mfs not shared ' %len(not_common))
+    print('\t%s mfs in both reps' %len(common))
+    print('\n')
+
+    common['Peak Height Rep 1'] = df[df['Molecular Formula'].isin(r1)]['Peak Height']
+    common['Peak Height Rep 2'] = df[df['Molecular Formula'].isin(r2)]['Peak Height']
+    common['Peak Height'] = (common['Peak Height Rep 1'] + common['Peak Height Rep 2']) / 2
+
+    not_common['Peak Height Rep 1'] = df[~df['Molecular Formula'].isin(r1_not_r2)]['Peak Height']
+    not_common['Peak Height Rep 2'] = df[~df['Molecular Formula'].isin(r2_not_r1)]['Peak Height']
+    not_common['Peak Height'] = (not_common['Peak Height Rep 1'] + not_common['Peak Height Rep 2']) / 2
+
+    df_av = pd.concat([common, not_common])
+
+    return df_av
 
 
 def normMS(df,fulldf):
