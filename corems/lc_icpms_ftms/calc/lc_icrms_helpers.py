@@ -439,9 +439,27 @@ def add_mzwindow_col(df):
 
 
 def getUniqueFeatures(df):    
-    #Create a list of all unique features and describe their intensity. 
-    #print('total # results: %s' %len(df))
-    #define a list of unique features (time, formula) with 'areas' determined for each sample. There may be a slight bug that causes the unique list to grow...
+    '''
+    Notes by Christian Dewey, 23-Feb-27
+
+    OVERVIEW:
+    
+        - subset m/z assignments by time bin
+        - sort subset by m/z error (ascending)
+        - remove duplicate m.f. assignments, preserving the assignment with lowest m/z error (first hit on sorted subset), save as 'currentunique'
+        - set the index of 'currentunique' to the 'Molecular Formula' column
+        - for each file in the raw file list:
+            - save subset the sorted m/z assignment list (with all files and duplicates) by file name as 'current_file'
+            - remove duplicate formulae from file subset copies
+            - rename 'Peak Height' to filename for each file
+            - set 'Molecular Formula' to index for copy with renamed 'Peak Height' col
+            - join the renamed 'Peak Height' col to 'currentunique'
+
+    RETURNS:    Pandas dataframe 
+                Contains unique m.f. assignments in each time bin & intenisty of unique m.f. feature in each file 
+
+    
+    '''
     uniquelist=[]
     for time in df.Time.unique():
         current=df[df.Time==time]
