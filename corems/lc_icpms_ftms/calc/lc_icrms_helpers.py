@@ -456,7 +456,7 @@ def getUniqueFeatures(df):
             - join the renamed 'Peak Height' col to 'currentunique'
 
     RETURNS:    Pandas dataframe 
-                Contains unique m.f. assignments in each time bin & intenisty of unique m.f. feature in each file 
+                Contains unique m.f. assignments in each time bin, and intenisty of unique m.f. feature in each file within each time bin
 
     
     '''
@@ -482,7 +482,6 @@ def getUniqueFeatures(df):
 
     unique_results=pd.concat(uniquelist,ignore_index=True)
     unique_results['N/C']=unique_results['N']/unique_results['C']
-
 
     return unique_results
 
@@ -624,7 +623,7 @@ def add_mz_window_colsl(data_df):
 
 
 def blankSubtract(df, blnkthresh = 0.8):
-    
+    # must be performed on df with unique assignments 
     holder = []
     for file in df['file'].unique():
         
@@ -655,51 +654,17 @@ def blankSubtract(df, blnkthresh = 0.8):
 
     return df_end
 
-def repCombineOLD(df):
+def intersection(lst1, lst2):
+    print(type(lst1))
+    # Use of hybrid method
+    temp = set(lst2)
+    lst3 = [value for value in lst1 if value in temp]
+    return lst3
 
-    list_to_concat = []
 
-    rep_list = []
-
-    for rep in df['Rep'].unique():
-
-        temp = df[df['Rep'] == rep]
-
-        rep_list.append(temp)
-
-    pbar = tqdm.tqdm(df['Molecular Formula'], desc="Averaging reps")
-
-    for mf in pbar:
-
-        holder = df[df['Molecular Formula'] == mf].copy()    
-
-        total_intensity = 0
-
-        for rep in rep_list:
-
-            if mf in rep['Molecular Formula']:
-
-                peak_height = rep[rep['Molecular Formula'] == mf].loc['Peak Height'][0]
-
-            else: 
-
-                peak_height = 0
-
-            total_intensity = total_intensity + peak_height
-            
-            rep_int_col = 'Peak Height '+ str(rep)
-            
-            holder[rep_int_col] = peak_height
-        
-        av_intensity = total_intensity / len(rep_list)
-        
-        holder['Average Peak Height'] = av_intensity
-
-        list_to_concat.append(holder)
-
-    df_av = pd.concat(list_to_concat, ignore_index=True)
-
-    return df_av
+def exclusion(ser1, ser2):
+    # takes pd Series (e.g. DataFrame columns); returns list
+    return list(set(list(ser1)) ^ set(list(ser2)))
 
 def repCombine(df):
     from functools import reduce
@@ -707,19 +672,37 @@ def repCombine(df):
     rep_list = []
 
     for rep in df['Rep'].unique():
-
+        print(rep)
         temp = df[df['Rep'] == rep]
 
+        temp['mf_t'] = temp['Molecular Formula'] + ' time_' + temp['Time'].map(str)
+
+        #print(temp['mf_t'])
         rep_list.append(temp)
 
-    r1 = rep_list[0]['Molecular Formula']
-    r2 = rep_list[1]['Molecular Formula']
-    r_df = df['Molecular Formula']
+    #r1 = rep_list[0]['Molecular Formula'
+    r1 = rep_list[0]
+    #r2 = rep_list[1]['Molecular Formula']
+    r2 = rep_list[1]
 
-    common = df[(df['Molecular Formula'].isin(r1)) & (df['Molecular Formula'].isin(r2))]
-    not_common = df[~df['Molecular Formula'].isin(common['Molecular Formula'])]
-    r1_not_r2 = r1[~r1.isin(r2)]
-    r2_not_r1 = r2[~r2.isin(r1)]
+    df['mf_t'] = df['Molecular Formula'] + ' time_' + df['Time'].map(str)
+    r_df = df['mf_t']
+
+    common_list = intersection(list(r1['mf_t'].values), list(r2['mf_t'].values))  # list of common formulae
+
+    print(common_list)
+    common = df.drop_duplicates(subset=['mf_t'])
+    common = common[common['mf_t'].isin(common_list)]
+    common = common.set_index(['mf_t'],drop=False)
+    print(len(common))
+    not_common_list = exclusion(r1['mf_t'], r2['mf_t'])
+    print(len(not_common_list))
+    not_common = df.drop_duplicates(subset=['mf_t'])
+    not_common = not_common[not_common['mf_t'].isnin(not_common_list)]
+    not_common = not_common.set_index(['mf_t'],drop=False)
+
+    r1_not_r2 = not_common[not_common['Rep']==1]
+    r2_not_r1 = not_common[not_common['Rep']==2]
 
     print('\t%s mfs total (both reps combined)' %len(r_df))
     print('\t%s mfs in rep 1' %len(r1))
@@ -729,13 +712,26 @@ def repCombine(df):
     print('\t%s mfs not shared ' %len(not_common))
     print('\t%s mfs in both reps' %len(common))
     print('\n')
-
-    common['Peak Height Rep 1'] = df[df['Molecular Formula'].isin(r1)]['Peak Height']
-    common['Peak Height Rep 2'] = df[df['Molecular Formula'].isin(r2)]['Peak Height']
+    
+    r1_c = r1[r1['mf_t'].isin(common['mf_t'])]
+    r2_c = r2[r2['mf_t'].isin(common['mf_t'])]
+    r1_c = r1_c.rename(columns={'Peak Height':'Peak Height Rep 1'}) 
+    r2_c = r2_c.rename(columns={'Peak Height':'Peak Height Rep 2'})
+    common = common.join(r1_c['Peak Height Rep 1'])
+    common = common.join(r2_c['Peak Height Rep 2'])
+    common[common['Peak Height Rep 1'] == np.nan] = 0
+    common[common['Peak Height Rep 2'] == np.nan] = 0
     common['Peak Height'] = (common['Peak Height Rep 1'] + common['Peak Height Rep 2']) / 2
-
-    not_common['Peak Height Rep 1'] = df[~df['Molecular Formula'].isin(r1_not_r2)]['Peak Height']
-    not_common['Peak Height Rep 2'] = df[~df['Molecular Formula'].isin(r2_not_r1)]['Peak Height']
+    
+    
+    r1_nc = r1[r1['mf_t'].isin(not_common['mf_t'])]
+    r2_nc = r2[r2['mf_t'].isin(not_common['mf_t'])]
+    r1_nc = r1_nc.rename(columns={'Peak Height':'Peak Height Rep 1'}) 
+    r2_nc = r2_nc.rename(columns={'Peak Height':'Peak Height Rep 2'})
+    not_common = not_common.join(r1_nc['Peak Height Rep 1'])
+    not_common = not_common.join(r2_nc['Peak Height Rep 2'])
+    not_common[not_common['Peak Height Rep 1'] == np.nan] = 0
+    not_common[not_common['Peak Height Rep 2'] == np.nan] = 0
     not_common['Peak Height'] = (not_common['Peak Height Rep 1'] + not_common['Peak Height Rep 2']) / 2
 
     df_av = pd.concat([common, not_common])
@@ -751,86 +747,7 @@ def normMS(df,fulldf):
 
     return df
 
-def blankSubtract(df, blnkthresh = 0.9):
-    
-    holder = []
-    for file in df['file'].unique():
-        
-        #if file == 
-        sub = df[df['file'] == file]
 
-        blkf = sub['blank file'].iloc[0]
-
-
-        sub[sub[file]== np.nan] = 0
-
-        nom = sub[file]
-        den = sub[blkf]
-
-        nom = nom.replace(np.nan,0)
-        den = den.replace(np.nan,1)
-
-        if file != blkf:
-            nom = nom
-        elif file == blkf:
-            nom = nom * (blnkthresh*0.8)
-
-        sub['blank subtract'] = nom/den
-        holder.append(sub)
-    df_end = pd.concat(holder)
-    df_end = df_end[df_end['blank subtract'] > blnkthresh]
-    return df_end
-
-
-
-"""def assign_formula(parser, interval, timerange, refmasslist=None,calorder=2,charge = -1):
-    #Function to build formula assignment lists
-    #Retrieve TIC for MS1 scans over the time range between 'timestart' and 'timestop' 
-    tic=parser.get_tic(ms_type='MS')[0]
-    tic_df=pd.DataFrame({'time': tic.time,'scan': tic.scans})
-
-    times=list(range(timerange[0],timerange[1],interval))
-
-    results=[]
-    
-    for timestart in times:
-        print('timestart: %s' %timestart )
-        scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
-
-        mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)    
-        mass_spectrum.molecular_search_settings.ion_charge = charge
-        #mass_spectrum.mass_spectrum.settings.calib_sn_threshold
-        #mass_spectrum.mass_spectrum.settings.calib_pol_order
-        #mass_spectrum.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=2)
-        #MzDomainCalibration(mass_spectrum, ref_file_location).run()
-
-        if refmasslist:
-            mass_spectrum.settings.min_calib_ppm_error = 10
-            mass_spectrum.settings.max_calib_ppm_error = -10
-            calfn = MzDomainCalibration(mass_spectrum, refmasslist)
-            ref_mass_list_fmt = calfn.load_ref_mass_list(refmasslist)
-
-            imzmeas, mzrefs = calfn.find_calibration_points(mass_spectrum, ref_mass_list_fmt,
-                                                        calib_ppm_error_threshold=(-1, 1),
-                                                        calib_snr_threshold=3)
-
-            calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=calorder)
-
-
-        SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
-
-        mass_spectrum.percentile_assigned(report_error=True)
-
-        assignments=mass_spectrum.to_dataframe()
-
-        assignments['Time']=timestart
-
-        results.append(assignments)
-    
-    results=pd.concat(results,ignore_index=True)
-
-    return(results)   
-"""
 
 def assign_formula(parser, interval, timerange, refmasslist=None,corder=2,charge=1, cal_ppm_threshold=(-1,1)):
     #Function to build formula assignment lists
