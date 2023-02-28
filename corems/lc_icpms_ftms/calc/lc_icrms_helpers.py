@@ -667,76 +667,26 @@ def exclusion(ser1, ser2):
     return list(set(list(ser1)) ^ set(list(ser2)))
 
 def repCombine(df):
-    from functools import reduce
-    
-    rep_list = []
 
-    for rep in df['Rep'].unique():
-        print(rep)
-        temp = df[df['Rep'] == rep]
+    for file in df['file'].unique():
 
-        temp['mf_t'] = temp['Molecular Formula'] + ' time_' + temp['Time'].map(str)
+        df[df[file] == np.nan] = 0
 
-        #print(temp['mf_t'])
-        rep_list.append(temp)
+        if 'rep2' not in file:
 
-    #r1 = rep_list[0]['Molecular Formula'
-    r1 = rep_list[0]
-    #r2 = rep_list[1]['Molecular Formula']
-    r2 = rep_list[1]
+            if '.raw' in file:
 
-    df['mf_t'] = df['Molecular Formula'] + ' time_' + df['Time'].map(str)
-    r_df = df['mf_t']
+                rep2file = file.split('.')[0]+'_rep2.raw'
 
-    common_list = intersection(list(r1['mf_t'].values), list(r2['mf_t'].values))  # list of common formulae
+            else:
 
-    print(common_list)
-    common = df.drop_duplicates(subset=['mf_t'])
-    common = common[common['mf_t'].isin(common_list)]
-    common = common.set_index(['mf_t'],drop=False)
-    print(len(common))
-    not_common_list = exclusion(r1['mf_t'], r2['mf_t'])
-    print(len(not_common_list))
-    not_common = df.drop_duplicates(subset=['mf_t'])
-    not_common = not_common[not_common['mf_t'].isnin(not_common_list)]
-    not_common = not_common.set_index(['mf_t'],drop=False)
+                rep2file = file + '_rep2'
+            
+            avfile = file + '_av'
+            
+            df[avfile] = (df[file] + df[rep2file]) / 2
 
-    r1_not_r2 = not_common[not_common['Rep']==1]
-    r2_not_r1 = not_common[not_common['Rep']==2]
-
-    print('\t%s mfs total (both reps combined)' %len(r_df))
-    print('\t%s mfs in rep 1' %len(r1))
-    print('\t%s mfs in rep 1 not in rep 2' %len(r1_not_r2))
-    print('\t%s mfs in rep 2' %len(r2))
-    print('\t%s mfs in rep 2 not in rep 1' %len(r2_not_r1))
-    print('\t%s mfs not shared ' %len(not_common))
-    print('\t%s mfs in both reps' %len(common))
-    print('\n')
-    
-    r1_c = r1[r1['mf_t'].isin(common['mf_t'])]
-    r2_c = r2[r2['mf_t'].isin(common['mf_t'])]
-    r1_c = r1_c.rename(columns={'Peak Height':'Peak Height Rep 1'}) 
-    r2_c = r2_c.rename(columns={'Peak Height':'Peak Height Rep 2'})
-    common = common.join(r1_c['Peak Height Rep 1'])
-    common = common.join(r2_c['Peak Height Rep 2'])
-    common[common['Peak Height Rep 1'] == np.nan] = 0
-    common[common['Peak Height Rep 2'] == np.nan] = 0
-    common['Peak Height'] = (common['Peak Height Rep 1'] + common['Peak Height Rep 2']) / 2
-    
-    
-    r1_nc = r1[r1['mf_t'].isin(not_common['mf_t'])]
-    r2_nc = r2[r2['mf_t'].isin(not_common['mf_t'])]
-    r1_nc = r1_nc.rename(columns={'Peak Height':'Peak Height Rep 1'}) 
-    r2_nc = r2_nc.rename(columns={'Peak Height':'Peak Height Rep 2'})
-    not_common = not_common.join(r1_nc['Peak Height Rep 1'])
-    not_common = not_common.join(r2_nc['Peak Height Rep 2'])
-    not_common[not_common['Peak Height Rep 1'] == np.nan] = 0
-    not_common[not_common['Peak Height Rep 2'] == np.nan] = 0
-    not_common['Peak Height'] = (not_common['Peak Height Rep 1'] + not_common['Peak Height Rep 2']) / 2
-
-    df_av = pd.concat([common, not_common])
-
-    return df_av
+    return df
 
 
 def normMS(df,fulldf):
