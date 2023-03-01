@@ -688,7 +688,21 @@ def repCombine(df):
 
     return df
 
+def repCombine_slough(df):
 
+    for file in df['file'].unique():
+
+        df[df[file] == np.nan] = 0
+
+        if '_01.raw' in file:
+
+            rep2file = file.split('.')[0][0:-2]+'02.raw'
+
+            avfile = file + '_av'
+            
+            df[avfile] = (df[file] + df[rep2file]) / 2
+
+    return df
 def normMS(df,fulldf):
 
     max_i = max(fulldf['Peak Height'].values)
