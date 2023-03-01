@@ -689,20 +689,142 @@ def repCombine(df):
     return df
 
 def repCombine_slough(df):
+    
+    orig = df.copy()
 
+    mask = ~df['file'].str.contains('qh2o', case=False, na=False)
+    
+    df=df[mask]
+    print('\n')
+
+    replist = []
     for file in df['file'].unique():
-
-        df[df[file] == np.nan] = 0
-
+        
         if '_01.raw' in file:
 
             rep2file = file.split('.')[0][0:-2]+'02.raw'
+            print('\n')
+            print(file)
+            print(rep2file)
 
-            avfile = file + '_av'
-            
-            df[avfile] = (df[file] + df[rep2file]) / 2
+            df_temp = df[(df['file'] == file) | (df['file'] == rep2file)]
+            print('\n%s total unique features (including features unique to ind. reps)' %len(df_temp))
+            mask1 = ~df_temp[file].isnull()
+            mask2 = ~df_temp[rep2file].isnull()
+            print('non-null features in rep 1: %s' %(len(mask1) - len(mask1[mask1 == False])))
+            print('non-null features in rep 2: %s' %(len(mask2) - len(mask1[mask2 == False])))
 
-    return df
+            print('null features in rep 1: %s' %len(mask1[mask1 == False]))
+            print('null features in rep 2: %s' %len(mask2[mask2 == False]))
+            df2 = df_temp[mask1]
+
+            df3 = df2[mask2]
+            print('features in both reps: %s' %len(df3))
+
+            av_col = file.split('.')[0][0:-2]+'av'
+
+            df3[av_col] = (df3[file] + df3[rep2file]) / 2
+
+            replist.append(df3)
+
+    df = orig
+    mask = df['file'].str.contains('qh2o', case=False, na=False)
+    df=df[mask]
+    print('\n')
+    breplist = []
+    for file in df['file'].unique():
+        
+        if '_01.raw' in file:
+            rep2file = file.split('.')[0][0:-2]+'02.raw'
+            print('\n')
+            print(file)
+            print(rep2file)
+
+            df_temp = df[(df['file'] == file) | (df['file'] == rep2file)]
+            print('\n%s total unique features (including features unique to ind. reps)' %len(df_temp))
+
+            mask1 = ~df_temp[file].isnull()
+
+            mask2 = ~df_temp[rep2file].isnull()
+            print('non-null features in blank rep 1: %s' %(len(mask1) - len(mask1[mask1 == False])))
+            print('non-null features in blank rep 2: %s' %(len(mask2) - len(mask1[mask2 == False])))
+
+            print('null features in blank rep 1: %s' %len(mask1[mask1 == False]))
+            print('null features in blank rep 2: %s' %len(mask2[mask2 == False]))
+            df2 = df_temp[mask1]
+
+            df4 = df2[mask2]
+
+            print('features in both reps: %s' %len(df4))
+
+            av_col = file.split('.')[0][0:-2]+'av'
+
+            df4[av_col] = (df4[file] + df4[rep2file]) / 2
+
+            breplist.append(df4)
+
+    combo = replist + breplist
+
+    return pd.concat(combo,ignore_index=True)
+
+
+def repCombine_slough_1(df):
+    
+
+    '''        if '_01.raw' in file:
+
+            rep2file = file.split('.')[0][0:-2]+'02.raw'
+
+            print(len(df))
+            df2 = df[(~df[file].isnull()) & (~df[rep2file].isnull())]
+            print(len(df2))
+            df2['Rep Averaged Peak Height'] = (df2[file] + df2[rep2file]) / 2'''
+    df['mf_t'] = df['Molecular Formula'] + '-time_'+df['Time'].map(str)
+    df['Rep'].unique()
+
+    replist = [df[df['Rep']==rep].copy() for rep in df['Rep'].unique()]
+
+    rep1_df, rep2_df = replist
+
+    rep1_df = rep1_df.sort_values(by=['Molecular Formula'],ascending=True)
+    rep2_df = rep2_df.sort_values(by=['Molecular Formula'],ascending=True)
+    t1= rep1_df['Molecular Formula']
+    t2= rep2_df['Molecular Formula']
+
+
+    shared_features = [mf for mf in df['Molecular Formula'] if (mf in t1) & (mf in t2)]
+    print('HEREE')
+    print(len(shared_features))
+
+    df2 = df[df['mf_t'].isin(shared_features)]
+
+    print(len(df2))
+
+    df2 = df2.sort_values(by=['m/z Error (ppm)'],ascending=True)
+    
+    df2 = df2.drop_duplicates(subset=['mf_t'])
+
+    df2 = df2.set_index(['mf_t'],drop=False)
+
+    print(len(df2))
+
+    df2 = df2.rename(columns={'Peak Height':'Average Peak Height'})
+
+    for rep_df, i in zip(replist, range(len(replist))):
+
+        temp = rep_df[rep_df['mf_t'].isin(shared_features)]
+
+        temp = temp.rename(columns={'Peak Height':'Peak Height, Rep '+str(i+1)})
+
+        temp=temp.set_index(['mf_t'],drop=False)
+        
+        df2=df2.join(temp['Peak Height, Rep '+str(i+1)])
+
+    df2['Average Peak Height'] = (df2['Peak Height, Rep 1'] + df2['Peak Height, Rep 2']) / 2
+
+    return df2
+
+
 def normMS(df,fulldf):
 
     max_i = max(fulldf['Peak Height'].values)
