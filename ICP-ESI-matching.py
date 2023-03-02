@@ -24,6 +24,20 @@ from corems.encapsulation.constant import Atoms
 from corems.mass_spectrum.calc.Calibration import MzDomainCalibration
 import corems.lc_icpms_ftms.calc.lc_icrms_helpers as lcmsfns
 
+"""
+Author:     Christian Dewey
+Run on:     3 Mar 23
+
+CoreMS run script for correlating ICPMS, ESIMS data
+
+    Dataset:        wastewater_SE_RC_ENV
+
+    Instruments:    Keck iCAP RQ, Keck IQ-X
+
+    Analysis date:  28 Feb 23 (IQ-X); 23 Feb 23 (iCAP) 
+
+    Analysis notes: attempting to identify I features 
+"""
 
 def plotICPMS(icp_data_file = None, elements = ['115In'], offset = 0, ax = None):
     # offset in seconds, required shift of ICPMS data to align with ESIMS data, based on b12 peak 
@@ -277,6 +291,7 @@ def setAssingmentParams():
     MSParameters.molecular_search.usedAtoms['P'] = (0,4)
     MSParameters.molecular_search.usedAtoms['Cl'] = (0,4)
     MSParameters.molecular_search.usedAtoms['I'] = (0,4)
+    MSParameters.molecular_search.usedAtoms['Br'] = (0,4)
 
 
 
@@ -285,44 +300,36 @@ if __name__ == '__main__':
     startdt = datetime.now()
     start = time.time()  #for duration
    
-    drive_dir = '/Users/christiandewey/Library/CloudStorage/GoogleDrive-christian.w.dewey@gmail.com/My Drive/manuscripts/2023_Dewey-Boiteau-etal-ESI-ICP-align/data/'
+    drive_dir = '/Volumes/Samsung_T5/ESI-ICP-MS/wastewater-iodine/'
     svdir=drive_dir+'mf_assignments/'
     
     mzref = "/Users/christiandewey/CoreMS/db/Hawkes_neg.ref"
     
     heteroAtom = '127I'
 
-    offset =-38 #seconds; seawater
+    offset = 7.4 # ICPMS time (s) + offset (s) = ESI time (s)
 
-    ### 1000 m depth
+    esifile_name = 'LN_20230227_SE_RC_ENV1_NEG_17.raw'
     data_dir = drive_dir
-    esifile = data_dir+'raw_thermo_files/220822_CTD27_1000m2.raw'
+    esifile = data_dir+esifile_name
     esiparser = rawFileReader.ImportMassSpectraThermoMSFileReader(esifile)
-    icpmsfile = data_dir + 'icpms/CTD27_1000m.csv'
-    results_fname='iulia-iodine_001.csv'
+    icpmsfile = data_dir + 'LN_20230223_SE_ENV1.csv'
+    results_fname='LN_230301_SE_ENV1_001.csv'
 
-    '''
-    ### load data, 600 m depth
-    data_dir = drive_dir
-    esifile = data_dir+'raw_thermo_files/220822_CTD27_600m2.raw'
-    esiparser = rawFileReader.ImportMassSpectraThermoMSFileReader(esifile)
-    icpmsfile = data_dir + 'icpms/CTD27_600m.csv
-    results_fname='assignments_600m2_001.csv'
-    '''
       
-    '''### plot offset ICPMS data and select peak for matching 
+    ### plot offset ICPMS data and select peak for matching 
     fig, ax = plt.subplots()
     global coords
     coords = []
     cid = fig.canvas.mpl_connect('button_press_event', mouse_event)
     ax = plotICPMS(icpmsfile,['127I', '59Co'], offset, ax)
-    plt.show()'''
+    plt.show()
 
     
     ### subset ICP data 
-    #trange = [coords[0][0], coords[1][0]]
+    trange = [coords[0][0], coords[1][0]]
 
-    trange = [43, 47]
+    #trange = [43, 47]
 
 
     icpsub = subset_icpdata(icp_data_file=icpmsfile, heteroAtom='127I', timerange=trange, offset = offset)
@@ -340,7 +347,7 @@ if __name__ == '__main__':
     all_results = pd.read_csv(svdir+results_fname)
     print(np.shape(all_results))
 
-    assignments = all_results[all_results['file'] == '220822_CTD27_1000m2.raw'].copy()
+    assignments = all_results[all_results['file'] == esifile_name].copy()
 
     print(np.shape(assignments))
 

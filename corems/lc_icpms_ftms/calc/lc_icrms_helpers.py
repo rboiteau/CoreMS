@@ -688,6 +688,99 @@ def repCombine(df):
 
     return df
 
+def repCombine_spring(df):
+    
+    orig = df.copy()
+
+    mask = ~df['file'].str.contains('qh2o', case=False, na=False)
+    
+    df=df[mask]
+    print('\n')
+
+    replist = []
+    for file in df['file'].unique():
+        
+        if 'rep2' not in file:
+
+            if '.raw' in file:
+
+                rep2file = file.split('.')[0]+'_rep2.raw'
+
+            else:
+
+                rep2file = file + '_rep2'
+
+            print('\n')
+            print(file)
+            print(rep2file)
+
+            df_temp = df[(df['file'] == file) | (df['file'] == rep2file)]
+            print('\n%s total unique features (including features unique to ind. reps)' %len(df_temp))
+            mask1 = ~df_temp[file].isnull()
+            mask2 = ~df_temp[rep2file].isnull()
+            print('non-null features in rep 1: %s' %(len(mask1) - len(mask1[mask1 == False])))
+            print('non-null features in rep 2: %s' %(len(mask2) - len(mask1[mask2 == False])))
+
+            print('null features in rep 1: %s' %len(mask1[mask1 == False]))
+            print('null features in rep 2: %s' %len(mask2[mask2 == False]))
+            df2 = df_temp[mask1]
+
+            df3 = df2[mask2]
+            print('features in both reps: %s' %len(df3))
+
+            av_col = file.split('.')[0][0:-2]+'av'
+
+            df3[av_col] = (df3[file] + df3[rep2file]) / 2
+
+            replist.append(df3)
+
+    df = orig
+    mask = df['file'].str.contains('qh2o', case=False, na=False)
+    df=df[mask]
+    print('\n')
+    breplist = []
+    for file in df['file'].unique():
+        
+        if 'rep2' not in file:
+
+            if '.raw' in file:
+
+                rep2file = file.split('.')[0]+'_rep2.raw'
+
+            else:
+
+                rep2file = file + '_rep2'
+            print('\n')
+            print(file)
+            print(rep2file)
+
+            df_temp = df[(df['file'] == file) | (df['file'] == rep2file)]
+            print('\n%s total unique features (including features unique to ind. reps)' %len(df_temp))
+
+            mask1 = ~df_temp[file].isnull()
+
+            mask2 = ~df_temp[rep2file].isnull()
+            print('non-null features in blank rep 1: %s' %(len(mask1) - len(mask1[mask1 == False])))
+            print('non-null features in blank rep 2: %s' %(len(mask2) - len(mask1[mask2 == False])))
+
+            print('null features in blank rep 1: %s' %len(mask1[mask1 == False]))
+            print('null features in blank rep 2: %s' %len(mask2[mask2 == False]))
+            df2 = df_temp[mask1]
+
+            df4 = df2[mask2]
+
+            print('features in both reps: %s' %len(df4))
+
+            av_col = file.split('.')[0][0:-2]+'av'
+
+            df4[av_col] = (df4[file] + df4[rep2file]) / 2
+
+            breplist.append(df4)
+
+    combo = replist + breplist
+
+    return pd.concat(combo,ignore_index=True)
+
 def repCombine_slough(df):
     
     orig = df.copy()
