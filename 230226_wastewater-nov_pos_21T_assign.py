@@ -143,7 +143,7 @@ if __name__ == '__main__':
     
 
 
-    data_dir = '/Volumes/Samsung_T5/NHMFL/2023_January_Christian/monoisotopic/neg/'
+    data_dir = '/home/dewey/Rawfiles/'
     #mzref = "/Users/christiandewey/CoreMS/tests/tests_data/ftms/nom_pos.ref"
     mzref = "/home/dewey/CoreMS/tests/tests_data/ftms/nom_pos.ref"
     fname = '230226_wastewater-nov_pos_21TNHMFL_001.csv'

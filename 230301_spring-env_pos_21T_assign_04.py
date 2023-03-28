@@ -22,12 +22,12 @@ import corems.lc_icpms_ftms.calc.lc_icrms_qc_assign as icrms
 import corems.lc_icpms_ftms.calc.lc_icrms_helpers as lcmsfns
 
 """
-CoreMS run script for slough-env samples, collected at NHMFL in Jan 2023
+CoreMS run script for spring-env samples, collected at NHMFL in Nov 2023
 
-Analysis notes: 1500 IT; samples diluted 2-fold; signal appeared low 
+Testing combination of assignment params: 04
 
 Christian Dewey
-26 Feb 23
+1 Mar 23
 """
 
 def printRunTime():
@@ -104,7 +104,7 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
 def setAssingmentParams():
     # set assignment parameters
     MSParameters.mass_spectrum.threshold_method = 'signal_noise'
-    MSParameters.mass_spectrum.s2n_threshold = 2
+    MSParameters.mass_spectrum.s2n_threshold = 3
     MSParameters.ms_peak.peak_min_prominence_percent = 0.001
 
     MSParameters.molecular_search.error_method = 'None'
@@ -129,11 +129,8 @@ def setAssingmentParams():
     MSParameters.molecular_search.usedAtoms['S'] = (0,1)
     MSParameters.molecular_search.usedAtoms['P'] = (0,1)
     MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['K'] = (0,1)
     MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['Co'] = (0,1)
-
+    MSParameters.molecular_search.usedAtoms['K'] = (0,0)
 
 
 
@@ -142,15 +139,13 @@ if __name__ == '__main__':
     startdt = datetime.now()
     
 
-
-    data_dir = '/Volumes/Samsung_T5/NHMFL/2023_January_Christian/monoisotopic/neg/'
-    #mzref = "/Users/christiandewey/CoreMS/tests/tests_data/ftms/nom_pos.ref"
-    mzref = "/home/dewey/CoreMS/tests/tests_data/ftms/nom_pos.ref"
-    fname = '230226_wastewater-nov_pos_21TNHMFL_001.csv'
-
-    interval = 2
-    time_range = [2,26]
-
+    data_dir = '/home/dewey/Rawfiles/spring-env/pos/'
+    fname = '230301_spring-env_pos_21TNHMFL_004.csv'
+    #mzref = "/home/deweyc/CoreMS/db/Hawkes_neg.ref"  # for negative mode 
+    mzref = "/home/dewey/CoreMS/tests/tests_data/ftms/nom_pos.ref"  # for positive mode
+    
+    interval = 3           # window in which scans are averaged
+    time_range = [10,16]    
 
 
 
@@ -166,14 +161,11 @@ if __name__ == '__main__':
     
     i = 1
     for f in f_raw:
-        fstart = time.time()
-        print("n\n%s/%s files" %(i, len(f_raw)))
-        output = assign_formula(esifile = f, times = times, charge = -1, cal_ppm_threshold=(-1,1), refmasslist = mzref)
+        print("\n\n\n%s/%s files" %(i, len(f_raw)))
+        output = assign_formula(esifile = f, times = times, charge = 1, cal_ppm_threshold=(-1,1), refmasslist = mzref)
         output['file'] = f 
         results.append(output)
         i = i + 1
-        min_duration = (time.time() - fstart) / 60
-        print('\nassignments for ' + f + ' took %.2f min to complete' %min_duration)
 
     df = pd.concat(results)
     df.to_csv(data_dir+fname)
@@ -181,6 +173,4 @@ if __name__ == '__main__':
     
     printRunTime()
 
-
-
-
+    

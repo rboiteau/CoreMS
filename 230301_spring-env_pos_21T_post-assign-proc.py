@@ -133,19 +133,20 @@ def blankFileCreate():
 
 if __name__ == '__main__':
 
-    data_dir = '/Users/christiandewey/Library/CloudStorage/GoogleDrive-christian.w.dewey@gmail.com/My Drive/manuscripts/2023_Dewey-Boiteau-etal_mz-windowing/assignments/spring-env/002/'
-    fname = '230301_spring-env_pos_21TNHMFL-Nov-22_002.csv'
+    data_dir = '/home/dewey/Rawfiles/spring-env/'
 
-    heter = ['N', 'Na', 'S', 'P', 'Fe', 'Cu']  # from 2300301_spring-env_pos_21T_assign.py
+    flist = [f for f in os.listdir() if '.csv' in f]
 
-    
+    for fname in flist:
 
-    results = pd.read_csv(data_dir+fname)
+        results = pd.read_csv(data_dir+fname)
 
-    postAssignProcess(heter)
+        heter = ['N', 'Na', 'S', 'P', 'K', 'Cu']  # from 2300301_spring-env_pos_21T_assign.py
 
-    blankFileCreate()
+        postAssignProcess(heter)
 
-    results.to_csv(data_dir+'p'+fname)
+        blankFileCreate()
+
+        results.to_csv(data_dir+'p'+fname)
 
     

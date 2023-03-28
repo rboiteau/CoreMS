@@ -355,15 +355,36 @@ def get_molclass_subset(included_elements, all_elements, all_results):
     tdf = all_results
 
     for e in all_elements:
-        tdf[e].fillna(0, inplace = True)
+
+        try:
+        
+            tdf[e].fillna(0, inplace = True)
+
+        except:
+
+            pass
 
     excluded_elements = [e for e in all_elements if e not in included_elements]
     
     for e in included_elements:
         
-        tdf = tdf[tdf[e]>0]
-        for j in excluded_elements:
-            tdf = tdf[tdf[j]==0]
+        try:
+
+            tdf = tdf[tdf[e]>0]
+
+            for j in excluded_elements:
+
+                try:
+                    
+                    tdf = tdf[tdf[j]==0]
+
+                except:
+
+                    pass
+
+        except:
+            
+            pass
 
     return tdf
 
