@@ -144,6 +144,7 @@ class Assignments:
         self.features_in_full_only['FeatureIn'] ='1000'
         self.features_in_both['FeatureIn'] = '100,1000'
 
+
 def postAssignProcess():
 
     ##add 'Window Size (m/z)', 'm/z window', 'Rep', 'mol_class' columns
@@ -242,9 +243,7 @@ def plotCHO_CHON_mzerror(data_df):
     ax.set_xlim(xmin,xmax)
     ax.set_title('%s features in both' %len(df), size = 8)
 
-
     ax8.axis('off')
-
 
     lbls_art = []
     lbls = ['a','b','c','d','e']
@@ -274,6 +273,310 @@ def plotCHO_CHON_mzerror(data_df):
     plt.savefig(data_dir + 'mz_error_CHO_CHON_' + flbl + '_' + samplename + '.pdf', bbox_extra_artists=(leg,lbla,lblb,lblc,lbld,lble,sttl), bbox_inches='tight')
 
 
+def plotCHOS_CHOP_mzerror(data_df):
+
+    global plttitle, samplename, snl
+
+    df_both = data_df.features_in_both
+    df_full = pd.concat([data_df.features_in_full_only, df_both[df_both['Window Size (m/z)'] == '1000']])
+    df_narrow = pd.concat([data_df.features_in_narrow_only, df_both[df_both['Window Size (m/z)'] == '100']])
+
+    print('%s features in both windows' %len(df_both))
+    print('%s features in full window' %len(df_full))
+    print('%s features in narrow window' %len(df_narrow))
+
+    molclass = ['CHOS', 'CHOP']
+
+    xmin = -0.25
+    xmax = 0.25
+
+    hc = 'mol_class'
+
+    fig, ((ax3,ax4,ax7),(ax5,ax6, ax8)) = plt.subplots(2, 3, figsize = (9,6))
+
+    ax = ax3
+    df = df_full[df_full['mol_class'].isin(molclass)]
+    df = df[df['S/N']>snl]
+    df = df.sort_values(by=['mol_class'])
+    ax = sns.kdeplot(data=df,x='m/z Error (ppm)',hue=hc, ax=ax, legend = False, palette = sns.color_palette('colorblind'))
+    ax.axvline(0, color = 'gray', linestyle = ':')
+    ax.set_xlim(xmin,xmax)
+    ax.set_title('%s features in full' %len(df), size = 8)
+
+    ax = ax5
+    df = df_narrow[df_narrow['mol_class'].isin(molclass)]
+    df = df[df['S/N']>snl]
+    df = df.sort_values(by=['mol_class'])
+    ax = sns.kdeplot(data=df,x='m/z Error (ppm)',hue=hc, ax=ax, legend  = False, palette = sns.color_palette('colorblind'))
+    ax.axvline(0, color = 'gray', linestyle = ':')
+    ax.set_xlim(xmin,xmax)
+    ax.set_xlim(xmin,xmax)
+    ax.set_title('%s features in narrow' %len(df), size = 8)
+
+    ax = ax4
+    df = data_df.features_in_full_only[data_df.features_in_full_only['mol_class'].isin(molclass)]
+    df = df[df['S/N']>snl]
+    df = df.sort_values(by=['mol_class'])
+    ax = sns.kdeplot(data=df,x='m/z Error (ppm)',hue=hc, ax=ax, legend = False, palette = sns.color_palette('colorblind'))
+    ax.axvline(0, color = 'gray', linestyle = ':')
+    ax.set_xlim(xmin,xmax)
+    ax.set_title('%s features unique to full' %len(df), size = 8)
+
+    ax = ax6
+    df = data_df.features_in_narrow_only[data_df.features_in_narrow_only['mol_class'].isin(molclass)]
+    df = df[df['S/N']>snl]
+    df = df.sort_values(by=['mol_class'])
+    ax = sns.kdeplot(data=df,x='m/z Error (ppm)',hue=hc, ax=ax, legend = False, palette = sns.color_palette('colorblind'))
+    ax.axvline(0, color = 'gray', linestyle = ':')
+    ax.set_xlim(xmin,xmax)
+    ax.set_title('%s features unique to narrow' %len(df), size = 8)
+
+    ax = ax7
+    df = df_both[df_both['mol_class'].isin(molclass)]
+    df = df[df['S/N']>snl]
+    df = df.sort_values(by=['mol_class'])
+    ax = sns.kdeplot(data=df,x='m/z Error (ppm)',hue=hc, ax=ax, palette = sns.color_palette('colorblind'))
+    ax.axvline(0, color = 'gray', linestyle = ':')
+    ax.set_xlim(xmin,xmax)
+    ax.set_title('%s features in both' %len(df), size = 8)
+
+    ax8.axis('off')
+
+    lbls_art = []
+    lbls = ['a','b','c','d','e']
+    axs = [ax3,ax4,ax5,ax6, ax7]
+    for lbl, ax in zip(lbls,axs):
+        l = ax.text(-0.15, 1.05,lbl,
+            horizontalalignment='center',
+            verticalalignment='center',
+            transform = ax.transAxes, fontweight='bold', fontsize = 10)
+        lbls_art.append(l)
+
+    legend = ax7.get_legend()
+    handles = legend.legendHandles
+    legend.remove()
+    labels = sorted(molclass)
+    leg = fig.legend(handles, labels, bbox_to_anchor=(0.8, 0.25), loc='center left',frameon=False, borderaxespad=0, title = 'Mol. Class', prop={'size': 8})
+
+    sttl = fig.suptitle(plttitle)
+
+    fig.tight_layout()
+
+    sns.despine()
+    lbla, lblb, lblc, lbld, lble= lbls_art
+    flbl = plttitle.replace(" ","")
+    if "/" in flbl:
+        flbl = flbl.replace("/","")
+    plt.savefig(data_dir + 'mz_error_CHOS_CHOP_' + flbl + '_' + samplename + '.pdf', bbox_extra_artists=(leg,lbla,lblb,lblc,lbld,lble,sttl), bbox_inches='tight')
+
+
+def plotCHONa_CHOK_mzerror(data_df):
+
+    global plttitle, samplename, snl
+
+    df_both = data_df.features_in_both
+    df_full = pd.concat([data_df.features_in_full_only, df_both[df_both['Window Size (m/z)'] == '1000']])
+    df_narrow = pd.concat([data_df.features_in_narrow_only, df_both[df_both['Window Size (m/z)'] == '100']])
+
+    print('%s features in both windows' %len(df_both))
+    print('%s features in full window' %len(df_full))
+    print('%s features in narrow window' %len(df_narrow))
+
+    elements = ['Na', 'K']
+    ecols = ['C0', 'C1']
+    xmin = -0.25
+    xmax = 0.25
+
+    elhue = {e: c for e, c in zip(elements, ecols)}
+
+    fig, ((ax3,ax4,ax7),(ax5,ax6, ax8)) = plt.subplots(2, 3, figsize = (9,6))
+
+    ax = ax3
+
+    for e in elements:
+        df = df_full[df_full[e]>0]
+        df = df[df['S/N']>snl]
+        df = df.sort_values(by=[e])
+        ax = sns.kdeplot(data=df,x='m/z Error (ppm)',color = elhue[e], ax=ax, legend = False, palette = sns.color_palette('colorblind'))
+    ax.axvline(0, color = 'gray', linestyle = ':')
+    ax.set_xlim(xmin,xmax)
+    ax.set_title('%s features in full' %len(df), size = 8)
+
+    ax = ax5
+    for e in elements:
+        df = df_narrow[df_narrow[e]>0]
+        df = df[df['S/N']>snl]
+        df = df.sort_values(by=[e])
+        ax = sns.kdeplot(data=df,x='m/z Error (ppm)',color = elhue[e],ax=ax, legend  = False, palette = sns.color_palette('colorblind'))
+    ax.axvline(0, color = 'gray', linestyle = ':')
+    ax.set_xlim(xmin,xmax)
+    ax.set_xlim(xmin,xmax)
+    ax.set_title('%s features in narrow' %len(df), size = 8)
+
+    ax = ax4
+    for e in elements:
+        df = data_df.features_in_full_only[data_df.features_in_full_only[e]>0]
+        df = df[df['S/N']>snl]
+        df = df.sort_values(by=[e])
+        ax = sns.kdeplot(data=df,x='m/z Error (ppm)', ax=ax, color = elhue[e], legend = False, palette = sns.color_palette('colorblind'))
+    ax.axvline(0, color = 'gray', linestyle = ':')
+    ax.set_xlim(xmin,xmax)
+    ax.set_title('%s features unique to full' %len(df), size = 8)
+
+    ax = ax6
+    for e in elements:
+        df = data_df.features_in_narrow_only[data_df.features_in_narrow_only[e]>0]
+        df = df[df['S/N']>snl]
+        df = df.sort_values(by=[e])
+        ax = sns.kdeplot(data=df,x='m/z Error (ppm)',color = elhue[e], ax=ax, legend = False, palette = sns.color_palette('colorblind'))
+    ax.axvline(0, color = 'gray', linestyle = ':')
+    ax.set_xlim(xmin,xmax)
+    ax.set_title('%s features unique to narrow' %len(df), size = 8)
+
+    ax = ax7
+    for e in elements:
+        df = df_both[df_both[e]>0]
+        df = df[df['S/N']>snl]
+        df = df.sort_values(by=[e])
+        ax = sns.kdeplot(data=df,x='m/z Error (ppm)',color = elhue[e], ax=ax, palette = sns.color_palette('colorblind'))
+    ax.axvline(0, color = 'gray', linestyle = ':')
+    ax.set_xlim(xmin,xmax)
+    ax.set_title('%s features in both' %len(df), size = 8)
+
+    ax8.axis('off')
+
+    lbls_art = []
+    lbls = ['a','b','c','d','e']
+    axs = [ax3,ax4,ax5,ax6, ax7]
+    for lbl, ax in zip(lbls,axs):
+        l = ax.text(-0.15, 1.05,lbl,
+            horizontalalignment='center',
+            verticalalignment='center',
+            transform = ax.transAxes, fontweight='bold', fontsize = 10)
+        lbls_art.append(l)
+
+    '''legend = ax7.get_legend()
+    handles = legend.legendHandles
+    legend.remove()
+    labels = sorted(elements)
+    leg = fig.legend(handles, labels, bbox_to_anchor=(0.8, 0.25), loc='center left',frameon=False, borderaxespad=0, title = 'Mol. Class', prop={'size': 8})
+    '''
+    sttl = fig.suptitle(plttitle)
+
+    fig.tight_layout()
+
+    sns.despine()
+    lbla, lblb, lblc, lbld, lble= lbls_art
+    flbl = plttitle.replace(" ","")
+    if "/" in flbl:
+        flbl = flbl.replace("/","")
+    plt.savefig(data_dir + 'mz_error_CHONa_CHOK_' + flbl + '_' + samplename + '.pdf', bbox_extra_artists=(lbla,lblb,lblc,lbld,lble,sttl), bbox_inches='tight')
+
+
+def plotCHOCu_CHOFe_mzerror(data_df):
+
+    global plttitle, samplename, snl
+
+    df_both = data_df.features_in_both
+    df_full = pd.concat([data_df.features_in_full_only, df_both[df_both['Window Size (m/z)'] == '1000']])
+    df_narrow = pd.concat([data_df.features_in_narrow_only, df_both[df_both['Window Size (m/z)'] == '100']])
+
+    print('%s features in both windows' %len(df_both))
+    print('%s features in full window' %len(df_full))
+    print('%s features in narrow window' %len(df_narrow))
+
+    elements = ['Fe']
+    ecols = ['C0', 'C1']
+    xmin = -0.25
+    xmax = 0.25
+
+    elhue = {e: c for e, c in zip(elements, ecols)}
+
+    fig, ((ax3,ax4,ax7),(ax5,ax6, ax8)) = plt.subplots(2, 3, figsize = (9,6))
+
+    ax = ax3
+
+    for e in elements:
+        df = df_full[df_full[e]>0]
+        df = df[df['S/N']>snl]
+        df = df.sort_values(by=[e])
+        ax = sns.kdeplot(data=df,x='m/z Error (ppm)',color = elhue[e], ax=ax, legend = False, palette = sns.color_palette('colorblind'))
+    ax.axvline(0, color = 'gray', linestyle = ':')
+    ax.set_xlim(xmin,xmax)
+    ax.set_title('%s features in full' %len(df), size = 8)
+
+    ax = ax5
+    for e in elements:
+        df = df_narrow[df_narrow[e]>0]
+        df = df[df['S/N']>snl]
+        df = df.sort_values(by=[e])
+        ax = sns.kdeplot(data=df,x='m/z Error (ppm)',color = elhue[e],ax=ax, legend  = False, palette = sns.color_palette('colorblind'))
+    ax.axvline(0, color = 'gray', linestyle = ':')
+    ax.set_xlim(xmin,xmax)
+    ax.set_xlim(xmin,xmax)
+    ax.set_title('%s features in narrow' %len(df), size = 8)
+
+    ax = ax4
+    for e in elements:
+        df = data_df.features_in_full_only[data_df.features_in_full_only[e]>0]
+        df = df[df['S/N']>snl]
+        df = df.sort_values(by=[e])
+        ax = sns.kdeplot(data=df,x='m/z Error (ppm)', ax=ax, color = elhue[e], legend = False, palette = sns.color_palette('colorblind'))
+    ax.axvline(0, color = 'gray', linestyle = ':')
+    ax.set_xlim(xmin,xmax)
+    ax.set_title('%s features unique to full' %len(df), size = 8)
+
+    ax = ax6
+    for e in elements:
+        df = data_df.features_in_narrow_only[data_df.features_in_narrow_only[e]>0]
+        df = df[df['S/N']>snl]
+        df = df.sort_values(by=[e])
+        ax = sns.kdeplot(data=df,x='m/z Error (ppm)',color = elhue[e], ax=ax, legend = False, palette = sns.color_palette('colorblind'))
+    ax.axvline(0, color = 'gray', linestyle = ':')
+    ax.set_xlim(xmin,xmax)
+    ax.set_title('%s features unique to narrow' %len(df), size = 8)
+
+    ax = ax7
+    for e in elements:
+        df = df_both[df_both[e]>0]
+        df = df[df['S/N']>snl]
+        df = df.sort_values(by=[e])
+        ax = sns.kdeplot(data=df,x='m/z Error (ppm)',color = elhue[e], ax=ax, palette = sns.color_palette('colorblind'))
+    ax.axvline(0, color = 'gray', linestyle = ':')
+    ax.set_xlim(xmin,xmax)
+    ax.set_title('%s features in both' %len(df), size = 8)
+
+    ax8.axis('off')
+
+    lbls_art = []
+    lbls = ['a','b','c','d','e']
+    axs = [ax3,ax4,ax5,ax6, ax7]
+    for lbl, ax in zip(lbls,axs):
+        l = ax.text(-0.15, 1.05,lbl,
+            horizontalalignment='center',
+            verticalalignment='center',
+            transform = ax.transAxes, fontweight='bold', fontsize = 10)
+        lbls_art.append(l)
+
+    '''legend = ax7.get_legend()
+    handles = legend.legendHandles
+    legend.remove()
+    labels = sorted(elements)
+    leg = fig.legend(handles, labels, bbox_to_anchor=(0.8, 0.25), loc='center left',frameon=False, borderaxespad=0, title = 'Mol. Class', prop={'size': 8})
+    '''
+    sttl = fig.suptitle(plttitle)
+
+    fig.tight_layout()
+
+    sns.despine()
+    lbla, lblb, lblc, lbld, lble= lbls_art
+    flbl = plttitle.replace(" ","")
+    if "/" in flbl:
+        flbl = flbl.replace("/","")
+    plt.savefig(data_dir + 'mz_error_CHOCu_CHOFe_' + flbl + '_' + samplename + '.pdf', bbox_extra_artists=(lbla,lblb,lblc,lbld,lble,sttl), bbox_inches='tight')
+
+
+
 if __name__ == '__main__':
 
     data_dir = '/home/dewey/Rawfiles/spring-env/pos/test/'
@@ -281,13 +584,17 @@ if __name__ == '__main__':
     fname = '230328_spring-env_pos.csv'
     heter = ['N', 'Na', 'S', 'P', 'K', 'Cu','Fe'] 
     results = pd.read_csv(data_dir+fname)
-    plttitle = 'S/N > 4'
-    snl = 4
+    plttitle = 'S/N > 3'
+    snl = 3
 
     df = loadData()
 
-    plotCHO_CHON_mzerror(df)
+    #plotCHO_CHON_mzerror(df)
 
+    #plotCHOS_CHOP_mzerror(df)
 
+    plotCHONa_CHOK_mzerror(df)
+
+    plotCHOCu_CHOFe_mzerror(df)
 
     
