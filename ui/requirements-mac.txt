@@ -1,8 +1,0 @@
-matplotlib
-numpy
-PyQt5
-pyqtgraph
-scikit-learn
-seaborn
-
-
