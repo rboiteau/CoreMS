@@ -23,8 +23,6 @@ import corems.lc_icpms_ftms.calc.align_icpms_esi_fns as algnfns
 """
 CoreMS run script for spring-env samples, collected at NHMFL in Nov 2023
 
-Testing SN > 5, calorder = 1
-
 Christian Dewey
 28 Mar 23
 """
@@ -485,7 +483,7 @@ def plotCHOCu_CHOFe_mzerror(data_df):
     print('%s features in full window' %len(df_full))
     print('%s features in narrow window' %len(df_narrow))
 
-    elements = ['Fe']
+    elements = ['Cu', 'Fe']
     ecols = ['C0', 'C1']
     xmin = -0.25
     xmax = 0.25
@@ -579,17 +577,17 @@ def plotCHOCu_CHOFe_mzerror(data_df):
 
 if __name__ == '__main__':
 
-    data_dir = '/home/dewey/Rawfiles/spring-env/pos/test/'
+    data_dir = '/Users/christiandewey/Rawfiles/spring-env/pos/test/'
     samplename = 'spring-env-10-14min'
-    fname = '230328_spring-env_pos.csv'
-    heter = ['N', 'Na', 'S', 'P', 'K', 'Cu','Fe'] 
+    fname = '230329_spring-env_pos_t.csv'
+    heter = ['N', 'Na',  'K', 'Cu', 'Fe']  #'S', 'P',,'Fe'
     results = pd.read_csv(data_dir+fname)
     plttitle = 'S/N > 3'
-    snl = 3
+    snl = 2
 
     df = loadData()
 
-    #plotCHO_CHON_mzerror(df)
+    plotCHO_CHON_mzerror(df)
 
     #plotCHOS_CHOP_mzerror(df)
 

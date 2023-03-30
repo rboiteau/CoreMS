@@ -70,8 +70,6 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
         mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)    
         mass_spectrum.molecular_search_settings.ion_charge = charge
 
-        setAssingmentParams_nrw()
-
         if refmasslist:
             mass_spectrum.settings.min_calib_ppm_error = 10
             mass_spectrum.settings.max_calib_ppm_error = -10
@@ -86,17 +84,18 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
             pmzrfs.to_csv('cal_mzs_%s.csv' %esifile.split('.')[0])
             calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=corder)
 
+        setAssingmentParams_1()
 
         SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
 
-        mass_spectrum.percentile_assigned(report_error=True)
-        print('\n')
-        setAssingmentParams_wd()
+        
+        setAssingmentParams_2()
 
         SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
 
-        mass_spectrum.percentile_assigned(report_error=True)
 
+        mass_spectrum.percentile_assigned(report_error=True)
+        
         assignments=mass_spectrum.to_dataframe()
 
         assignments['Time']=timestart
@@ -109,7 +108,7 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
 
 
 
-def setAssingmentParams_wd():
+def setAssingmentParams_2():
     # set assignment parameters
     MSParameters.mass_spectrum.threshold_method = 'signal_noise'
     MSParameters.mass_spectrum.s2n_threshold = 3
@@ -133,21 +132,21 @@ def setAssingmentParams_wd():
     MSParameters.molecular_search.usedAtoms['H'] = (4,100)
     MSParameters.molecular_search.usedAtoms['O'] = (0,20)
     MSParameters.molecular_search.usedAtoms['N'] = (0,2)
-    MSParameters.molecular_search.usedAtoms['S'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['P'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['K'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['S'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['P'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Na'] = (0,0)
+    MSParameters.molecular_search.usedAtoms['Cu'] = (0,0)
+    MSParameters.molecular_search.usedAtoms['K'] = (0,0)
+    MSParameters.molecular_search.usedAtoms['Fe'] = (0,0)
 
-def setAssingmentParams_nrw():
+def setAssingmentParams_1():
     # set assignment parameters
     MSParameters.mass_spectrum.threshold_method = 'signal_noise'
     MSParameters.mass_spectrum.s2n_threshold = 3
 
     MSParameters.molecular_search.error_method = 'None'
-    MSParameters.molecular_search.min_ppm_error = -0.1
-    MSParameters.molecular_search.max_ppm_error = 0.1
+    MSParameters.molecular_search.min_ppm_error = -0.25
+    MSParameters.molecular_search.max_ppm_error = 0.25
 
     MSParameters.molecular_search.isProtonated = True
     MSParameters.molecular_search.isRadical = False
@@ -162,14 +161,14 @@ def setAssingmentParams_nrw():
 
     MSParameters.molecular_search.usedAtoms['C'] = (1,50)
     MSParameters.molecular_search.usedAtoms['H'] = (4,100)
-    MSParameters.molecular_search.usedAtoms['O'] = (1,20)
-    MSParameters.molecular_search.usedAtoms['N'] = (3,4)
-    MSParameters.molecular_search.usedAtoms['S'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['O'] = (0,20)
+    MSParameters.molecular_search.usedAtoms['N'] = (3,10)
+    MSParameters.molecular_search.usedAtoms['S'] = (0,0)
     MSParameters.molecular_search.usedAtoms['P'] = (0,0)
     MSParameters.molecular_search.usedAtoms['Na'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Cu'] = (1,1)
     MSParameters.molecular_search.usedAtoms['K'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Fe'] = (0,0)
 
 if __name__ == '__main__':
     start = time.time()  #for duration
@@ -177,8 +176,8 @@ if __name__ == '__main__':
     
 
     #data_dir = '/home/dewey/Rawfiles/spring-env/pos/test/'
-    data_dir = '/Users/christiandewey/Rawfiles/spring-env/pos/test/'
-    fname = '230329_spring-env_pos_t.csv'
+    data_dir = '/Users/christiandewey/Rawfiles/spring-env/pos/test/test2/'
+    fname = '230330_spring-env_pos_1.csv'
     #mzref = "/home/deweyc/CoreMS/db/Hawkes_neg.ref"  # for negative mode 
     #mzref = "/home/dewey/CoreMS/tests/tests_data/ftms/nom_pos.ref"  # for positive mode
     mzref = "/Users/christiandewey/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
