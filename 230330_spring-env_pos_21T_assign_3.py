@@ -176,8 +176,9 @@ if __name__ == '__main__':
     
 
     #data_dir = '/home/dewey/Rawfiles/spring-env/pos/test/'
-    data_dir = '/Users/christiandewey/Rawfiles/spring-env/pos/test/test2/'
-    fname = '230330_spring-env_pos_3.csv'
+    #data_dir = '/Users/christiandewey/Rawfiles/spring-env/pos/test/test2/'
+    data_dir = '/Users/christiandewey/Library/CloudStorage/Box-Box/Boiteau Lab/Mass Spec Data/21T at NHMFL/2022-10 Nicole & Christian/Christian/test/'
+    fname = '230330_spring-env_pos_1.csv'
     #mzref = "/home/deweyc/CoreMS/db/Hawkes_neg.ref"  # for negative mode 
     #mzref = "/home/dewey/CoreMS/tests/tests_data/ftms/nom_pos.ref"  # for positive mode
     mzref = "/Users/christiandewey/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
