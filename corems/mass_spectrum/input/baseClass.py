@@ -11,10 +11,12 @@ import chardet
 from pandas.core.frame import DataFrame
 from s3path import S3Path
 
+from bs4 import BeautifulSoup
+
 from corems.encapsulation.factory.processingSetting import DataInputSetting
 from corems.encapsulation.factory.parameters import default_parameters
 from corems.encapsulation.constant import Labels
-from corems.encapsulation.input.parameter_from_json import load_and_set_parameters_class, load_and_set_parameters_ms
+from corems.encapsulation.input.parameter_from_json import load_and_set_parameters_class, load_and_set_parameters_ms, load_and_set_toml_parameters_class
 
 class MassListBaseClass:
     '''
@@ -90,6 +92,10 @@ class MassListBaseClass:
     @parameters.setter
     def parameters(self, instance_DataInputSetting):
         self._parameters = instance_DataInputSetting
+    
+    def set_parameter_from_toml(self, parameters_path):
+        self._parameters = load_and_set_toml_parameters_class(
+            'DataInput', self.parameters, parameters_path=parameters_path)
 
     def set_parameter_from_json(self, parameters_path):
         self._parameters = load_and_set_parameters_class(
@@ -128,6 +134,11 @@ class MassListBaseClass:
             self.data_type = 'txt'
             self.delimiter = '\t'
 
+        elif self.file_location.suffix == '.tsv':
+
+            self.data_type = 'txt'
+            self.delimiter = '\t'
+
         elif self.file_location.suffix == '.xlsx':
 
             self.data_type = 'excel'
@@ -146,6 +157,11 @@ class MassListBaseClass:
             self.data_type = 'pks'
             self.delimiter = '          '
             self.header_lines = 9
+        
+        elif self.file_location.suffix == '.xml':
+            self.data_type = 'xml'
+            #self.delimiter = None
+            #self.header_lines = None
             
         else:
             raise TypeError(
@@ -197,6 +213,10 @@ class MassListBaseClass:
         elif self.data_type == 'excel':
 
             dataframe = read_excel(data)
+
+        elif self.data_type == 'xml':
+
+            dataframe = self.read_xml_peaks(data)
 
         else:
 
@@ -314,3 +334,70 @@ class MassListBaseClass:
 
             raise Exception(
                 "Please make sure to include the columns %s" % ', '.join(not_found))
+
+    def read_xml_peaks(self, data):
+        '''
+        Function to parse Bruker .xml files 
+        '''
+        with open(data, "r") as file:
+            content = file.readlines()
+            content = "".join(content)
+            bs_content = BeautifulSoup(content, features='xml')
+        peaks_xml = bs_content.find_all("pk")   
+
+        # initialise lists of the peak variables
+        areas = []
+        fwhms = []
+        intensities = []
+        mzs = []
+        res = []
+        sn = []
+        #iterate through the peaks appending to each list
+        for peak in peaks_xml:
+            areas.append(float(peak['a']))
+            fwhms.append(float(peak['fwhm']))
+            intensities.append(float(peak['i']))
+            mzs.append(float(peak['mz']))
+            res.append(float(peak['res']))
+            sn.append(float(peak['sn']))
+
+        #Compile pandas dataframe of these values    
+        names=["m/z", "I", "Resolving Power", "Area", 'S/N','fwhm']    
+        df = DataFrame(columns = names,dtype=float)
+        df['m/z'] = mzs
+        df['I'] = intensities
+        df['Resolving Power'] = mzs
+        df['Area'] = areas
+        df['S/N'] = sn
+        df['fwhm'] = fwhms
+        return df
+
+    def get_xml_polarity(self):
+        '''
+        '''
+        # Check its an actual xml
+        if not self.data_type or not self.delimiter:
+
+            self.set_data_type()
+
+        if isinstance(self.file_location, S3Path):
+            # data = self.file_location.open('rb').read()
+            data = BytesIO(self.file_location.open('rb').read())
+        
+        else:
+            data = self.file_location
+
+        if self.data_type != 'xml':
+            raise Exception ("This function is only for XML peaklists (Bruker format)")
+
+        with open(data, "r") as file:
+            content = file.readlines()
+            content = "".join(content)
+            bs_content = BeautifulSoup(content, features='xml')
+        polarity = bs_content.find_all("ms_spectrum")[0]['polarity']
+        if polarity == '-':
+            return -1
+        elif polarity == '+':
+            return +1
+        else:
+            raise Exception("Polarity %s unhandled" % polarity)

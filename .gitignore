@@ -1,10 +1,12 @@
 venv/ 
+test_env/ 
 venvwsl/
 tmp_data/ 
 .pyc  
 .pyo
 *.hdf5
 *.d  
+tmp_data/
 *.so  
 *.pkl  
 *.ems

@@ -10,7 +10,7 @@ import tqdm
 
 
 from corems import chunks, timeit
-from corems.encapsulation.constant import Atoms, Labels
+from corems.encapsulation.constant import Labels
 from corems.molecular_formula.factory.MolecularFormulaFactory import LCMSLibRefMolecularFormula, MolecularFormula
 from corems.ms_peak.factory.MSPeakClasses import _MSPeak
 from corems.molecular_id.factory.molecularSQL import MolForm_SQL
@@ -161,7 +161,7 @@ class SearchMolecularFormulas:
 
         def run():
 
-            for classe_chunk in chunks(classes, 300): 
+            for classe_chunk in chunks(classes, self.mass_spectrum_obj.molecular_search_settings.db_chunk_size): 
 
                 classes_str_list = [class_tuple[0] for class_tuple in classe_chunk]
 

@@ -8,7 +8,7 @@ from corems.mass_spectrum.factory.MassSpectrumClasses import MassSpecfromFreq
 from corems.transient.calc.TransientCalc import TransientCalculations
 import matplotlib.pyplot as plt
 from copy import deepcopy
-from corems.encapsulation.input.parameter_from_json import load_and_set_parameters_class
+from corems.encapsulation.input.parameter_from_json import load_and_set_parameters_class, load_and_set_toml_parameters_class
 
 
 __author__ = "Yuri E. Corilo"
@@ -106,6 +106,9 @@ class Transient(TransientCalculations):
     def parameters(self, instance_TransientParameters):
         self._parameters = instance_TransientParameters
     
+    def set_parameter_from_toml(self, parameters_path):
+        self._parameters = load_and_set_toml_parameters_class('Transient', self._parameters, parameters_path=parameters_path)
+      
     def set_parameter_from_json(self, parameters_path):
         self._parameters = load_and_set_parameters_class('Transient', self._parameters, parameters_path=parameters_path)
     
@@ -143,7 +146,7 @@ class Transient(TransientCalculations):
         # return frequency_domain, magnitude
 
     def get_mass_spectrum(self, auto_process=True, plot_result=True,
-                         keep_profile=True, auto_noise=True, noise_bayes_est=False) -> MassSpecfromFreq:
+                         keep_profile=True, noise_bayes_est=False) -> MassSpecfromFreq:
 
         #plt.figure(figsize=(13, 8))
 
@@ -160,7 +163,7 @@ class Transient(TransientCalculations):
         return MassSpecfromFreq(
             frequency_domain, magnitude, self.d_params, 
             auto_process=auto_process, keep_profile=keep_profile,
-            auto_noise=auto_noise, noise_bayes_est=noise_bayes_est)
+            noise_bayes_est=noise_bayes_est)
 
     @property
     def filename(self):

@@ -39,7 +39,9 @@ from ThermoFisher.CommonCore.RawFileReader import RawFileReaderAdapter
 from ThermoFisher.CommonCore.Data import ToleranceUnits, Extensions
 from ThermoFisher.CommonCore.Data.Business import ChromatogramTraceSettings, TraceType, MassOptions
 from ThermoFisher.CommonCore.Data.Business import ChromatogramSignal, Range
+from ThermoFisher.CommonCore.Data.Business import Device
 from ThermoFisher.CommonCore.Data.Interfaces import IChromatogramSettings
+from ThermoFisher.CommonCore.Data.Business import MassOptions, FileHeaderReaderFactory
 from ThermoFisher.CommonCore.Data.FilterEnums import MSOrderType
 from System.Collections.Generic import List
 
@@ -67,9 +69,12 @@ class ThermoBaseClass():
 
         self.iRawDataPlus = RawFileReaderAdapter.FileFactory(str(file_path))
 
-        self.res = self.iRawDataPlus.SelectInstrument(0, 1)
+        self.res = self.iRawDataPlus.SelectInstrument(Device.MS, 1)
         
         self.file_path = file_location
+        self.iFileHeader = FileHeaderReaderFactory.ReadFile(str(file_path))
+
+        # removing tmp file
 
         self._init_settings()
 
@@ -408,17 +413,8 @@ class ThermoBaseClass():
         else:
             return None, None
 
-    def get_average_mass_spectrum_by_scanlist(self, scans_list: List[int], auto_process: bool = True,
+    def get_average_mass_spectrum_by_scanlist(self, scans_list: List[int], auto_process: bool = True, 
                                               ppm_tolerance: float = 5.0) -> MassSpecProfile:
-
-        '''
-        Averages selected scans mass spectra using Thermo's AverageScans method
-        scans_list: list[int]
-        auto_process: bool
-            If true performs peak picking, and noise threshold calculation after creation of mass spectrum object
-        Returns:
-            MassSpecProfile
-        '''
 
         """
         Averages selected scans mass spectra using Thermo's AverageScans method
@@ -512,6 +508,7 @@ class ThermoBaseClass():
             Type of mass spectrum scan, default for full scan acquisition
          Returns:
             MassSpecProfile
+        # This Function is Broken and/or redundant.
         '''
 
         d_params = self.set_metadata(firstScanNumber=self.start_scan,
@@ -577,6 +574,8 @@ class ThermoBaseClass():
             d_params['polarity'] = self.get_polarity_mode(firstScanNumber)
 
         d_params['analyzer'] = self.iRawDataPlus.GetInstrumentData().Model
+
+        d_params['aquisition_time'] = self.iRawDataPlus.GetInstrumentData().Model
 
         d_params['instrument_label'] = self.iRawDataPlus.GetInstrumentData().Name
 
@@ -859,9 +858,6 @@ class ImportMassSpectraThermoMSFileReader(ThermoBaseClass, LC_Calculations):
             }
 
         return data_dict
-
-   
-
     
     def get_best_scans_idx(self, stdevs=2, method='mean', plot=False):
         '''
@@ -876,8 +872,10 @@ class ImportMassSpectraThermoMSFileReader(ThermoBaseClass, LC_Calculations):
 
         if method == 'median':
             tic_median = tic['TIC'].median()
+
         elif method == 'mean':
             tic_median = tic['TIC'].mean()
+        
         else:
             print('Method ' + str(method) + ' undefined')
 
