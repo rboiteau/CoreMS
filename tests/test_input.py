@@ -40,7 +40,7 @@ def test_import_booster_mass_spectrum_hdf():
         
         booster_reader = ReadHDF_BoosterMassSpectrum(file_path, isCentroid=False)
 
-        mass_spectrum = booster_reader.get_mass_spectrum(auto_process=True, auto_noise=True)
+        mass_spectrum = booster_reader.get_mass_spectrum(auto_process=True)
 
         #mass_spectrum.plot_mz_domain_profile()
         
@@ -54,7 +54,7 @@ def test_import_booster_mass_spectrum_hdf():
         )
 
         assert round(mass_spectrum[0].mz_exp,3) == 220.147
-    
+        
     else:
         
         FileNotFoundError(file_path)
@@ -118,7 +118,7 @@ def test_import_transient():
         #MSParameters.mass_spectrum.threshold_method = 'signal_noise'
         #MSParameters.mass_spectrum.s2n_threshold = 50
 
-        MSParameters.mass_spectrum.threshold_method = 'auto'
+        MSParameters.mass_spectrum.threshold_method = 'log'
         MSParameters.mass_spectrum.noise_threshold_std = 3
 
         MSParameters.ms_peak.peak_min_prominence_percent = 1
@@ -156,7 +156,8 @@ def test_import_corems_hdf5():
 
     file_location = Path.cwd() / "tests/tests_data/ftms/" / "NEG_ESI_SRFA_CoreMS.hdf5"
     
-    #polarity need to be set or read from the file
+    MSParameters.mass_spectrum.threshold_method = 'relative_abundance'
+    MSParameters.mass_spectrum.relative_abundance_threshold = 0.1
     
     #load any type of mass list file, change the delimeter to read another type of file, i.e : "," for csv, "\t" for tabulated mass list, etc
     mass_list_reader = ReadCoreMSHDF_MassSpectrum(file_location)
@@ -190,7 +191,8 @@ def test_import_corems_mass_list():
 
     file_location = Path.cwd() / "tests/tests_data/ftms/ESI_NEG_SRFA_COREMS.csv"
     
-    #polarity need to be set or read from the file
+    MSParameters.mass_spectrum.threshold_method = 'relative_abundance'
+    MSParameters.mass_spectrum.relative_abundance_threshold = 0.1
     
     #load any type of mass list file, change the delimeter to read another type of file, i.e : "," for csv, "\t" for tabulated mass list, etc
     mass_list_reader = ReadCoremsMasslist(file_location,  analyzer='ICR', instrument_label='12T')
@@ -259,6 +261,9 @@ def test_import_maglab_pks():
     #MSParameters.mass_spectrum.min_calib_ppm_error = 3
     #MSParameters.mass_spectrum.max_calib_ppm_error = 4
 
+    MSParameters.mass_spectrum.threshold_method = 'relative_abundance'
+    MSParameters.mass_spectrum.relative_abundance_threshold = 0.1
+
     mass_spectrum = mass_list_reader.get_mass_spectrum(polarity)
 
     #MzDomainCalibration(mass_spectrum, ref_file_location).run()
@@ -276,14 +281,14 @@ def test_import_mass_list():
     #polarity need to be set or read from the file
     polarity = -1
 
-    #MSParameters.mass_spectrum.threshold_method = 'relative_abundance'
-    #MSParameters.mass_spectrum.relative_abundance_threshold = 30
+    MSParameters.mass_spectrum.threshold_method = 'relative_abundance'
+    MSParameters.mass_spectrum.relative_abundance_threshold = 1
 
     # MSParameters.mass_spectrum.threshold_method = 'signal_noise'
     # MSParameters.mass_spectrum.s2n_threshold = 100
 
-    MSParameters.mass_spectrum.threshold_method = 'auto'
-    MSParameters.mass_spectrum.noise_threshold_std = 32
+    #MSParameters.mass_spectrum.threshold_method = 'log'
+    #MSParameters.mass_spectrum.noise_threshold_std = 32
 
     #load any type of mass list file, change the delimeter to read another type of file, i.e : "," for csv, "\t" for tabulated mass list, etc
     mass_list_reader = ReadMassList(file_location)
@@ -320,8 +325,8 @@ if __name__ == '__main__':
     #test_import_thermo_profile_mass_list()
     # test_import_transient()
     #test_import_corems_hdf5()
-    test_import_corems_mass_list()
+    #test_import_corems_mass_list()
     #test_import_mass_list()
-    #test_import_maglab_pks()
+    test_import_maglab_pks()
     #test_andi_netcdf_gcms()
 

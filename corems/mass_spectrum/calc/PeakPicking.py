@@ -4,8 +4,7 @@
 '''
 
 from logging import warn
-from numpy import hstack, inf, isnan, poly1d, polyfit, where, array
-from numpy import float as npfloat
+from numpy import hstack, inf, isnan, polyfit, where, array
 from corems.encapsulation.constant import Labels
 from corems.mass_spectra.calc import SignalProcessing as sp
 
@@ -268,11 +267,11 @@ class PeakPicking:
         
     def get_threshold(self, intes):
         
-        intes = array(intes).astype(npfloat)
+        intes = array(intes).astype(float)
        
         threshold_method = self.settings.threshold_method
 
-        if threshold_method == 'auto':
+        if threshold_method == 'minima':
             
             if self.is_centroid:
                 warn("Auto threshould is disabled for centroid data, returning 0")
@@ -293,6 +292,17 @@ class PeakPicking:
             abundance_threshold = self.settings.relative_abundance_threshold
             factor = intes.max()/100
 
+        elif threshold_method == "absolute_abundance":
+
+            abundance_threshold = self.settings.absolute_abundance_threshold
+            factor = 1
+
+        elif threshold_method == 'log':
+            if self.is_centroid:
+                raise  Exception("log noise Not tested for centroid data")
+            abundance_threshold = self.settings.log_nsigma
+            factor = self.baselise_noise_std
+
         else:
             raise  Exception("%s method was not implemented, please refer to corems.mass_spectrum.calc.NoiseCalc Class" % threshold_method)
         
@@ -312,7 +322,7 @@ class PeakPicking:
         list_mass = [mass[current_index - 1], mass[current_index], mass[current_index +1]]
         list_y = [abund[current_index - 1],abund[current_index], abund[current_index +1]]
         
-        z = poly1d(polyfit(list_mass, list_y, 2))
+        z = polyfit(list_mass, list_y, 2)
         a = z[2]
         b = z[1]
 
@@ -330,7 +340,7 @@ class PeakPicking:
             
             # fit parabola to three most abundant frequency datapoints
             list_freq = [freq[current_index - 1], freq[current_index], freq[current_index +1]]
-            z = poly1d(polyfit(list_freq, list_y, 2))
+            z = polyfit(list_freq, list_y, 2)
             a = z[2]
             b = z[1]
 
