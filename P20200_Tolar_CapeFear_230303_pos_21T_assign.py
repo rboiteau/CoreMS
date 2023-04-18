@@ -22,10 +22,8 @@ import corems.lc_icpms_ftms.calc.lc_icrms_qc_assign as icrms
 import corems.lc_icpms_ftms.calc.lc_icrms_helpers as lcmsfns
 
 """
-CoreMS run script for spring-env samples, collected at NHMFL in Nov 2023
+CoreMS run script template for 21T positive mode data
 
-Christian Dewey
-28 Mar 23
 """
 
 def printRunTime():
@@ -54,7 +52,7 @@ def printRunTime():
 
 def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist=None):
     
-    corder=1
+    corder=2
 
     parser = rawFileReader.ImportMassSpectraThermoMSFileReader(esifile)
 
@@ -80,22 +78,13 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
                                                         calib_ppm_error_threshold=cal_ppm_threshold,
                                                         calib_snr_threshold=3)
 
-            pmzrfs = pd.DataFrame(mzrefs)
-            pmzrfs.to_csv('cal_mzs_%s.csv' %esifile.split('.')[0])
             calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=corder)
 
-        setAssingmentParams_1()
 
-        SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
-
-        
-        setAssingmentParams_2()
-
-        SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
-
+        SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
 
         mass_spectrum.percentile_assigned(report_error=True)
-        
+
         assignments=mass_spectrum.to_dataframe()
 
         assignments['Time']=timestart
@@ -108,10 +97,11 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
 
 
 
-def setAssingmentParams_2():
+def setAssingmentParams():
     # set assignment parameters
     MSParameters.mass_spectrum.threshold_method = 'signal_noise'
-    MSParameters.mass_spectrum.s2n_threshold = 3
+    MSParameters.mass_spectrum.s2n_threshold = 5
+    MSParameters.ms_peak.peak_min_prominence_percent = 0.001
 
     MSParameters.molecular_search.error_method = 'None'
     MSParameters.molecular_search.min_ppm_error = -0.25
@@ -128,62 +118,38 @@ def setAssingmentParams_2():
     MSParameters.molecular_search.min_dbe = -1
     MSParameters.molecular_search.max_dbe = 20
 
-    MSParameters.molecular_search.usedAtoms['C'] = (1,50)
+    #### you can add elements to include in assignments here 
+    #### the parentheses contain possible min and max of each element in formula
+    #### to remove an element listed below, set the maximum and minimum to 0
+    MSParameters.molecular_search.usedAtoms['C'] = (1,60)
     MSParameters.molecular_search.usedAtoms['H'] = (4,100)
-    MSParameters.molecular_search.usedAtoms['O'] = (0,20)
-    MSParameters.molecular_search.usedAtoms['N'] = (0,2)
-    MSParameters.molecular_search.usedAtoms['S'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['P'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['Na'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['Cu'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['K'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['Fe'] = (0,0)
-
-def setAssingmentParams_1():
-    # set assignment parameters
-    MSParameters.mass_spectrum.threshold_method = 'signal_noise'
-    MSParameters.mass_spectrum.s2n_threshold = 3
-
-    MSParameters.molecular_search.error_method = 'None'
-    MSParameters.molecular_search.min_ppm_error = -0.25
-    MSParameters.molecular_search.max_ppm_error = 0.25
-
-    MSParameters.molecular_search.isProtonated = True
-    MSParameters.molecular_search.isRadical = False
-    MSParameters.molecular_search.isAdduct = False
-
-    MSParameters.molecular_search.score_method = "prob_score"
-    MSParameters.molecular_search.output_score_method = "prob_score"
-
-    MSParameters.molecular_search.url_database = 'postgresql+psycopg2://coremsappdb:coremsapppnnl@localhost:5432/coremsapp'
-    MSParameters.molecular_search.min_dbe = -1
-    MSParameters.molecular_search.max_dbe = 20
-
-    MSParameters.molecular_search.usedAtoms['C'] = (1,50)
-    MSParameters.molecular_search.usedAtoms['H'] = (4,100)
-    MSParameters.molecular_search.usedAtoms['O'] = (0,20)
-    MSParameters.molecular_search.usedAtoms['N'] = (3,10)
-    MSParameters.molecular_search.usedAtoms['S'] = (0,0)
+    MSParameters.molecular_search.usedAtoms['O'] = (1,20)
+    MSParameters.molecular_search.usedAtoms['N'] = (0,4)
+    MSParameters.molecular_search.usedAtoms['S'] = (0,2)
     MSParameters.molecular_search.usedAtoms['P'] = (0,0)
     MSParameters.molecular_search.usedAtoms['Na'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['Cu'] = (1,1)
+    MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
     MSParameters.molecular_search.usedAtoms['K'] = (0,0)
     MSParameters.molecular_search.usedAtoms['Fe'] = (0,0)
+
+
 
 if __name__ == '__main__':
     start = time.time()  #for duration
     startdt = datetime.now()
     
-
-    #data_dir = '/home/dewey/Rawfiles/spring-env/pos/test/'
-    data_dir ='/mnt/disks/orca-data/mz-windowing/pos/spring/test/'#/Users/christiandewey/Rawfiles/spring-env/pos/test/test2/'
-    fname = '230330_spring-env_pos_1.csv'
-    #mzref = "/home/deweyc/CoreMS/db/Hawkes_neg.ref"  # for negative mode 
-    #mzref = "/home/dewey/CoreMS/tests/tests_data/ftms/nom_pos.ref"  # for positive mode
-    mzref = "/home/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
+    # replace XXXXX with full directory containing rawfiles; you might need to add a '/' to the end, e.g., '/home/dewey/Rawfiles/spring-env/pos/'
+    data_dir = '/mnt/disks/orca-data/Lydia_LC21t/'
+    # replace YYYYY with name for results file
+    fname = 'P20200_Tolar_March2023_LC21T.csv'
+    # location of top CoreMS, e.g., "/home/dewey/CoreMS/"
+    coremsdir = "/home/CoreMS/"
+    mzref = coremsdir + "tests/tests_data/ftms/nom_pos.ref"  # for positive mode
     
-    interval = 1      # window in which scans are averaged
-    time_range = [10,14]    
+    interval = 2    # time window (minutes) in which scans are averaged; 2 min generally works well
+    time_range = [2,50] # time range over which to assign formula, min    
+
+    setAssingmentParams()
 
     results = []
     
@@ -198,7 +164,7 @@ if __name__ == '__main__':
     i = 1
     for f in f_raw:
         print("\n\n\n%s/%s files" %(i, len(f_raw)))
-        output = assign_formula(esifile = f, times = times, charge = 1, cal_ppm_threshold=(-1,1), refmasslist = mzref)
+        output = assign_formula(esifile = f, times = times, charge = 1, cal_ppm_threshold=(-2,2), refmasslist = mzref)
         output['file'] = f 
         results.append(output)
         i = i + 1
