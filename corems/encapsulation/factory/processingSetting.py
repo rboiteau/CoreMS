@@ -392,7 +392,7 @@ class MolecularFormulaSearchSettings:
     db_jobs: int = 3
 
     '''query setting'''
-    ion_charge: int = 2 #-1
+    ion_charge: int = -1
 
     min_hc_filter: float = 0.3
 
