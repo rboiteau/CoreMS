@@ -1014,7 +1014,7 @@ class MassSpecCentroid(MassSpecBase):
             else:
 
                 if data_dict.get(Labels.abundance)[index]/factor >= abundance_threshold:
-
+                    print('line 1017 MassSpectrumClasses.py %s' %ion_charge)
                     self.add_mspeak(
                         ion_charge,
                         mz,
