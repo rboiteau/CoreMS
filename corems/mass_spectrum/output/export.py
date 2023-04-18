@@ -398,7 +398,7 @@ class HighResMassSpecExport(Thread):
 
             for index, ms_peak in enumerate(mass_spectrum):
 
-                # print(ms_peak.mz_exp)
+                print('line 401 mass_spectrum.output.export.py, ms_peak.ion_charge: %s)' %ms_peak.ion_charge)
 
                 if ms_peak:
 

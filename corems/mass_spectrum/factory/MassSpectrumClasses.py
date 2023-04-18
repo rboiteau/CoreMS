@@ -121,7 +121,7 @@ class MassSpecBase(MassSpecCalc, KendrickGrouping):
                     exp_freq=None,
                     ms_parent=None
                 ):
-        print('line 124 MassSpectrumClasses.py ion charge: %s)' %ion_charge)
+        print('line 124 MassSpectrumClasses.py ion charge: %s' %ion_charge)
         mspeak = MSPeak(
                 ion_charge,
                 mz_exp,
