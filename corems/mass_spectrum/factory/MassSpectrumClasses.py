@@ -121,6 +121,7 @@ class MassSpecBase(MassSpecCalc, KendrickGrouping):
                     exp_freq=None,
                     ms_parent=None
                 ):
+        print('line 124 MassSpectrumClasses.py ion charge: %s)' %ion_charge)
         mspeak = MSPeak(
                 ion_charge,
                 mz_exp,
@@ -771,7 +772,7 @@ class MassSpecProfile(MassSpecBase):
         """
         method docs
         """
-        # print(data_dict.keys())
+        print('line 774 MassSpectrumClasses.py autoprocess function')
         super().__init__(data_dict.get(Labels.mz), data_dict.get(Labels.abundance), d_params)
        
         if auto_process:
