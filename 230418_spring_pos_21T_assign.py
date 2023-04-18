@@ -92,8 +92,7 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
         assignments=mass_spectrum.to_dataframe()
 
         assignments['Time']=timestart
-        for i in assignments['Ion Charge']:
-            print(i)
+
         results.append(assignments)
     
     results=pd.concat(results,ignore_index=True)
