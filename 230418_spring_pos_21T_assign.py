@@ -24,10 +24,8 @@ import corems.lc_icpms_ftms.calc.lc_icrms_helpers as lcmsfns
 """
 CoreMS run script for spring-env samples, collected at NHMFL in Nov 2023
 
-Testing SN > 5, calorder = 1
-
 Christian Dewey
-28 Mar 23
+18 April 2023
 """
 
 def printRunTime():
@@ -53,10 +51,9 @@ def printRunTime():
     print('Finished at ' + enddt_str )
 
 
-
 def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist=None):
     
-    corder=1
+    corder=2
 
     parser = rawFileReader.ImportMassSpectraThermoMSFileReader(esifile)
 
@@ -82,10 +79,13 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
                                                         calib_ppm_error_threshold=cal_ppm_threshold,
                                                         calib_snr_threshold=3)
 
+            pmzrfs = pd.DataFrame(mzrefs)
+            pmzrfs.to_csv('cal_mzs_%s.csv' %esifile.split('.')[0])
             calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=corder)
 
+        setAssingmentParams()
 
-        SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
+        SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
 
         mass_spectrum.percentile_assigned(report_error=True)
 
@@ -105,7 +105,6 @@ def setAssingmentParams():
     # set assignment parameters
     MSParameters.mass_spectrum.threshold_method = 'signal_noise'
     MSParameters.mass_spectrum.s2n_threshold = 3
-    MSParameters.ms_peak.peak_min_prominence_percent = 0.001
 
     MSParameters.molecular_search.error_method = 'None'
     MSParameters.molecular_search.min_ppm_error = -0.25
@@ -121,36 +120,33 @@ def setAssingmentParams():
     MSParameters.molecular_search.url_database = 'postgresql+psycopg2://coremsappdb:coremsapppnnl@localhost:5432/coremsapp'
     MSParameters.molecular_search.min_dbe = -1
     MSParameters.molecular_search.max_dbe = 20
-
+    MSParameters.molecular_search.ion_charge = 2
+    
     MSParameters.molecular_search.usedAtoms['C'] = (1,50)
     MSParameters.molecular_search.usedAtoms['H'] = (4,100)
-    MSParameters.molecular_search.usedAtoms['O'] = (1,20)
+    MSParameters.molecular_search.usedAtoms['O'] = (0,20)
     MSParameters.molecular_search.usedAtoms['N'] = (0,4)
     MSParameters.molecular_search.usedAtoms['S'] = (0,1)
     MSParameters.molecular_search.usedAtoms['P'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['K'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
-
+    MSParameters.molecular_search.usedAtoms['Na'] = (0,0)
+    MSParameters.molecular_search.usedAtoms['Cu'] = (0,0)
+    MSParameters.molecular_search.usedAtoms['K'] = (0,0)
+    MSParameters.molecular_search.usedAtoms['Fe'] = (0,0)
 
 
 if __name__ == '__main__':
+
     start = time.time()  #for duration
     startdt = datetime.now()
     
+    data_dir = '/mnt/disks/orca-data/mz-windowing/pos/spring/'
 
-    data_dir = '/home/dewey/Rawfiles/spring-env/pos/test/'
-    fname = '230328_spring-env_pos.csv'
-    #mzref = "/home/deweyc/CoreMS/db/Hawkes_neg.ref"  # for negative mode 
-    mzref = "/home/dewey/CoreMS/tests/tests_data/ftms/nom_pos.ref"  # for positive mode
+    fname = '230418_spring-env_pos_ztest.csv'
+
+    mzref = "/home/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
     
-    interval = 4           # window in which scans are averaged
+    interval = 2      # window in which scans are averaged
     time_range = [10,14]    
-
-
-
-    setAssingmentParams()
 
     results = []
     
@@ -159,16 +155,15 @@ if __name__ == '__main__':
     flist=os.listdir(data_dir)
     f_raw = [f for f in flist if '.raw' in f]
     os.chdir(data_dir)
-
-    print(flist)
     
     i = 1
     for f in f_raw:
-        print("\n\n\n%s/%s files" %(i, len(f_raw)))
-        output = assign_formula(esifile = f, times = times, charge = 1, cal_ppm_threshold=(-1,1), refmasslist = mzref)
-        output['file'] = f 
-        results.append(output)
-        i = i + 1
+        if 'spring_fullmz' in f:
+            print("\n\n\n%s/%s files" %(i, len(f_raw)))
+            output = assign_formula(esifile = f, times = times, charge = 2, cal_ppm_threshold=(-1,1), refmasslist = mzref)
+            output['file'] = f 
+            results.append(output)
+            i = i + 1
 
     df = pd.concat(results)
     df.to_csv(data_dir+fname)
