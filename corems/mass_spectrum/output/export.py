@@ -385,7 +385,7 @@ class HighResMassSpecExport(Thread):
             for atom in self.atoms_order_list:
                 if atom in formula_dict.keys():
                     dict_result[atom] = formula_dict.get(atom)
-
+            print('line 388 mass_spectrum.output.export.py, dict_result[Ion Charge]:', dict_result['Ion Charge'])
             dict_data_list.append(dict_result)
 
         score_methods = mass_spectrum.molecular_search_settings.score_methods
