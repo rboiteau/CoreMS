@@ -164,9 +164,10 @@ if __name__ == '__main__':
             print("\n\n\n%s/%s files" %(i, len(f_raw)))
             output = assign_formula(esifile = f, times = times, charge = 2, cal_ppm_threshold=(-1,1), refmasslist = mzref)
             output['file'] = f 
+            print(output['Ion Charge'])
             results.append(output)
             i = i + 1
-
+    
     df = pd.concat(results)
     df.to_csv(data_dir+fname)
 
