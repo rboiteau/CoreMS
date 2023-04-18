@@ -66,7 +66,7 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
         print('\nfile: %s\ntimestart:%s'  %(esifile,timestart))
         scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
 
-        setAssingmentParams()
+        setAssingmentParams(charge)
 
         mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)    
         mass_spectrum.molecular_search_settings.ion_charge = charge
@@ -101,7 +101,7 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
 
 
 
-def setAssingmentParams():
+def setAssingmentParams(ion_charge):
     # set assignment parameters
     MSParameters.mass_spectrum.threshold_method = 'signal_noise'
     MSParameters.mass_spectrum.s2n_threshold = 3
@@ -120,7 +120,7 @@ def setAssingmentParams():
     MSParameters.molecular_search.url_database = 'postgresql+psycopg2://coremsappdb:coremsapppnnl@localhost:5432/coremsapp'
     MSParameters.molecular_search.min_dbe = -1
     MSParameters.molecular_search.max_dbe = 20
-    MSParameters.molecular_search.ion_charge = 1 # absolute value; multiplied by polarity w/in code
+    MSParameters.molecular_search.ion_charge = ion_charge # absolute value; multiplied by polarity w/in code
 
     MSParameters.molecular_search.usedAtoms['C'] = (1,50)  
     MSParameters.molecular_search.usedAtoms['H'] = (4,100)
@@ -156,11 +156,12 @@ if __name__ == '__main__':
     f_raw = [f for f in flist if '.raw' in f]
     os.chdir(data_dir)
     
+    ion_charge = 2
     i = 1
     for f in f_raw:
         if 'spring_fullmz' in f:
             print("\n\n\n%s/%s files" %(i, len(f_raw)))
-            output = assign_formula(esifile = f, times = times, charge = 1, cal_ppm_threshold=(-1,1), refmasslist = mzref)
+            output = assign_formula(esifile = f, times = times, charge = ion_charge, cal_ppm_threshold=(-1,1), refmasslist = mzref)
             output['file'] = f 
             results.append(output)
             i = i + 1
