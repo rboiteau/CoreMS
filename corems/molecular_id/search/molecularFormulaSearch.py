@@ -56,7 +56,6 @@ class SearchMolecularFormulas:
         return False
 
     def run_search(self, mspeaks, query, min_abundance, ion_type, ion_charge, adduct_atom=None):
-        print('molecularFormulaSearch.py line 59 ion charge %s' %ion_charge)
         def get_formulas(nominal_overlay=0.1):
 
             nominal_mz = ms_peak.nominal_mz_exp
@@ -140,7 +139,7 @@ class SearchMolecularFormulas:
 
         # ion charge for all the ion in the mass spectrum
         # under the current structure is possible to search for individual m/z but it takes longer than allow all the m/z to be search against
-        ion_charge =  2 #self.mass_spectrum_obj.ion_charge #self.mass_spectrum_obj.polarity #
+        ion_charge =  self.mass_spectrum_obj.polarity * self.mass_spectrum_obj.molecular_search_settings.ion_charge
     
         # use to limit the calculation of possible isotopologues
         min_abundance = self.mass_spectrum_obj.min_abundance

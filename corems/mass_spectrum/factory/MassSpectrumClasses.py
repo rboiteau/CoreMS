@@ -121,7 +121,6 @@ class MassSpecBase(MassSpecCalc, KendrickGrouping):
                     exp_freq=None,
                     ms_parent=None
                 ):
-        print('line 124 MassSpectrumClasses.py ion charge: %s' %ion_charge)
         mspeak = MSPeak(
                 ion_charge,
                 mz_exp,
@@ -978,7 +977,7 @@ class MassSpecCentroid(MassSpecBase):
         
         data_dict = self.data_dict
         s2n = True
-        ion_charge = 2 #self.polarity
+        ion_charge = self.polarity * self._parameters.molecular_search.ion_charge
         #l_exp_mz_centroid = data_dict.get(Labels.mz)
         #l_intes_centr = data_dict.get(Labels.abundance)
         #l_peak_resolving_power = data_dict.get(Labels.rp)

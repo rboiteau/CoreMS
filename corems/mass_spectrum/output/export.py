@@ -337,7 +337,6 @@ class HighResMassSpecExport(Thread):
             '''
             Export dictionary of mspeak info for unassigned (no match) data
             '''
-            print('line 340 mass_spectrum.output.export.py, ion charge: %s' %ms_peak.ion_charge)
             dict_result = {'Index': index,
                            'm/z': ms_peak._mz_exp,
                            'Calibrated m/z': ms_peak.mz_exp,
@@ -356,7 +355,6 @@ class HighResMassSpecExport(Thread):
             Export dictionary of mspeak info for assigned (match) data
             '''
             formula_dict = mformula.to_dict()
-            print('line 359 mass_spectrum.output.export.py, ion charge: %s' %ms_peak.ion_charge)
             dict_result = {'Index': index,
                            'm/z': ms_peak._mz_exp,
                            'Calibrated m/z': ms_peak.mz_exp,
