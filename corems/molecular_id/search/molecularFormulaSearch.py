@@ -140,7 +140,7 @@ class SearchMolecularFormulas:
 
         # ion charge for all the ion in the mass spectrum
         # under the current structure is possible to search for individual m/z but it takes longer than allow all the m/z to be search against
-        ion_charge =  self.mass_spectrum_obj.ion_charge #self.mass_spectrum_obj.polarity #
+        ion_charge =  2 #self.mass_spectrum_obj.ion_charge #self.mass_spectrum_obj.polarity #
     
         # use to limit the calculation of possible isotopologues
         min_abundance = self.mass_spectrum_obj.min_abundance
