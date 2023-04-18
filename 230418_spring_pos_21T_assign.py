@@ -125,9 +125,9 @@ def setAssingmentParams(ion_charge):
     MSParameters.molecular_search.usedAtoms['C'] = (1,50)  
     MSParameters.molecular_search.usedAtoms['H'] = (4,100)
     MSParameters.molecular_search.usedAtoms['O'] = (0,20)
-    MSParameters.molecular_search.usedAtoms['N'] = (0,4)
-    MSParameters.molecular_search.usedAtoms['S'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['P'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['N'] = (0,2)
+    MSParameters.molecular_search.usedAtoms['S'] = (0,2)
+    MSParameters.molecular_search.usedAtoms['P'] = (0,2)
     MSParameters.molecular_search.usedAtoms['Na'] = (0,0)
     MSParameters.molecular_search.usedAtoms['Cu'] = (0,0)
     MSParameters.molecular_search.usedAtoms['K'] = (0,0)
@@ -141,11 +141,11 @@ if __name__ == '__main__':
     
     data_dir = '/mnt/disks/orca-data/mz-windowing/pos/spring/'
 
-    fname = '230418_spring-env_pos_ztest.csv'
+    fname = '230418_spring-env_pos_ztest-multiple.csv'
 
     mzref = "/home/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
     
-    interval = 4      # window in which scans are averaged
+    interval = 2      # window in which scans are averaged
     time_range = [10,14]    
 
     results = []
@@ -159,7 +159,7 @@ if __name__ == '__main__':
     ion_charge = 2
     i = 1
     for f in f_raw:
-        if 'spring_fullmz' in f:
+        if 'spring' in f:
             print("\n\n\n%s/%s files" %(i, len(f_raw)))
             output = assign_formula(esifile = f, times = times, charge = ion_charge, cal_ppm_threshold=(-1,1), refmasslist = mzref)
             output['file'] = f 
