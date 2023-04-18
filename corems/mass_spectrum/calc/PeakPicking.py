@@ -204,6 +204,7 @@ class PeakPicking:
                     peak_resolving_power = self.calculate_resolving_power( abund, mass, apex_index)
                     s2n = intes_centr/self.baselise_noise_std
                     ion_charge = self.polarity * self._parameters.molecular_search.ion_charge
+                    print('ion charge %s ' %ion_charge)
                     self.add_mspeak(ion_charge, mz_exp_centroid, abund[apex_index] , peak_resolving_power, s2n, indexes_tuple, exp_freq=freq_centr, ms_parent=self)
                 #pyplot.plot(domain[start_index: final_index + 1], signal[start_index:final_index + 1], c='black')
                 #pyplot.show()
