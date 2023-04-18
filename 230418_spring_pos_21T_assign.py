@@ -120,7 +120,7 @@ def setAssingmentParams():
     MSParameters.molecular_search.url_database = 'postgresql+psycopg2://coremsappdb:coremsapppnnl@localhost:5432/coremsapp'
     MSParameters.molecular_search.min_dbe = -1
     MSParameters.molecular_search.max_dbe = 20
-    MSParameters.molecular_search.ion_charge = 2
+    MSParameters.molecular_search.ion_charge = 1 # absolute value; multiplied by polarity w/in code
 
     MSParameters.molecular_search.usedAtoms['C'] = (1,50)  
     MSParameters.molecular_search.usedAtoms['H'] = (4,100)
