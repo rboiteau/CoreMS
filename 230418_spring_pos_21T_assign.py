@@ -85,7 +85,7 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
 
         setAssingmentParams()
 
-        SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
+        SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
 
         mass_spectrum.percentile_assigned(report_error=True)
 
