@@ -128,7 +128,7 @@ class HighResMassSpecExport(Thread):
         dict_data_list = self.get_list_dict_data(self.mass_spectrum)
 
         df = DataFrame(dict_data_list, columns=columns)
-
+        print(df)
         df.to_pickle(self.output_file.with_suffix('.pkl'))
 
         if write_metadata:
