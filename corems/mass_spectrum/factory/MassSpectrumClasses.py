@@ -1000,7 +1000,7 @@ class MassSpecCentroid(MassSpecBase):
             if s2n:
                 
                 if abun[index]/factor >= abundance_threshold:
-
+                    print('line 1003 MassSpectrumClasses.py %s' %ion_charge)
                     self.add_mspeak(
                         ion_charge,
                         mz,

@@ -19,7 +19,6 @@ class _MSPeak(MSPeakCalculation):
 
         self._ms_parent = ms_parent
         # needed to create the object
-        print('MSPeakClasses.py %s' %ion_charge)
         self.ion_charge = int(ion_charge)
         self._mz_exp = float(mz_exp)
         self.mass = float(mz_exp) / float(ion_charge)
