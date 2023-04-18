@@ -91,6 +91,8 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
 
         assignments=mass_spectrum.to_dataframe()
 
+        print(assignments['Ion Charge'])
+
         assignments['Time']=timestart
 
         results.append(assignments)
@@ -122,7 +124,7 @@ def setAssingmentParams():
     MSParameters.molecular_search.max_dbe = 20
     MSParameters.molecular_search.ion_charge = 2
 
-    MSParameters.molecular_search.usedAtoms['C'] = (1,50)
+    MSParameters.molecular_search.usedAtoms['C'] = (1,50)  
     MSParameters.molecular_search.usedAtoms['H'] = (4,100)
     MSParameters.molecular_search.usedAtoms['O'] = (0,20)
     MSParameters.molecular_search.usedAtoms['N'] = (0,4)
