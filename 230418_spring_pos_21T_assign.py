@@ -160,7 +160,7 @@ if __name__ == '__main__':
     for f in f_raw:
         if 'spring_fullmz' in f:
             print("\n\n\n%s/%s files" %(i, len(f_raw)))
-            output = assign_formula(esifile = f, times = times, charge = 2, cal_ppm_threshold=(-1,1), refmasslist = mzref)
+            output = assign_formula(esifile = f, times = times, charge = 1, cal_ppm_threshold=(-1,1), refmasslist = mzref)
             output['file'] = f 
             results.append(output)
             i = i + 1
