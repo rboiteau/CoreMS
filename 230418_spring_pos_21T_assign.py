@@ -66,6 +66,8 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
         print('\nfile: %s\ntimestart:%s'  %(esifile,timestart))
         scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
 
+        setAssingmentParams()
+
         mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)    
         mass_spectrum.molecular_search_settings.ion_charge = charge
 
@@ -82,8 +84,6 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
             pmzrfs = pd.DataFrame(mzrefs)
             pmzrfs.to_csv('cal_mzs_%s.csv' %esifile.split('.')[0])
             calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=corder)
-
-        setAssingmentParams()
 
         SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
 
