@@ -121,7 +121,7 @@ def setAssingmentParams():
     MSParameters.molecular_search.min_dbe = -1
     MSParameters.molecular_search.max_dbe = 20
     MSParameters.molecular_search.ion_charge = 2
-    
+
     MSParameters.molecular_search.usedAtoms['C'] = (1,50)
     MSParameters.molecular_search.usedAtoms['H'] = (4,100)
     MSParameters.molecular_search.usedAtoms['O'] = (0,20)
@@ -145,7 +145,7 @@ if __name__ == '__main__':
 
     mzref = "/home/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
     
-    interval = 2      # window in which scans are averaged
+    interval = 4      # window in which scans are averaged
     time_range = [10,14]    
 
     results = []
