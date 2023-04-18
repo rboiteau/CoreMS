@@ -56,7 +56,7 @@ class SearchMolecularFormulas:
         return False
 
     def run_search(self, mspeaks, query, min_abundance, ion_type, ion_charge, adduct_atom=None):
-
+        print('molecularFormulaSearch.py line 59 ion charge %s' %ion_charge)
         def get_formulas(nominal_overlay=0.1):
 
             nominal_mz = ms_peak.nominal_mz_exp
