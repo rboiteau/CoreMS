@@ -6,7 +6,7 @@
 from logging import warn
 from numpy import hstack, inf, isnan, poly1d, polyfit, where, array
 from numpy import float as npfloat
-from corems.encapsulation.constant import Labels
+from corems.encapsulation.constant import Labels, Atoms
 from corems.mass_spectra.calc import SignalProcessing as sp
 from corems.encapsulation.factory.parameters import MSParameters
 
@@ -204,10 +204,10 @@ class PeakPicking:
                     
                     peak_resolving_power = self.calculate_resolving_power( abund, mass, apex_index)
                     s2n = intes_centr/self.baselise_noise_std
-                    ion_charge = self.polarity * MSParameters.molecular_search.ion_charge
+                    ion_charge = self.polarity #* MSParameters.molecular_search.ion_charge
                     self.add_mspeak(ion_charge, mz_exp_centroid, abund[apex_index] , peak_resolving_power, s2n, indexes_tuple, exp_freq=freq_centr, ms_parent=self)
-                #pyplot.plot(domain[start_index: final_index + 1], signal[start_index:final_index + 1], c='black')
-                #pyplot.show()
+
+        self.determine_ion_charge()
 
     def calc_centroid_legacy(self, mass, abund, freq):
         pass
@@ -377,5 +377,76 @@ class PeakPicking:
             
             return mass[current_index], abund[current_index], peak_indexes
 
+    def determine_ion_charge(self): 
 
+        '''checks whether there is a 13C peak corresponding to singly or doubly charged ion; assigns ion_charge to peak (1 or 2 multiplied by polarity) if 13C peak detected'''
+
+        c_mz_delta = Atoms.atomic_masses['13C'] - Atoms.atomic_masses['C']
+        c_m2z_delta = c_mz_delta / 2.0
+
+        for peak_index in range(len(self._mspeaks)):
+
+            peak = self._mspeaks[peak_index]
+
+            #ion_charge = peak.ion_charge
+            mz_exp = peak.mz_exp
+            abunance = peak.abundance
+            #resolving_power = peak.resolving_power
+            #s2n = peak.s2n
+
+            print('line 384 mass_spectrum.calc.PeakPicking.py, peak_mz, index: %s' %(mz_exp, peak_index))
+
+            candidate_mz = mz_exp
+
+            i = peak_index
+
+            while candidate_mz < (1.05 * (mz_exp + c_mz_delta)):
+
+                i = i + 1 
+
+                candidate_peak = self._mspeaks[i]
+                candidate_mz = candidate_peak.mz_exp
+                candidate_abund = candidate_peak.abundance
+                candidate_res_p = candidate_peak.resolving_power
+                mz_tolerance = candidate_mz / candidate_res_p
+
+                if (candidate_mz  < (mz_exp + c_m2z_delta + mz_tolerance)) and (candidate_mz > (mz_exp + c_m2z_delta - mz_tolerance)): 
                     
+                    intensity_threshold = (candidate_mz * 2 ) / Atoms.atomic_masses['C'] * Atoms.isotopic_abundance['13C']
+
+                    if candidate_abund < (intensity_threshold * abunance):
+                        
+                        self._mspeaks[peak_index].ion_charge = 2 * self.polarity
+                        self._mspeaks[i].ion_charge = 2 * self.polarity
+                        print('ion charge 2')
+                        break
+
+                elif (candidate_mz  < (mz_exp + c_mz_delta + mz_tolerance)) and (candidate_mz > (mz_exp + c_mz_delta - mz_tolerance)):
+
+                    intensity_threshold = (candidate_mz ) / Atoms.atomic_masses['C'] * Atoms.isotopic_abundance['13C']
+
+                    if candidate_abund < (intensity_threshold * abunance): 
+
+                        self._mspeaks[peak_index].ion_charge = 1 * self.polarity
+                        self._mspeaks[i].ion_charge = 2 * self.polarity
+                        print('ion charge 1')
+                        break
+
+                else:
+
+                    self._mspeaks[peak_index].ion_charge = MSParameters.molecular_search.ion_charge * self.polarity
+                    print('ion charge ELSE')
+
+
+
+
+
+
+
+
+
+
+    
+
+
+

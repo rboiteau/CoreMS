@@ -141,7 +141,7 @@ if __name__ == '__main__':
     
     data_dir = '/mnt/disks/orca-data/mz-windowing/pos/spring/'
 
-    fname = '230418_spring-env_pos_ztest-multiple.csv'
+    fname = '230418_spring-env_pos_ztest-assign-charge.csv'
 
     mzref = "/home/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
     
@@ -159,7 +159,7 @@ if __name__ == '__main__':
     ion_charge = 2
     i = 1
     for f in f_raw:
-        if 'spring' in f:
+        if 'spring_fullmz_rep2' in f:
             print("\n\n\n%s/%s files" %(i, len(f_raw)))
             output = assign_formula(esifile = f, times = times, charge = ion_charge, cal_ppm_threshold=(-1,1), refmasslist = mzref)
             output['file'] = f 
