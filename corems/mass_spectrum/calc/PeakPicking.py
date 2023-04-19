@@ -388,14 +388,10 @@ class PeakPicking:
 
             peak = self._mspeaks[peak_index]
 
-            #ion_charge = peak.ion_charge
             mz_exp = peak.mz_exp
             abundance = peak.abundance
             resolving_power = peak.resolving_power
-            #s2n = peak.s2n
             mz_e1 = mz_exp / resolving_power
-
-            #print('line 384 mass_spectrum.calc.PeakPicking.py, peak_mz, index: %.4f %s' %(mz_exp, peak_index))
 
             candidate_mz = mz_exp
 
