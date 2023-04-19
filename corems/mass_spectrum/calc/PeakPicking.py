@@ -390,11 +390,10 @@ class PeakPicking:
 
             #ion_charge = peak.ion_charge
             mz_exp = peak.mz_exp
-            abunance = peak.abundance
+            abundance = peak.abundance
             #resolving_power = peak.resolving_power
             #s2n = peak.s2n
-            print(type(mz_exp))
-            print(type(peak_index))
+
             print('line 384 mass_spectrum.calc.PeakPicking.py, peak_mz, index: %.4f %s' %(mz_exp, peak_index))
 
             candidate_mz = mz_exp
@@ -411,11 +410,15 @@ class PeakPicking:
                 candidate_res_p = candidate_peak.resolving_power
                 mz_tolerance = candidate_mz / candidate_res_p
 
+                print('candidate m/z: %.4f' %(mz_exp, peak_index))
+
                 if (candidate_mz  < (mz_exp + c_m2z_delta + mz_tolerance)) and (candidate_mz > (mz_exp + c_m2z_delta - mz_tolerance)): 
+
+                    print('if')
                     
                     intensity_threshold = (candidate_mz ) / Atoms.atomic_masses['C'] * Atoms.isotopic_abundance['13C']
 
-                    if candidate_abund < (intensity_threshold * abunance):
+                    if candidate_abund < (intensity_threshold * abundance):
                         
                         self._mspeaks[peak_index].ion_charge = 2 * self.polarity
                         self._mspeaks[i].ion_charge = 2 * self.polarity
@@ -424,9 +427,11 @@ class PeakPicking:
 
                 elif (candidate_mz  < (mz_exp + c_mz_delta + mz_tolerance)) and (candidate_mz > (mz_exp + c_mz_delta - mz_tolerance)):
 
+                    print('elif')
+
                     intensity_threshold = (candidate_mz ) / Atoms.atomic_masses['C'] * Atoms.isotopic_abundance['13C']
 
-                    if candidate_abund < (intensity_threshold * abunance): 
+                    if candidate_abund < (intensity_threshold * abundance): 
 
                         self._mspeaks[peak_index].ion_charge = 1 * self.polarity
                         self._mspeaks[i].ion_charge = 2 * self.polarity
