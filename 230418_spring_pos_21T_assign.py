@@ -66,7 +66,6 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
         print('\nfile: %s\ntimestart:%s'  %(esifile,timestart))
         scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
 
-        MSParameters.molecular_search.ion_charge = ion_charge
         mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)    
         mass_spectrum.molecular_search_settings.ion_charge = charge
 
@@ -85,8 +84,6 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
             calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=corder)
 
         print('\nassigning with first parameter set...')
-        setAssingmentParams2(charge)
-
         setAssingmentParams(charge)
 
         SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
@@ -169,15 +166,15 @@ def setAssingmentParams2(ion_charge):
     MSParameters.molecular_search.ion_charge = ion_charge # absolute value; multiplied by polarity w/in code
 
     MSParameters.molecular_search.usedAtoms['C'] = (10,100)  
-    MSParameters.molecular_search.usedAtoms['H'] = (20,200)
+    MSParameters.molecular_search.usedAtoms['H'] = (20,150)
     MSParameters.molecular_search.usedAtoms['O'] = (0,20)
     MSParameters.molecular_search.usedAtoms['N'] = (0,20)
-    MSParameters.molecular_search.usedAtoms['S'] = (0,5)
-    MSParameters.molecular_search.usedAtoms['P'] = (0,5)
+    MSParameters.molecular_search.usedAtoms['S'] = (0,2)
+    MSParameters.molecular_search.usedAtoms['P'] = (0,2)
     MSParameters.molecular_search.usedAtoms['Na'] = (0,2)
-    MSParameters.molecular_search.usedAtoms['Cu'] = (0,2)
-    MSParameters.molecular_search.usedAtoms['K'] = (0,2)
-    MSParameters.molecular_search.usedAtoms['Fe'] = (0,2)
+    MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['K'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
 
 
 if __name__ == '__main__':
