@@ -406,7 +406,7 @@ class PeakPicking:
 
                 try:
                     candidate_peak = self._mspeaks[i]
-                    
+
                 except:
                     print(i, len(self._mspeaks))
                     break
@@ -421,7 +421,7 @@ class PeakPicking:
 
                         print('if candidate m/z: %.4f' %(mz_exp))
                         
-                        intensity_threshold = (candidate_mz ) / Atoms.atomic_masses['C'] * Atoms.isotopic_abundance['13C']
+                        intensity_threshold = (candidate_mz * 2) / Atoms.atomic_masses['C'] * Atoms.isotopic_abundance['13C']
 
                         if candidate_abund < (intensity_threshold * abundance):
                             
