@@ -66,8 +66,6 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
         print('\nfile: %s\ntimestart:%s'  %(esifile,timestart))
         scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
 
-        setAssingmentParams(charge)
-
         mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)    
         mass_spectrum.molecular_search_settings.ion_charge = charge
 
@@ -85,15 +83,23 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
             pmzrfs.to_csv('cal_mzs_%s.csv' %esifile.split('.')[0])
             calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=corder)
 
+        print('\nassigning with first parameter set...')
+        setAssingmentParams2(charge)
+
+        setAssingmentParams(charge)
 
         SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
 
+        print('\nresults with first parameter set...')
         mass_spectrum.percentile_assigned(report_error=True)
 
-
+        print('\nassigning with second parameter set...')
         setAssingmentParams2(charge)
 
         SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
+
+        print('\nresults with second parameter set...')
+        mass_spectrum.percentile_assigned(report_error=True)
 
         assignments=mass_spectrum.to_dataframe()
 
