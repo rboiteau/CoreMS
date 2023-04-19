@@ -771,7 +771,6 @@ class MassSpecProfile(MassSpecBase):
         """
         method docs
         """
-        print('line 774 MassSpectrumClasses.py autoprocess function')
         super().__init__(data_dict.get(Labels.mz), data_dict.get(Labels.abundance), d_params)
        
         if auto_process:
