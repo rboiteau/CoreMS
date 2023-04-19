@@ -391,7 +391,7 @@ class PeakPicking:
             #ion_charge = peak.ion_charge
             mz_exp = peak.mz_exp
             abundance = peak.abundance
-            #resolving_power = peak.resolving_power
+            resolving_power = peak.resolving_power
             #s2n = peak.s2n
 
             #print('line 384 mass_spectrum.calc.PeakPicking.py, peak_mz, index: %.4f %s' %(mz_exp, peak_index))
@@ -400,50 +400,52 @@ class PeakPicking:
 
             i = peak_index
 
-            while candidate_mz < (1.05 * (mz_exp + c_mz_delta)):
-
+            while candidate_mz < (mz_exp + c_mz_delta + (mz_exp / resolving_power)):
+                
                 i = i + 1 
 
-                candidate_peak = self._mspeaks[i]
-                candidate_mz = candidate_peak.mz_exp
-                candidate_abund = candidate_peak.abundance
-                candidate_res_p = candidate_peak.resolving_power
-                mz_tolerance = candidate_mz / candidate_res_p
-
-                
-
-                if (candidate_mz  < (mz_exp + c_m2z_delta + mz_tolerance)) and (candidate_mz > (mz_exp + c_m2z_delta - mz_tolerance)): 
-
-                    print('if candidate m/z: %.4f' %(mz_exp))
+                try:
+                    candidate_peak = self._mspeaks[i]
                     
-                    intensity_threshold = (candidate_mz ) / Atoms.atomic_masses['C'] * Atoms.isotopic_abundance['13C']
-
-                    if candidate_abund < (intensity_threshold * abundance):
-                        
-                        self._mspeaks[peak_index].ion_charge = 2 * self.polarity
-                        self._mspeaks[i].ion_charge = 2 * self.polarity
-                        print('ion charge 2')
-                        break
-
-                elif (candidate_mz  < (mz_exp + c_mz_delta + mz_tolerance)) and (candidate_mz > (mz_exp + c_mz_delta - mz_tolerance)):
-
-                    print('elif candidate m/z: %.4f' %(mz_exp))
-
-                    intensity_threshold = (candidate_mz ) / Atoms.atomic_masses['C'] * Atoms.isotopic_abundance['13C']
-
-                    if candidate_abund < (intensity_threshold * abundance): 
-
-                        self._mspeaks[peak_index].ion_charge = 1 * self.polarity
-                        self._mspeaks[i].ion_charge = 2 * self.polarity
-                        print('ion charge 1')
-                        break
+                except:
+                    print(i, len(self._mspeaks))
+                    break
 
                 else:
+                    candidate_mz = candidate_peak.mz_exp
+                    candidate_abund = candidate_peak.abundance
+                    candidate_res_p = candidate_peak.resolving_power
+                    mz_tolerance = candidate_mz / candidate_res_p
 
-                    self._mspeaks[peak_index].ion_charge = MSParameters.molecular_search.ion_charge * self.polarity
-                    #print('ion charge ELSE')
+                    if (candidate_mz  < (mz_exp + c_m2z_delta + mz_tolerance)) and (candidate_mz > (mz_exp + c_m2z_delta - mz_tolerance)): 
 
+                        print('if candidate m/z: %.4f' %(mz_exp))
+                        
+                        intensity_threshold = (candidate_mz ) / Atoms.atomic_masses['C'] * Atoms.isotopic_abundance['13C']
 
+                        if candidate_abund < (intensity_threshold * abundance):
+                            
+                            self._mspeaks[peak_index].ion_charge = 2 * self.polarity
+                            self._mspeaks[i].ion_charge = 2 * self.polarity
+                            print('ion charge 2')
+                            break
+                    elif (candidate_mz  < (mz_exp + c_mz_delta + mz_tolerance)) and (candidate_mz > (mz_exp + c_mz_delta - mz_tolerance)):
+
+                        print('elif candidate m/z: %.4f' %(mz_exp))
+
+                        intensity_threshold = (candidate_mz ) / Atoms.atomic_masses['C'] * Atoms.isotopic_abundance['13C']
+
+                        if candidate_abund < (intensity_threshold * abundance): 
+
+                            self._mspeaks[peak_index].ion_charge = 1 * self.polarity
+                            self._mspeaks[i].ion_charge = 2 * self.polarity
+                            print('ion charge 1')
+                            break
+                    else:
+
+                        self._mspeaks[peak_index].ion_charge = MSParameters.molecular_search.ion_charge * self.polarity
+                        #print('ion charge ELSE')
+                
 
 
 
