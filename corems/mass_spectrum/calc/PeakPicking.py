@@ -393,7 +393,8 @@ class PeakPicking:
             abunance = peak.abundance
             #resolving_power = peak.resolving_power
             #s2n = peak.s2n
-
+            print(type(mz_exp))
+            print(type(peak_index))
             print('line 384 mass_spectrum.calc.PeakPicking.py, peak_mz, index: %s' %(mz_exp, peak_index))
 
             candidate_mz = mz_exp
