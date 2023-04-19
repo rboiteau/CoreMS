@@ -419,26 +419,27 @@ class PeakPicking:
 
                     if (candidate_mz  < (mz_exp + c_m2z_delta + mz_tolerance)) and (candidate_mz > (mz_exp + c_m2z_delta - mz_tolerance)): 
 
-                        print('if candidate m/z: %.4f' %(mz_exp))
+                        print('2z candidate m/z: %.4f' %(mz_exp))
                         
-                        intensity_threshold = (candidate_mz * 2) / Atoms.atomic_masses['C'] * Atoms.isotopic_abundance['13C']
+                        intensity_threshold_2 = (candidate_mz * 2) / Atoms.atomic_masses['C'] * Atoms.isotopic_abundance['13C']
 
-                        if candidate_abund < (intensity_threshold * abundance):
+                        if candidate_abund < (intensity_threshold_2 * abundance):
                             
                             self._mspeaks[peak_index].ion_charge = 2 * self.polarity
                             self._mspeaks[i].ion_charge = 2 * self.polarity
-                            print('ion charge 2')
+                            print('\tion charge 2')
                             break
+
                     elif (candidate_mz  < (mz_exp + c_mz_delta + mz_tolerance)) and (candidate_mz > (mz_exp + c_mz_delta - mz_tolerance)):
 
-                        print('elif candidate m/z: %.4f' %(mz_exp))
+                        print('1z candidate m/z: %.4f' %(mz_exp))
 
-                        intensity_threshold = (candidate_mz ) / Atoms.atomic_masses['C'] * Atoms.isotopic_abundance['13C']
+                        intensity_threshold_1 = (candidate_mz ) / Atoms.atomic_masses['C'] * Atoms.isotopic_abundance['13C']
 
-                        if candidate_abund < (intensity_threshold * abundance): 
+                        if candidate_abund < (intensity_threshold_1 * abundance): 
 
-                            self._mspeaks[peak_index].ion_charge = 1 * self.polarity
-                            self._mspeaks[i].ion_charge = 2 * self.polarity
+                            self._mspeaks[peak_index].ion_charge = self.polarity
+                            self._mspeaks[i].ion_charge = self.polarity
                             print('ion charge 1')
                             break
                     else:

@@ -145,8 +145,8 @@ if __name__ == '__main__':
 
     mzref = "/home/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
     
-    interval = 2      # window in which scans are averaged
-    time_range = [10,14]    
+    interval = 4      # window in which scans are averaged
+    time_range = [8,12]    
 
     results = []
     
