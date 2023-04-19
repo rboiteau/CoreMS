@@ -139,11 +139,11 @@ if __name__ == '__main__':
     start = time.time()  #for duration
     startdt = datetime.now()
     
-    data_dir = '/mnt/disks/orca-data/mz-windowing/pos/spring/'
+    data_dir = '/Volumes/Samsung_T5/data-temp/test/'
 
     fname = '230418_spring-env_pos_ztest-assign-charge.csv'
 
-    mzref = "/home/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
+    mzref = "/Users/christiandewey/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
     
     interval = 4      # window in which scans are averaged
     time_range = [8,12]    
