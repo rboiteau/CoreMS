@@ -122,13 +122,13 @@ def setAssingmentParams(ion_charge):
     MSParameters.molecular_search.max_dbe = 20
     MSParameters.molecular_search.ion_charge = ion_charge # absolute value; multiplied by polarity w/in code
 
-    MSParameters.molecular_search.usedAtoms['C'] = (50,65)  
-    MSParameters.molecular_search.usedAtoms['H'] = (50,100)
-    MSParameters.molecular_search.usedAtoms['O'] = (10,20)
-    MSParameters.molecular_search.usedAtoms['N'] = (10,20)
+    MSParameters.molecular_search.usedAtoms['C'] = (1,65)  
+    MSParameters.molecular_search.usedAtoms['H'] = (4,100)
+    MSParameters.molecular_search.usedAtoms['O'] = (0,20)
+    MSParameters.molecular_search.usedAtoms['N'] = (0,20)
     MSParameters.molecular_search.usedAtoms['S'] = (0,2)
     MSParameters.molecular_search.usedAtoms['P'] = (0,2)
-    MSParameters.molecular_search.usedAtoms['Na'] = (0,0)
+    MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
     MSParameters.molecular_search.usedAtoms['Co'] = (0,1)
     MSParameters.molecular_search.usedAtoms['K'] = (0,0)
     MSParameters.molecular_search.usedAtoms['Fe'] = (0,0)
