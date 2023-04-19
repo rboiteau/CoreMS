@@ -66,6 +66,7 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
         print('\nfile: %s\ntimestart:%s'  %(esifile,timestart))
         scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
 
+        MSParameters.molecular_search.ion_charge = ion_charge
         mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)    
         mass_spectrum.molecular_search_settings.ion_charge = charge
 
