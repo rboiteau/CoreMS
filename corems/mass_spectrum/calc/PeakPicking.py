@@ -412,7 +412,7 @@ class PeakPicking:
 
                 if (candidate_mz  < (mz_exp + c_m2z_delta + mz_tolerance)) and (candidate_mz > (mz_exp + c_m2z_delta - mz_tolerance)): 
                     
-                    intensity_threshold = (candidate_mz * 2 ) / Atoms.atomic_masses['C'] * Atoms.isotopic_abundance['13C']
+                    intensity_threshold = (candidate_mz ) / Atoms.atomic_masses['C'] * Atoms.isotopic_abundance['13C']
 
                     if candidate_abund < (intensity_threshold * abunance):
                         
