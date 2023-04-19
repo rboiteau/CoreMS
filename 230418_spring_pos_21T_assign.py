@@ -62,6 +62,8 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
 
     results=[]
     
+    calAssingmentParams()
+
     for timestart in times:
         print('\nfile: %s\ntimestart:%s'  %(esifile,timestart))
         scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
@@ -109,6 +111,38 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
 
     return(results)   
 
+
+def calAssingmentParams(ion_charge):
+    # set assignment parameters
+    MSParameters.mass_spectrum.threshold_method = 'signal_noise'
+    MSParameters.mass_spectrum.s2n_threshold = 3
+
+    MSParameters.molecular_search.error_method = 'None'
+    MSParameters.molecular_search.min_ppm_error = -0.25
+    MSParameters.molecular_search.max_ppm_error = 0.25
+
+    MSParameters.molecular_search.isProtonated = True
+    MSParameters.molecular_search.isRadical = False
+    MSParameters.molecular_search.isAdduct = False
+
+    MSParameters.molecular_search.score_method = "prob_score"
+    MSParameters.molecular_search.output_score_method = "prob_score"
+
+    MSParameters.molecular_search.url_database = 'postgresql+psycopg2://coremsappdb:coremsapppnnl@localhost:5432/coremsapp'
+    MSParameters.molecular_search.min_dbe = -1
+    MSParameters.molecular_search.max_dbe = 20
+    MSParameters.molecular_search.ion_charge = ion_charge # absolute value; multiplied by polarity w/in code
+
+    MSParameters.molecular_search.usedAtoms['C'] = (1,50)  
+    MSParameters.molecular_search.usedAtoms['H'] = (4,100)
+    MSParameters.molecular_search.usedAtoms['O'] = (0,10)
+    MSParameters.molecular_search.usedAtoms['N'] = (0,3)
+    MSParameters.molecular_search.usedAtoms['S'] = (0,0)
+    MSParameters.molecular_search.usedAtoms['P'] = (0,0)
+    MSParameters.molecular_search.usedAtoms['Na'] = (0,0)
+    MSParameters.molecular_search.usedAtoms['Cu'] = (0,0)
+    MSParameters.molecular_search.usedAtoms['K'] = (0,0)
+    MSParameters.molecular_search.usedAtoms['Fe'] = (0,0)
 
 
 def setAssingmentParams(ion_charge):
