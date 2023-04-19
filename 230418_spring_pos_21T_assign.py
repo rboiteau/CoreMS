@@ -85,9 +85,15 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
             pmzrfs.to_csv('cal_mzs_%s.csv' %esifile.split('.')[0])
             calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=corder)
 
+
         SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
 
         mass_spectrum.percentile_assigned(report_error=True)
+
+
+        setAssingmentParams2(charge)
+
+        SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
 
         assignments=mass_spectrum.to_dataframe()
 
@@ -102,6 +108,39 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
 
 
 def setAssingmentParams(ion_charge):
+    # set assignment parameters
+    MSParameters.mass_spectrum.threshold_method = 'signal_noise'
+    MSParameters.mass_spectrum.s2n_threshold = 3
+
+    MSParameters.molecular_search.error_method = 'None'
+    MSParameters.molecular_search.min_ppm_error = -0.1
+    MSParameters.molecular_search.max_ppm_error = 0.1
+
+    MSParameters.molecular_search.isProtonated = True
+    MSParameters.molecular_search.isRadical = False
+    MSParameters.molecular_search.isAdduct = False
+
+    MSParameters.molecular_search.score_method = "prob_score"
+    MSParameters.molecular_search.output_score_method = "prob_score"
+
+    MSParameters.molecular_search.url_database = 'postgresql+psycopg2://coremsappdb:coremsapppnnl@localhost:5432/coremsapp'
+    MSParameters.molecular_search.min_dbe = -1
+    MSParameters.molecular_search.max_dbe = 20
+    MSParameters.molecular_search.ion_charge = ion_charge # absolute value; multiplied by polarity w/in code
+
+    MSParameters.molecular_search.usedAtoms['C'] = (1,30)  
+    MSParameters.molecular_search.usedAtoms['H'] = (4,80)
+    MSParameters.molecular_search.usedAtoms['O'] = (0,10)
+    MSParameters.molecular_search.usedAtoms['N'] = (0,3)
+    MSParameters.molecular_search.usedAtoms['S'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['P'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['K'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
+
+
+def setAssingmentParams2(ion_charge):
     # set assignment parameters
     MSParameters.mass_spectrum.threshold_method = 'signal_noise'
     MSParameters.mass_spectrum.s2n_threshold = 3
@@ -122,16 +161,16 @@ def setAssingmentParams(ion_charge):
     MSParameters.molecular_search.max_dbe = 20
     MSParameters.molecular_search.ion_charge = ion_charge # absolute value; multiplied by polarity w/in code
 
-    MSParameters.molecular_search.usedAtoms['C'] = (1,80)  
-    MSParameters.molecular_search.usedAtoms['H'] = (4,100)
+    MSParameters.molecular_search.usedAtoms['C'] = (10,100)  
+    MSParameters.molecular_search.usedAtoms['H'] = (20,200)
     MSParameters.molecular_search.usedAtoms['O'] = (0,20)
-    MSParameters.molecular_search.usedAtoms['N'] = (0,10)
-    MSParameters.molecular_search.usedAtoms['S'] = (0,2)
-    MSParameters.molecular_search.usedAtoms['P'] = (0,2)
-    MSParameters.molecular_search.usedAtoms['Na'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['Co'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['K'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['Fe'] = (0,0)
+    MSParameters.molecular_search.usedAtoms['N'] = (0,20)
+    MSParameters.molecular_search.usedAtoms['S'] = (0,5)
+    MSParameters.molecular_search.usedAtoms['P'] = (0,5)
+    MSParameters.molecular_search.usedAtoms['Na'] = (0,2)
+    MSParameters.molecular_search.usedAtoms['Cu'] = (0,2)
+    MSParameters.molecular_search.usedAtoms['K'] = (0,2)
+    MSParameters.molecular_search.usedAtoms['Fe'] = (0,2)
 
 
 if __name__ == '__main__':
@@ -139,13 +178,13 @@ if __name__ == '__main__':
     start = time.time()  #for duration
     startdt = datetime.now()
     
-    data_dir = '/Volumes/Samsung_T5/data-temp/test/'
+    data_dir = '/mnt/disks/orca-data/mz-windowing/pos/spring/'
 
-    fname = '230418_spring-env_pos_ztest-assign-charge.csv'
+    fname = '230418_spring-env_pos_001.csv'
 
-    mzref = "/Users/christiandewey/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
+    mzref = "/home/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
     
-    interval = 4      # window in which scans are averaged
+    interval = 2      # window in which scans are averaged
     time_range = [8,12]    
 
     results = []
@@ -159,12 +198,11 @@ if __name__ == '__main__':
     ion_charge = 1
     i = 1
     for f in f_raw:
-        if 'spring_fullmz_rep2' in f:
-            print("\n\n\n%s/%s files" %(i, len(f_raw)))
-            output = assign_formula(esifile = f, times = times, charge = ion_charge, cal_ppm_threshold=(-1,1), refmasslist = mzref)
-            output['file'] = f 
-            results.append(output)
-            i = i + 1
+        print("\n\n\n%s/%s files" %(i, len(f_raw)))
+        output = assign_formula(esifile = f, times = times, charge = ion_charge, cal_ppm_threshold=(-1,1), refmasslist = mzref)
+        output['file'] = f 
+        results.append(output)
+        i = i + 1
     
     df = pd.concat(results)
     df.to_csv(data_dir+fname)
