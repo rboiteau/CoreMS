@@ -410,7 +410,7 @@ class PeakPicking:
                 candidate_res_p = candidate_peak.resolving_power
                 mz_tolerance = candidate_mz / candidate_res_p
 
-                print('candidate m/z: %.4f' %(mz_exp, peak_index))
+                print('candidate m/z: %.4f' %(mz_exp))
 
                 if (candidate_mz  < (mz_exp + c_m2z_delta + mz_tolerance)) and (candidate_mz > (mz_exp + c_m2z_delta - mz_tolerance)): 
 
