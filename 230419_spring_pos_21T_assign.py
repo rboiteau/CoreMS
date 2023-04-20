@@ -86,7 +86,7 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
             pmzrfs.to_csv('cal_mzs_%s.csv' %esifile.split('.')[0])
             calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=corder)
 
-        print('\nassigning with first parameter set...')
+        #print('\nassigning with first parameter set...')
 
         SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
 
@@ -172,7 +172,7 @@ def setAssingmentParams(ion_charge):
     MSParameters.molecular_search.usedAtoms['N'] = (0,20)
     MSParameters.molecular_search.usedAtoms['S'] = (0,4)
     MSParameters.molecular_search.usedAtoms['P'] = (0,4)
-    MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Na'] = (0,0)
     MSParameters.molecular_search.usedAtoms['Cu'] = (0,0)
     MSParameters.molecular_search.usedAtoms['K'] = (0,0)
     MSParameters.molecular_search.usedAtoms['Fe'] = (0,0)

@@ -85,7 +85,7 @@ class SearchMolecularFormulas:
         for ms_peak in mspeaks:
             
             ion_charge = ms_peak.ion_charge
-            print('line 88 molecular_id.search.molecularFormulaSearch.py ion charge %s' %ion_charge)
+            #print('line 88 molecular_id.search.molecularFormulaSearch.py ion charge %s' %ion_charge)
             # already assigned a molecular formula
             if self.first_hit:
 
