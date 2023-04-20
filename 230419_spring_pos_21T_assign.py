@@ -62,7 +62,7 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
 
     results=[]
     
-    calAssingmentParams()
+    #calAssingmentParams()
 
     for timestart in times:
         print('\nfile: %s\ntimestart:%s'  %(esifile,timestart))
@@ -90,16 +90,16 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
 
         SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
 
-        print('\nresults with first parameter set...')
+        #print('\nresults with first parameter set...')
         mass_spectrum.percentile_assigned(report_error=True)
 
-        print('\nassigning with second parameter set...')
-        setAssingmentParams2(charge)
+        #print('\nassigning with second parameter set...')
+        #setAssingmentParams2(charge)
 
-        SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
+        #SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
 
-        print('\nresults with second parameter set...')
-        mass_spectrum.percentile_assigned(report_error=True)
+        #print('\nresults with second parameter set...')
+        #mass_spectrum.percentile_assigned(report_error=True)
 
         assignments=mass_spectrum.to_dataframe()
 
@@ -151,8 +151,8 @@ def setAssingmentParams(ion_charge):
     MSParameters.mass_spectrum.s2n_threshold = 3
 
     MSParameters.molecular_search.error_method = 'None'
-    MSParameters.molecular_search.min_ppm_error = -0.1
-    MSParameters.molecular_search.max_ppm_error = 0.1
+    MSParameters.molecular_search.min_ppm_error = -0.25
+    MSParameters.molecular_search.max_ppm_error = 0.25
 
     MSParameters.molecular_search.isProtonated = True
     MSParameters.molecular_search.isRadical = False
@@ -166,12 +166,12 @@ def setAssingmentParams(ion_charge):
     MSParameters.molecular_search.max_dbe = 20
     MSParameters.molecular_search.ion_charge = ion_charge # absolute value; multiplied by polarity w/in code
 
-    MSParameters.molecular_search.usedAtoms['C'] = (1,30)  
-    MSParameters.molecular_search.usedAtoms['H'] = (4,80)
-    MSParameters.molecular_search.usedAtoms['O'] = (0,10)
-    MSParameters.molecular_search.usedAtoms['N'] = (0,3)
-    MSParameters.molecular_search.usedAtoms['S'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['P'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['C'] = (1,100)  
+    MSParameters.molecular_search.usedAtoms['H'] = (4,200)
+    MSParameters.molecular_search.usedAtoms['O'] = (0,20)
+    MSParameters.molecular_search.usedAtoms['N'] = (0,20)
+    MSParameters.molecular_search.usedAtoms['S'] = (0,4)
+    MSParameters.molecular_search.usedAtoms['P'] = (0,4)
     MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
     MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
     MSParameters.molecular_search.usedAtoms['K'] = (0,1)
@@ -218,11 +218,11 @@ if __name__ == '__main__':
     
     data_dir = '/mnt/disks/orca-data/mz-windowing/pos/spring/'
 
-    fname = '230418_spring-env_pos_001.csv'
+    fname = '230419_spring-env_pos_001.csv'
 
     mzref = "/home/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
     
-    interval = 2      # window in which scans are averaged
+    interval = 4     # window in which scans are averaged
     time_range = [8,12]    
 
     results = []
@@ -236,16 +236,16 @@ if __name__ == '__main__':
     ion_charge = 1
     i = 1
     for f in f_raw:
-        print("\n\n\n%s/%s files" %(i, len(f_raw)))
-        output = assign_formula(esifile = f, times = times, charge = ion_charge, cal_ppm_threshold=(-1,1), refmasslist = mzref)
-        output['file'] = f 
-        results.append(output)
-        i = i + 1
+        if 'spring_fullmz_rep2' in f:
+            print("\n\n\n%s/%s files" %(i, len(f_raw)))
+            output = assign_formula(esifile = f, times = times, charge = ion_charge, cal_ppm_threshold=(-1,1), refmasslist = mzref)
+            output['file'] = f 
+            results.append(output)
+            i = i + 1
     
     df = pd.concat(results)
     df.to_csv(data_dir+fname)
 
-    
     printRunTime()
 
     
