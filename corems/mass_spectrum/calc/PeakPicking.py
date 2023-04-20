@@ -384,6 +384,10 @@ class PeakPicking:
         c_mz_delta = Atoms.atomic_masses['13C'] - Atoms.atomic_masses['C']
         c_m2z_delta = c_mz_delta / 2.0
 
+        n_z2 = 0 
+        n_z1 = 0
+        n_def = 0
+
         for peak_index in range(len(self._mspeaks)):
 
             peak = self._mspeaks[peak_index]
@@ -422,6 +426,8 @@ class PeakPicking:
                             
                             self._mspeaks[peak_index].ion_charge = 2 * self.polarity
                             self._mspeaks[i].ion_charge = 2 * self.polarity
+                            n_z2 = n_z2 + 1
+
                             break
 
                     elif (candidate_mz  < (mz_exp + c_mz_delta + mz_tolerance)) and (candidate_mz > (mz_exp + c_mz_delta - mz_tolerance)):
@@ -432,11 +438,18 @@ class PeakPicking:
 
                             self._mspeaks[peak_index].ion_charge = self.polarity
                             self._mspeaks[i].ion_charge = self.polarity
+                            n_z1 = n_z1 + 1
                             break
                     else:
 
                         self._mspeaks[peak_index].ion_charge = MSParameters.molecular_search.ion_charge * self.polarity
-                
+                        n_def = n_def + 1
+
+        print('num z = 2: %s' %n_z2)
+        print('num z = 1: %s' %n_z1)
+        print('num z default: %s' %n_def)
+
+
 
 
 

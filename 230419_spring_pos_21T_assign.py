@@ -63,6 +63,7 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
     results=[]
     
     #calAssingmentParams()
+    setAssingmentParams(charge)
 
     for timestart in times:
         print('\nfile: %s\ntimestart:%s'  %(esifile,timestart))
@@ -86,7 +87,6 @@ def assign_formula(esifile, times, charge, cal_ppm_threshold=(-1,1), refmasslist
             calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=corder)
 
         print('\nassigning with first parameter set...')
-        setAssingmentParams(charge)
 
         SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
 
