@@ -173,9 +173,9 @@ def setAssingmentParams(ion_charge):
     MSParameters.molecular_search.usedAtoms['S'] = (0,4)
     MSParameters.molecular_search.usedAtoms['P'] = (0,4)
     MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['K'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Cu'] = (0,0)
+    MSParameters.molecular_search.usedAtoms['K'] = (0,0)
+    MSParameters.molecular_search.usedAtoms['Fe'] = (0,0)
 
 
 def setAssingmentParams2(ion_charge):
