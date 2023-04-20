@@ -52,8 +52,9 @@ def printRunTime():
 
 
 def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
-    
-    corder=2
+
+    MSParameters.mass_spectrum.threshold_method = 'signal_noise'
+    MSParameters.mass_spectrum.s2n_threshold = 3
 
     parser = rawFileReader.ImportMassSpectraThermoMSFileReader(esifile)
 
@@ -62,8 +63,6 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
 
     results=[]
     
-    
-
     for timestart in times:
         print('\nfile: %s\ntimestart:%s'  %(esifile,timestart))
         scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
@@ -72,6 +71,8 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
         if refmasslist:
             
             calAssingmentParams()
+
+            corder=2
 
             mass_spectrum.settings.min_calib_ppm_error = 10
             mass_spectrum.settings.max_calib_ppm_error = -10
@@ -122,9 +123,6 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
 
 def calAssingmentParams():
     # set assignment parameters
-    MSParameters.mass_spectrum.threshold_method = 'signal_noise'
-    MSParameters.mass_spectrum.s2n_threshold = 3
-
     MSParameters.molecular_search.error_method = 'None'
     MSParameters.molecular_search.min_ppm_error = -0.25
     MSParameters.molecular_search.max_ppm_error = 0.25
@@ -155,9 +153,6 @@ def calAssingmentParams():
 
 def setAssingmentParams(ion_charge):
     # set assignment parameters
-    MSParameters.mass_spectrum.threshold_method = 'signal_noise'
-    MSParameters.mass_spectrum.s2n_threshold = 3
-
     MSParameters.molecular_search.error_method = 'None'
     MSParameters.molecular_search.min_ppm_error = -0.1
     MSParameters.molecular_search.max_ppm_error = 0.1
@@ -188,9 +183,6 @@ def setAssingmentParams(ion_charge):
 
 def setAssingmentParams2(ion_charge):
     # set assignment parameters
-    MSParameters.mass_spectrum.threshold_method = 'signal_noise'
-    MSParameters.mass_spectrum.s2n_threshold = 3
-
     MSParameters.molecular_search.error_method = 'None'
     MSParameters.molecular_search.min_ppm_error = -0.25
     MSParameters.molecular_search.max_ppm_error = 0.25
