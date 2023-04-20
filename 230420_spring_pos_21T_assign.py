@@ -66,7 +66,10 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
     
     for timestart in times:
         print('\nfile: %s\ntimestart:%s'  %(esifile,timestart))
+    
         scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
+
+        MSParameters.molecular_search.ion_charge = 1
         mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)  
         print("HELLO MS Obj loaded - "+str(len(mass_spectrum.mspeaks))+" peaks found.")
 

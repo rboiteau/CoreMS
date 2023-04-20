@@ -448,6 +448,7 @@ class PeakPicking:
         print('num z = 2: %s' %n_z2)
         print('num z = 1: %s' %n_z1)
         print('num z default: %s' %n_def)
+        print(MSParameters.molecular_search.ion_charge * self.polarity)
 
 
 
