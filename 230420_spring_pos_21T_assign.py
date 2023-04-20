@@ -61,7 +61,8 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
     tic=parser.get_tic(ms_type='MS')[0]
     tic_df=pd.DataFrame({'time': tic.time,'scan': tic.scans})
 
-    results=[]
+    results_1 = []
+    results_2 = []
     
     for timestart in times:
         print('\nfile: %s\ntimestart:%s'  %(esifile,timestart))
@@ -102,7 +103,7 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
 
         assignments_z1['Time']=timestart
 
-        results_1.append(assignments_1)
+        results_1.append(assignments_z1)
 
         
         print('\nassigning with second parameter set...')
@@ -119,7 +120,7 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
 
         assignments_z2['Time']=timestart
 
-        results_2.append(assignments_2)
+        results_2.append(assignments_z2)
 
     results_1=pd.concat(results_1,ignore_index=True)
     results_2=pd.concat(results_2,ignore_index=True)
