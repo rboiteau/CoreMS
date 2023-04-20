@@ -70,6 +70,9 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
         mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)  
         print("HELLO MS Obj loaded - "+str(len(mass_spectrum.mspeaks))+" peaks found.")
 
+        for peak in mass_spectrum.mspeaks:
+            print(peak.ion_charge)
+
         if refmasslist:
         
             corder=2
