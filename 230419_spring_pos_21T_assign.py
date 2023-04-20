@@ -233,7 +233,7 @@ if __name__ == '__main__':
     f_raw = [f for f in flist if '.raw' in f]
     os.chdir(data_dir)
     
-    ion_charge = 1
+    ion_charge = 2
     i = 1
     for f in f_raw:
         if 'spring_fullmz_rep2' in f:
