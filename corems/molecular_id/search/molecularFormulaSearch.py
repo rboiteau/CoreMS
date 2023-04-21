@@ -198,10 +198,6 @@ class SearchMolecularFormulas:
                         candidate_formulas = dict_res.get(ion_type).get(classe_str)
 
                         if candidate_formulas:
-                            
-                            print(type(candidate_formulas))
-                            for c in candidate_formulas:
-                                print(c, candidate_formulas[c])
 
                             self.run_search(ms_peaks, candidate_formulas,
                                             min_abundance, ion_charge_list, ion_type)
@@ -396,6 +392,8 @@ class SearchMolecularFormulaWorker:
         # min_error = min([pmf.mz_error for pmf in possible_formulas])
 
         def mass_by_ion_type(possible_formula_obj, ion_charge):
+
+            print(ion_type)
 
             if ion_type == Labels.protonated_de_ion:
 
