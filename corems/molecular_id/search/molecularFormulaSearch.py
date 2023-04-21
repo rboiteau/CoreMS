@@ -426,13 +426,10 @@ class SearchMolecularFormulaWorker:
             if possible_formula:
                 
                 error_z1 = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula, ion_charge_list[0]))
-                if abs(error_z1) < 10:
-                    print('error z1 = %.4f' %error_z1)
-                error_z2 = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula, ion_charge_list[1]))
-                if abs(error_z2) < 10:
-                    print('error z2 = %.4f' %error_z2)
 
-                if error_z1 < error_z2:
+                error_z2 = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula, ion_charge_list[1]))
+
+                if abs(error_z1) < abs(error_z2):
 
                     error = error_z1
 
