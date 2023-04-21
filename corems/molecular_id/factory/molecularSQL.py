@@ -258,10 +258,10 @@ class MolForm_SQL:
                 )
             )
 
-        def add_dict_formula(formulas, ion_type, ion_charge, adduct_atom=None):
+        def add_dict_formula(formulas, ion_type, z, adduct_atom=None):
             "organize data by heteroatom classes"
             dict_res = {}
-            print('\td %s' %ion_charge)
+            print('\td %s' %z)
             def nominal_mass_by_ion_type(formula_obj,z):
                 
                 if ion_type == Labels.protonated_de_ion:
@@ -277,49 +277,47 @@ class MolForm_SQL:
                     return int(formula_obj._adduct_mz(z, adduct_atom))
             
             for formula_obj, ch_obj, classe_obj in tqdm.tqdm(formulas, desc="Loading molecular formula database"):
+
+                nominal_mz = nominal_mass_by_ion_type(formula_obj,z)
                 
-                for z in ion_charge:
+                if self.type != 'normal':
+                    if not nominal_mz in nominal_mzs:
+                        continue
+                classe = classe_obj.name
 
-                    nominal_mz = nominal_mass_by_ion_type(formula_obj,z)
+                # classe_str = formula.classe_string
+                
+                # pbar.set_description_str(desc="Loading molecular formula database for class %s " % classe_str)
+                
+                formula_dict = formula_obj.to_dict()
+
+                if formula_dict.get("O"):
                     
-                    if self.type != 'normal':
-                        if not nominal_mz in nominal_mzs:
-                            continue
-                    classe = classe_obj.name
+                    if formula_dict.get("O") / formula_dict.get("C") >= molecular_search_settings.max_oc_filter:
+                        # print(formula_dict.get("O") / formula_dict.get("C"), molecular_search_settings.max_oc_filter)
+                        continue
+                    elif formula_dict.get("O") / formula_dict.get("C") <= molecular_search_settings.min_oc_filter:
+                        # print(formula_dict.get("O") / formula_dict.get("C"), molecular_search_settings.min_oc_filter)
+                        continue
+                    #if formula_dict.get("P"):
 
-                    # classe_str = formula.classe_string
-                    
-                    # pbar.set_description_str(desc="Loading molecular formula database for class %s " % classe_str)
-                    
-                    formula_dict = formula_obj.to_dict()
-
-                    if formula_dict.get("O"):
-                        
-                        if formula_dict.get("O") / formula_dict.get("C") >= molecular_search_settings.max_oc_filter:
-                            # print(formula_dict.get("O") / formula_dict.get("C"), molecular_search_settings.max_oc_filter)
-                            continue
-                        elif formula_dict.get("O") / formula_dict.get("C") <= molecular_search_settings.min_oc_filter:
-                            # print(formula_dict.get("O") / formula_dict.get("C"), molecular_search_settings.min_oc_filter)
-                            continue
-                        #if formula_dict.get("P"):
-
-                        #    if  not (formula_dict.get("O") -2)/ formula_dict.get("P") >= molecular_search_settings.min_op_filter:
-                                
-                        #        continue
-            
-                    if classe in dict_res.keys():
-                        
-                        if nominal_mz in dict_res[classe].keys():
+                    #    if  not (formula_dict.get("O") -2)/ formula_dict.get("P") >= molecular_search_settings.min_op_filter:
                             
-                            dict_res.get(classe).get(nominal_mz).append(formula_obj)
+                    #        continue
+        
+                if classe in dict_res.keys():
+                    
+                    if nominal_mz in dict_res[classe].keys():
                         
-                        else:
-
-                            dict_res.get(classe)[nominal_mz] = [formula_obj ]  
-                
+                        dict_res.get(classe).get(nominal_mz).append(formula_obj)
+                    
                     else:
-                        
-                        dict_res[classe] = {nominal_mz: [formula_obj] }     
+
+                        dict_res.get(classe)[nominal_mz] = [formula_obj ]  
+            
+                else:
+                    
+                    dict_res[classe] = {nominal_mz: [formula_obj] }     
             
             return dict_res
         
