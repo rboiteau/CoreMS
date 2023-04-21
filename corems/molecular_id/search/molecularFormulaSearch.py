@@ -164,14 +164,6 @@ class SearchMolecularFormulas:
 
         # ion charge for all the ion in the mass spectrum
         # under the current structure is possible to search for individual m/z but it takes longer than allow all the m/z to be search against
-
-        for i in range(len(self.mass_spectrum_obj.mspeaks)):
-
-            p = self.mass_spectrum_obj.mspeaks[i]
-            
-            if p.ion_charge == -999:
-
-                self.mass_spectrum_obj.mspeaks[i].ion_charge = self.mass_spectrum_obj.molecular_search_settings.ion_charge * self.mass_spectrum_obj.polarity
                 
         ion_charge_list = [i * self.mass_spectrum_obj.polarity for i in [1,2]]
 
