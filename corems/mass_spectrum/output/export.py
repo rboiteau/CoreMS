@@ -103,7 +103,7 @@ class HighResMassSpecExport(Thread):
         dict_data_list = self.get_list_dict_data(self.mass_spectrum)
         df = DataFrame(dict_data_list, columns=columns)
         import numpy as np
-        df.replace(-999, np.nan)
+        df.replace(-999, np.nan,inplace=True)
         df.name = self.output_file
         return df
 
