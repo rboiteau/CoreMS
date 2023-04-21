@@ -261,7 +261,7 @@ class MolForm_SQL:
         def add_dict_formula(formulas, ion_type, ion_charge, adduct_atom=None):
             "organize data by heteroatom classes"
             dict_res = {}
-
+            print('\td %s' %ion_charge)
             def nominal_mass_by_ion_type(formula_obj,z):
                 
                 if ion_type == Labels.protonated_de_ion:
