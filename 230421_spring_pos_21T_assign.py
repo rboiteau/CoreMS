@@ -71,6 +71,8 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
         
         mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)  
 
+        print('\n\nassigning with first parameter set...')
+
         setAssingmentParams()
 
         if refmasslist:
@@ -102,6 +104,8 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
 
         results.append(assignments)
 
+
+        print('\nassigning with second parameter set...')
 
         setAssingmentParams2()
 
@@ -146,10 +150,10 @@ def setAssingmentParams():
     MSParameters.molecular_search.usedAtoms['H'] = (4,200)
     MSParameters.molecular_search.usedAtoms['O'] = (0,20)
     MSParameters.molecular_search.usedAtoms['N'] = (0,4)
-    MSParameters.molecular_search.usedAtoms['S'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['P'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['Na'] = (0,0)
-    #MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['S'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['P'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
     #MSParameters.molecular_search.usedAtoms['K'] = (0,1)
     #MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
     #MSParameters.molecular_search.usedAtoms['Zn'] = (0,1)
@@ -180,8 +184,8 @@ def setAssingmentParams2():
     MSParameters.molecular_search.usedAtoms['N'] = (0,20)
     MSParameters.molecular_search.usedAtoms['S'] = (0,1)
     MSParameters.molecular_search.usedAtoms['P'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['Na'] = (0,0)
-    #MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
     #MSParameters.molecular_search.usedAtoms['K'] = (0,1)
     #MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
     #MSParameters.molecular_search.usedAtoms['Zn'] = (0,1)
@@ -213,14 +217,13 @@ if __name__ == '__main__':
     
     i = 1
     for f in f_raw:
-        if 'spring_fullmz_rep2' in f:
-            print("\n\n\n%s/%s files" %(i, len(f_raw)))
-            output1, output2 = assign_formula(esifile = f, times = times, cal_ppm_threshold=(-1,1), refmasslist = mzref)
-            output1['file'] = f 
-            output2['file'] = f 
-            results.append(output1)
-            results2.append(output2)
-            i = i + 1
+        print("\n\n\n%s/%s files" %(i, len(f_raw)))
+        output1, output2 = assign_formula(esifile = f, times = times, cal_ppm_threshold=(-1,1), refmasslist = mzref)
+        output1['file'] = f 
+        output2['file'] = f 
+        results.append(output1)
+        results2.append(output2)
+        i = i + 1
     
     df = pd.concat(results)
     df.to_csv(data_dir+fname)
