@@ -89,9 +89,11 @@ class SearchMolecularFormulas:
                 if ms_peak.is_assigned:
                     continue
 
-            ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, ion_charge_list, adduct_atom)    
+            for ion_charge in ion_charge_list:
+                
+                ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, ion_charge, adduct_atom)    
 
-            all_assigned_indexes.extend(ms_peak_indexes)
+                all_assigned_indexes.extend(ms_peak_indexes)
 
         # all_assigned_indexes = MolecularFormulaSearchFilters().filter_isotopologue(all_assigned_indexes, self.mass_spectrum_obj)
 
@@ -367,7 +369,7 @@ class SearchMolecularFormulaWorker:
             raise Exception("Please set mz_calc first")
 
     def find_formulas(self, formulas, min_abundance,
-                      mass_spectrum_obj, ms_peak, ion_type, ion_charge_list, adduct_atom=None):
+                      mass_spectrum_obj, ms_peak, ion_type, ion_charge, adduct_atom=None):
         '''
         # uses the closest error the next search (this is not ideal, it needs to use confidence
         # metric to choose the right candidate then propagate the error using the error from the best candidate
@@ -424,31 +426,8 @@ class SearchMolecularFormulaWorker:
 
             if possible_formula:
                 
-                print(ms_peak_mz_exp, ion_charge_list[0])
-                error_z1 = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula, ion_charge_list[0]))
+                error = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula, ion_charge))
 
-                error_z2 = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula, ion_charge_list[1]))
-
-                if error_z1 <= error_z2:
-
-                    print('z1')
-                    error = error_z1
-
-                    ion_charge = ion_charge_list[0]
-
-                    ms_peak.ion_charge = ion_charge
-
-                else:
-
-                    print('z2')
-
-                    error = error_z2
-
-                    ion_charge = ion_charge_list[1]
-
-                    ms_peak.ion_charge = ion_charge
-
-                print(error)
                 if min_ppm_error <= error <= max_ppm_error:
                     
                     
