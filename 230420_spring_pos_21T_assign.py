@@ -197,8 +197,8 @@ if __name__ == '__main__':
     
     data_dir = '/mnt/disks/orca-data/mz-windowing/pos/spring/'
 
-    fname1 = '230420_spring-env_pos_+1.csv'
-    fname2 = '230420_spring-env_pos_+2.csv'
+    fname1 = '230420_spring-env_pos_+1a.csv'
+    fname2 = '230420_spring-env_pos_+2a.csv'
 
     mzref = "/home/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
     

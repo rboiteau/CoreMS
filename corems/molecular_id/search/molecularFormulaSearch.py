@@ -123,7 +123,6 @@ class SearchMolecularFormulas:
 
         dict_res = {}
 
-        print('line 126 ion charge %s' %ion_charge)
         if mf_search_settings.isProtonated:
             dict_res[Labels.protonated_de_ion] = sql_db.get_dict_by_classes(classe_str_list, Labels.protonated_de_ion, nominal_mzs, ion_charge, mf_search_settings)    
 
@@ -150,7 +149,6 @@ class SearchMolecularFormulas:
 
         ion_charge_list = [p.ion_charge for p in self.mass_spectrum_obj.mspeaks if p.ion_charge != None]
         ion_charge = list(set(ion_charge_list)) #None #self.mass_spectrum_obj.polarity #* self.mass_spectrum_obj.molecular_search_settings.ion_charge
-        print(ion_charge)
         # use to limit the calculation of possible isotopologues
         min_abundance = self.mass_spectrum_obj.min_abundance
 
@@ -176,7 +174,6 @@ class SearchMolecularFormulas:
 
                 # load the molecular formula objs binned by ion type and heteroatoms classes, {ion type:{classe:[list_formula]}}
                 # for adduct ion type a third key is added {atoms:{ion type:{classe:[list_formula]}}} 
-                print('line 179 %s' %ion_charge)
                 dict_res = self.database_to_dict(classes_str_list, nominal_mzs, self.mass_spectrum_obj.molecular_search_settings, ion_charge)
 
                 pbar = tqdm.tqdm(classe_chunk)
