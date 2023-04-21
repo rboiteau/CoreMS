@@ -442,14 +442,11 @@ class PeakPicking:
                             break
                     else:
 
-                        self._mspeaks[peak_index].ion_charge = MSParameters.molecular_search.ion_charge * self.polarity
+                        self._mspeaks[peak_index].ion_charge = -999 # MSParameters.molecular_search.ion_charge * self.polarity
                         n_def = n_def + 1
 
         print('num z = 2: %s' %n_z2)
         print('num z = 1: %s' %n_z1)
-        print('num z default: %s' %n_def)
-        print(MSParameters.molecular_search.ion_charge * self.polarity)
-
 
 
 

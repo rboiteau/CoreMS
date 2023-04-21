@@ -85,6 +85,11 @@ class SearchMolecularFormulas:
         for ms_peak in mspeaks:
             
             ion_charge = ms_peak.ion_charge
+
+            if ion_charge == -999:
+
+                ms_peak.ion_charge = self.mass_spectrum_obj.molecular_search_settings.ion_charge
+
             #print('line 88 molecular_id.search.molecularFormulaSearch.py ion charge %s' %ion_charge)
             # already assigned a molecular formula
             if self.first_hit:
@@ -126,7 +131,7 @@ class SearchMolecularFormulas:
 
         if mf_search_settings.isAdduct:
 
-            adduct_list = mf_search_settings.adduct_atoms_neg if ion_charge < 0 else mf_search_settings.adduct_atoms_pos
+            adduct_list = mf_search_settings.adduct_atoms_neg if ((ion_charge < 0) and (ion_charge > -999)) else mf_search_settings.adduct_atoms_pos
             dict_res[Labels.adduct_ion] = sql_db.get_dict_by_classes(classe_str_list, Labels.adduct_ion, nominal_mzs, ion_charge, mf_search_settings, adducts=adduct_list)    
 
         return dict_res
@@ -573,7 +578,7 @@ class SearchMolecularFormulasLC(SearchMolecularFormulas):
                 
                 ion_type = Labels.adduct_ion
                 
-                adduct_list = self.mass_spectrum_obj.molecular_search_settings.adduct_atoms_neg if ion_charge < 0 else self.mass_spectrum_obj.molecular_search_settings.adduct_atoms_pos
+                adduct_list = self.mass_spectrum_obj.molecular_search_settings.adduct_atoms_neg if ((ion_charge < 0) and (ion_charge > -999)) else self.mass_spectrum_obj.molecular_search_settings.adduct_atoms_pos
 
                 for adduct_atom in adduct_list:
 

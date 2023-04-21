@@ -71,10 +71,7 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
 
         MSParameters.molecular_search.ion_charge = 1
         mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)  
-        print("HELLO MS Obj loaded - "+str(len(mass_spectrum.mspeaks))+" peaks found.")
-
-        for peak in mass_spectrum.mspeaks:
-            print(peak.ion_charge)
+        #print("MS Obj loaded - "+str(len(mass_spectrum.mspeaks))+" peaks found.")
 
         if refmasslist:
         
@@ -110,7 +107,27 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
 
         results_1.append(assignments_z1)
 
+
+        MSParameters.molecular_search.ion_charge = 2
+        mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)  
         
+        if refmasslist:
+        
+            corder=2
+
+            mass_spectrum.settings.min_calib_ppm_error = 10
+            mass_spectrum.settings.max_calib_ppm_error = -10
+            calfn = MzDomainCalibration(mass_spectrum, refmasslist)
+            ref_mass_list_fmt = calfn.load_ref_mass_list(refmasslist)
+
+            imzmeas, mzrefs = calfn.find_calibration_points(mass_spectrum, ref_mass_list_fmt,
+                                                        calib_ppm_error_threshold=cal_ppm_threshold,
+                                                        calib_snr_threshold=3)
+
+            pmzrfs = pd.DataFrame(mzrefs)
+            pmzrfs.to_csv('cal_mzs_%s.csv' %esifile.split('.')[0])
+            calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=corder)
+            
         print('\nassigning with second parameter set...')
 
         setAssingmentParams2(ion_charge =2 )
