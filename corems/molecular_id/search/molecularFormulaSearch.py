@@ -176,7 +176,7 @@ class SearchMolecularFormulas:
 
                 # load the molecular formula objs binned by ion type and heteroatoms classes, {ion type:{classe:[list_formula]}}
                 # for adduct ion type a third key is added {atoms:{ion type:{classe:[list_formula]}}} 
-                print('two %' %ion_charge)
+                print('two %s' %ion_charge)
                 dict_res = self.database_to_dict(classes_str_list, nominal_mzs, self.mass_spectrum_obj.molecular_search_settings, ion_charge)
 
                 pbar = tqdm.tqdm(classe_chunk)
