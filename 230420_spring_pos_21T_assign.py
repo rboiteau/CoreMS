@@ -112,7 +112,7 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
         
         setAssingmentParams2(ion_charge =2 )
 
-        SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
+        SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
 
         print('\nresults with second parameter set...')
         

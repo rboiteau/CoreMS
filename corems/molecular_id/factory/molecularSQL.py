@@ -258,27 +258,27 @@ class MolForm_SQL:
                 )
             )
 
-        def add_dict_formula(formulas, ion_type, z, adduct_atom=None):
+        def add_dict_formula(formulas, ion_type, ion_charge, adduct_atom=None):
             "organize data by heteroatom classes"
             dict_res = {}
             #print('\td %s' %z)
-            def nominal_mass_by_ion_type(formula_obj,z):
+            def nominal_mass_by_ion_type(formula_obj,ion_charge):
                 
                 if ion_type == Labels.protonated_de_ion:
                 
-                    return int(formula_obj._protonated_mz(z))
+                    return int(formula_obj._protonated_mz(ion_charge))
                 
                 elif ion_type == Labels.radical_ion:
                     
-                    return int(formula_obj._radical_mz(z))
+                    return int(formula_obj._radical_mz(ion_charge))
 
                 elif ion_type == Labels.adduct_ion and adduct_atom:
                     
-                    return int(formula_obj._adduct_mz(z, adduct_atom))
+                    return int(formula_obj._adduct_mz(ion_charge, adduct_atom))
             
             for formula_obj, ch_obj, classe_obj in tqdm.tqdm(formulas, desc="Loading molecular formula database"):
 
-                nominal_mz = nominal_mass_by_ion_type(formula_obj,z)
+                nominal_mz = nominal_mass_by_ion_type(formula_obj,ion_charge)
                 
                 if self.type != 'normal':
                     if not nominal_mz in nominal_mzs:
@@ -329,30 +329,24 @@ class MolForm_SQL:
         query = query_normal(classes, len_adducts)
 
         if ion_type == Labels.protonated_de_ion:
-            for z in ion_charge:
-                print('assigning ions with charge = %s' %z)
-                if self.type == 'normal':
-                    query = query.filter(and_(
-                                    MolecularFormulaLink._protonated_mz(z).cast(Integer).in_(nominal_mzs)
-                                    ))
-                return add_dict_formula(query, ion_type, z)
+            if self.type == 'normal':
+                query = query.filter(and_(
+                                MolecularFormulaLink._protonated_mz(ion_charge).cast(Integer).in_(nominal_mzs)
+                                ))
+            return add_dict_formula(query, ion_type, ion_charge)
         
         if ion_type == Labels.radical_ion:
-            for z in ion_charge:
-                print('assigning ions with charge = %s' %z)
-                if self.type == 'normal':
-                    query = query.filter(MolecularFormulaLink._radical_mz(z).cast(Integer).in_(nominal_mzs))    
-                return add_dict_formula(query, ion_type, z)
+            if self.type == 'normal':
+                query = query.filter(MolecularFormulaLink._radical_mz(ion_charge).cast(Integer).in_(nominal_mzs))    
+            return add_dict_formula(query, ion_type, ion_charge)
         
         if ion_type == Labels.adduct_ion:
             dict_res = {}
             if adducts: 
                 for atom in adducts:
-                    for z in ion_charge:
-                        print('assigning ions with charge = %s' %z)
-                        if self.type == 'normal':
-                            query = query.filter(MolecularFormulaLink._adduct_mz(z, atom).cast(Integer).in_(nominal_mzs))    
-                        dict_res[atom] = add_dict_formula(query, ion_type, z, adduct_atom=atom)
+                    if self.type == 'normal':
+                        query = query.filter(MolecularFormulaLink._adduct_mz(ion_charge, atom).cast(Integer).in_(nominal_mzs))    
+                    dict_res[atom] = add_dict_formula(query, ion_type, ion_charge, adduct_atom=atom)
                 return dict_res
         # dump all objs to memory
         self.session.expunge_all()
