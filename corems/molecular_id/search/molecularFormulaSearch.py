@@ -90,6 +90,7 @@ class SearchMolecularFormulas:
                     continue
 
             if ms_peak.ion_charge == ion_charge:
+                print(ms_peak.ion_charge)
                 ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, ms_peak.ion_charge, adduct_atom)    
                 all_assigned_indexes.extend(ms_peak_indexes)
 
