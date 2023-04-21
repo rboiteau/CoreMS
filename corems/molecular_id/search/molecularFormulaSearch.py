@@ -199,8 +199,9 @@ class SearchMolecularFormulas:
 
                         if candidate_formulas:
                             
-                            print(candidate_formulas)
-                            
+                            for c in candidate_formulas:
+                                print(c)
+
                             self.run_search(ms_peaks, candidate_formulas,
                                             min_abundance, ion_charge_list, ion_type)
                             
