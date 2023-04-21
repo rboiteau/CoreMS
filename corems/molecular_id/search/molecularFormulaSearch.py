@@ -195,8 +195,10 @@ class SearchMolecularFormulas:
 
                         candidate_formulas = dict_res.get(ion_type).get(classe_str)
 
-                        self.run_search(ms_peaks,candidate_formulas,
-                                            min_abundance, ion_type, ion_charge)
+                        if candidate_formulas:
+
+                            self.run_search(ms_peaks,candidate_formulas,
+                                                min_abundance, ion_type, ion_charge)
      
                     if self.mass_spectrum_obj.molecular_search_settings.isRadical:
 
