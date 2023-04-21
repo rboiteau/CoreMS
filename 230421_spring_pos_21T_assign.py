@@ -86,7 +86,7 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
                                                         calib_snr_threshold=3)
 
             pmzrfs = pd.DataFrame(mzrefs)
-            pmzrfs.to_csv('cal_mzs_%s.csv' %esifile.split('.')[0])
+            #pmzrfs.to_csv('cal_mzs_%s.csv' %esifile.split('.')[0])
             calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=corder)
 
         SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()

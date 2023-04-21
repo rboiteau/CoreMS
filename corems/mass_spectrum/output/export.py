@@ -102,6 +102,7 @@ class HighResMassSpecExport(Thread):
         columns = self.columns_label + self.get_all_used_atoms_in_order(self.mass_spectrum)
         dict_data_list = self.get_list_dict_data(self.mass_spectrum)
         df = DataFrame(dict_data_list, columns=columns)
+        df[df['Ion Charge'] == -999] = ''
         df.name = self.output_file
         return df
 
