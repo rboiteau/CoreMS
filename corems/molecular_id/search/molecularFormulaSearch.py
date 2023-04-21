@@ -198,7 +198,9 @@ class SearchMolecularFormulas:
                         candidate_formulas = dict_res.get(ion_type).get(classe_str)
 
                         if candidate_formulas:
-
+                            
+                            print(candidate_formulas)
+                            
                             self.run_search(ms_peaks, candidate_formulas,
                                             min_abundance, ion_charge_list, ion_type)
                             
@@ -423,11 +425,12 @@ class SearchMolecularFormulaWorker:
         for possible_formula in formulas:
 
             if possible_formula:
-
+                
+                
                 error_z1 = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula, ion_charge_list[0]))
-
+                print('z1 ran')
                 error_z2 = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula, ion_charge_list[1]))
-
+                print('z2 ran')
                 if error_z1 <= error_z2:
 
                     error = error_z1
