@@ -147,7 +147,16 @@ class SearchMolecularFormulas:
         # ion charge for all the ion in the mass spectrum
         # under the current structure is possible to search for individual m/z but it takes longer than allow all the m/z to be search against
 
-        ion_charge_list = [p.ion_charge for p in self.mass_spectrum_obj.mspeaks if p.ion_charge != None]
+        for i in range(len(self.mass_spectrum_obj.mspeaks)):
+
+            p = self.mass_spectrum_obj.mspeaks[i]
+            
+            if p.ion_charge == -999:
+
+                self.mass_spectrum_obj.mspeaks[i].ion_charge = self.mass_spectrum_obj.molecular_search_settings.ion_charge
+                
+        ion_charge_list = [p.ion_charge for p in self.mass_spectrum_obj.mspeaks]
+        
         #None #self.mass_spectrum_obj.polarity #* self.mass_spectrum_obj.molecular_search_settings.ion_charge
 
         # use to limit the calculation of possible isotopologues
