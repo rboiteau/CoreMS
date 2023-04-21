@@ -55,7 +55,7 @@ class SearchMolecularFormulas:
 
         return False
 
-    def run_search(self, mspeaks, query, min_abundance, ion_type, ion_charge, adduct_atom=None):
+    def run_search(self, mspeaks, query, min_abundance, ion_type, adduct_atom=None):
         def get_formulas(nominal_overlay=0.1):
 
             nominal_mz = ms_peak.nominal_mz_exp
@@ -88,7 +88,7 @@ class SearchMolecularFormulas:
 
             if ion_charge == -999:
 
-                ms_peak.ion_charge = self.mass_spectrum_obj.molecular_search_settings.ion_charge
+                ms_peak.ion_charge = self.mass_spectrum_obj.molecular_search_settings.ion_charge * self.mass_spectrum_obj.polarity
 
             #print('line 88 molecular_id.search.molecularFormulaSearch.py ion charge %s' %ion_charge)
             # already assigned a molecular formula
@@ -131,7 +131,7 @@ class SearchMolecularFormulas:
 
         if mf_search_settings.isAdduct:
 
-            adduct_list = mf_search_settings.adduct_atoms_neg if ((ion_charge < 0) and (ion_charge > -999)) else mf_search_settings.adduct_atoms_pos
+            adduct_list = mf_search_settings.adduct_atoms_neg if ion_charge[0] < 0 else mf_search_settings.adduct_atoms_pos
             dict_res[Labels.adduct_ion] = sql_db.get_dict_by_classes(classe_str_list, Labels.adduct_ion, nominal_mzs, ion_charge, mf_search_settings, adducts=adduct_list)    
 
         return dict_res
@@ -146,7 +146,9 @@ class SearchMolecularFormulas:
 
         # ion charge for all the ion in the mass spectrum
         # under the current structure is possible to search for individual m/z but it takes longer than allow all the m/z to be search against
-        ion_charge =  self.mass_spectrum_obj.polarity #* self.mass_spectrum_obj.molecular_search_settings.ion_charge
+
+        ion_charge_list = [p.ion_charge for p in self.mass_spectrum_obj.mspeaks]
+        ion_charge = list(set(ion_charge_list)) #None #self.mass_spectrum_obj.polarity #* self.mass_spectrum_obj.molecular_search_settings.ion_charge
     
         # use to limit the calculation of possible isotopologues
         min_abundance = self.mass_spectrum_obj.min_abundance
@@ -194,7 +196,7 @@ class SearchMolecularFormulas:
                         if candidate_formulas:
 
                             self.run_search(ms_peaks, candidate_formulas,
-                                            min_abundance, ion_type, ion_charge)
+                                            min_abundance, ion_type)
 
                     if self.mass_spectrum_obj.molecular_search_settings.isRadical:
 
@@ -207,7 +209,7 @@ class SearchMolecularFormulas:
                         if candidate_formulas:
 
                             self.run_search(ms_peaks, candidate_formulas,
-                                            min_abundance, ion_type, ion_charge)
+                                            min_abundance, ion_type)
                     # looks for adduct, used_atom_valences should be 0 
                     # this code does not support H exchance by halogen atoms
                     if self.mass_spectrum_obj.molecular_search_settings.isAdduct:
@@ -223,7 +225,7 @@ class SearchMolecularFormulas:
 
                             if candidate_formulas:
                                 self.run_search(ms_peaks, candidate_formulas,
-                                                min_abundance, ion_type, ion_charge, adduct_atom=adduct_atom)
+                                                min_abundance, ion_type, adduct_atom=adduct_atom)
 
         run()
         self.sql_db.close()
@@ -384,19 +386,19 @@ class SearchMolecularFormulaWorker:
         ms_peak_mz_exp, ms_peak_abundance = ms_peak.mz_exp, ms_peak.abundance
         # min_error = min([pmf.mz_error for pmf in possible_formulas])
 
-        def mass_by_ion_type(possible_formula_obj):
+        def mass_by_ion_type(possible_formula_obj, z):
 
             if ion_type == Labels.protonated_de_ion:
 
-                return possible_formula_obj._protonated_mz(ion_charge)
+                return possible_formula_obj._protonated_mz(z)
 
             elif ion_type == Labels.radical_ion:
 
-                return possible_formula_obj._radical_mz(ion_charge)
+                return possible_formula_obj._radical_mz(z)
 
             elif ion_type == Labels.adduct_ion and adduct_atom:
 
-                return possible_formula._adduct_mz(ion_charge, adduct_atom)
+                return possible_formula._adduct_mz(z, adduct_atom)
 
             else:
                 # will return externally calculated mz if is set, #use on Bruker Reference list import
@@ -415,104 +417,106 @@ class SearchMolecularFormulaWorker:
 
         for possible_formula in formulas:
 
-            if possible_formula:
+            for z in ion_charge:
 
-                error = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula))
+                if possible_formula:
 
-                # error = possible_formula.mz_error
+                    error = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula, z))
 
-                if min_ppm_error <= error <= max_ppm_error:
+                    # error = possible_formula.mz_error
 
-                    # update the error
+                    if min_ppm_error <= error <= max_ppm_error:
 
-                    self.set_last_error(error, mass_spectrum_obj)
+                        # update the error
 
-                    # add molecular formula match to ms_peak
+                        self.set_last_error(error, mass_spectrum_obj)
 
-                    # get molecular formula dict from sql obj
-                    # formula_dict = pickle.loads(possible_formula.mol_formula)
-                    #if possible_mf_class:
+                        # add molecular formula match to ms_peak
+
+                        # get molecular formula dict from sql obj
+                        # formula_dict = pickle.loads(possible_formula.mol_formula)
+                        #if possible_mf_class:
+                            
+                        #    molecular_formula = deepcopy(possible_formula)
                         
-                    #    molecular_formula = deepcopy(possible_formula)
-                    
-                    #else:
-                        
-                    formula_dict = possible_formula.to_dict()
-                    # create the molecular formula obj to be stored
-                    if possible_mf_class:
+                        #else:
+                            
+                        formula_dict = possible_formula.to_dict()
+                        # create the molecular formula obj to be stored
+                        if possible_mf_class:
 
-                        molecular_formula = LCMSLibRefMolecularFormula(formula_dict, ion_charge, ion_type=ion_type, adduct_atom=adduct_atom)
-                        
-                        molecular_formula.name = possible_formula.name
-                        molecular_formula.kegg_id = possible_formula.kegg_id
-                        molecular_formula.cas = possible_formula.cas
+                            molecular_formula = LCMSLibRefMolecularFormula(formula_dict, z, ion_type=ion_type, adduct_atom=adduct_atom)
+                            
+                            molecular_formula.name = possible_formula.name
+                            molecular_formula.kegg_id = possible_formula.kegg_id
+                            molecular_formula.cas = possible_formula.cas
 
-                    else:
+                        else:
 
-                        molecular_formula = MolecularFormula(formula_dict, ion_charge, ion_type=ion_type, adduct_atom=adduct_atom)
-                    # add the molecular formula obj to the mspeak obj
-                    # add the mspeak obj and it's index for tracking next assignment step
+                            molecular_formula = MolecularFormula(formula_dict, z, ion_type=ion_type, adduct_atom=adduct_atom)
+                        # add the molecular formula obj to the mspeak obj
+                        # add the mspeak obj and it's index for tracking next assignment step
 
-                    if self.find_isotopologues:
+                        if self.find_isotopologues:
 
-                        # calculates isotopologues
-                        isotopologues = molecular_formula.isotopologues(min_abundance, ms_peak_abundance, mass_spectrum_obj.dynamic_range)
+                            # calculates isotopologues
+                            isotopologues = molecular_formula.isotopologues(min_abundance, ms_peak_abundance, mass_spectrum_obj.dynamic_range)
 
-                        # search for isotopologues
-                        for isotopologue_formula in isotopologues:
+                            # search for isotopologues
+                            for isotopologue_formula in isotopologues:
 
-                            molecular_formula.expected_isotopologues.append(isotopologue_formula)
-                            # move this outside to improve preformace
-                            # we need to increase the search space to -+1 m_z 
-                            first_index, last_index = mass_spectrum_obj.get_nominal_mz_first_last_indexes(isotopologue_formula.mz_nominal_calc)
+                                molecular_formula.expected_isotopologues.append(isotopologue_formula)
+                                # move this outside to improve preformace
+                                # we need to increase the search space to -+1 m_z 
+                                first_index, last_index = mass_spectrum_obj.get_nominal_mz_first_last_indexes(isotopologue_formula.mz_nominal_calc)
 
-                            for ms_peak_iso in mass_spectrum_obj[first_index:last_index]:
+                                for ms_peak_iso in mass_spectrum_obj[first_index:last_index]:
 
-                                error = self.calc_error(ms_peak_iso.mz_exp, isotopologue_formula.mz_calc)
+                                    error = self.calc_error(ms_peak_iso.mz_exp, isotopologue_formula.mz_calc)
 
-                                if min_ppm_error <= error <= max_ppm_error:
+                                    if min_ppm_error <= error <= max_ppm_error:
 
-                                    # need to define error distribution for abundance measurements
+                                        # need to define error distribution for abundance measurements
 
-                                    # if mass_spectrum_obj.is_centroid:
+                                        # if mass_spectrum_obj.is_centroid:
 
-                                    abundance_error = self.calc_error(isotopologue_formula.abundance_calc, ms_peak_iso.abundance,method='perc')            
+                                        abundance_error = self.calc_error(isotopologue_formula.abundance_calc, ms_peak_iso.abundance,method='perc')            
 
-                                    # area_error = self.calc_error(ms_peak.area, ms_peak_iso.area, method='perc')
+                                        # area_error = self.calc_error(ms_peak.area, ms_peak_iso.area, method='perc')
 
-                                    # margin of error was set empirically/ needs statistical calculation
-                                    #  of margin of error for the measurement of the abundances
-                                    if min_abun_error <= abundance_error <= max_abun_error:
+                                        # margin of error was set empirically/ needs statistical calculation
+                                        #  of margin of error for the measurement of the abundances
+                                        if min_abun_error <= abundance_error <= max_abun_error:
 
-                                        # update the error
+                                            # update the error
 
-                                        self.set_last_error(error, mass_spectrum_obj)
+                                            self.set_last_error(error, mass_spectrum_obj)
 
-                                        # isotopologue_formula.mz_error = error
+                                            # isotopologue_formula.mz_error = error
 
-                                        # isotopologue_formula.area_error = area_error
+                                            # isotopologue_formula.area_error = area_error
 
-                                        # isotopologue_formula.abundance_error = abundance_error
+                                            # isotopologue_formula.abundance_error = abundance_error
 
-                                        isotopologue_formula.mspeak_index_mono_isotopic = ms_peak.index
+                                            isotopologue_formula.mspeak_index_mono_isotopic = ms_peak.index
 
-                                        mono_isotopic_formula_index = len(ms_peak)
+                                            mono_isotopic_formula_index = len(ms_peak)
 
-                                        isotopologue_formula.mspeak_index_mono_isotopic = ms_peak.index
+                                            isotopologue_formula.mspeak_index_mono_isotopic = ms_peak.index
 
-                                        isotopologue_formula.mono_isotopic_formula_index = mono_isotopic_formula_index
+                                            isotopologue_formula.mono_isotopic_formula_index = mono_isotopic_formula_index
 
-                                        # add mspeaks isotopologue index to the mono isotopic MolecularFormula obj and the respective formula position  
+                                            # add mspeaks isotopologue index to the mono isotopic MolecularFormula obj and the respective formula position  
 
-                                        # add molecular formula match to ms_peak
-                                        x = ms_peak_iso.add_molecular_formula(isotopologue_formula)
+                                            # add molecular formula match to ms_peak
+                                            x = ms_peak_iso.add_molecular_formula(isotopologue_formula)
 
-                                        molecular_formula.mspeak_mf_isotopologues_indexes.append((ms_peak_iso.index, x))
-                                        # add mspeaks mono isotopic index to the isotopologue MolecularFormula obj
+                                            molecular_formula.mspeak_mf_isotopologues_indexes.append((ms_peak_iso.index, x))
+                                            # add mspeaks mono isotopic index to the isotopologue MolecularFormula obj
 
-                    y = ms_peak.add_molecular_formula(molecular_formula)            
+                        y = ms_peak.add_molecular_formula(molecular_formula)            
 
-                    mspeak_assigned_index.append((ms_peak.index, y))
+                        mspeak_assigned_index.append((ms_peak.index, y))
 
         return mspeak_assigned_index
 
@@ -553,7 +557,7 @@ class SearchMolecularFormulasLC(SearchMolecularFormulas):
 
             self.mass_spectrum_obj = peak.mass_spectrum
 
-            ion_charge = self.mass_spectrum_obj.polarity
+            ion_charge = self.mass_spectrum_obj.molecular_search_settings.ion_charge
             
             candidate_formulas = peak.targeted_molecular_formulas
 
@@ -578,7 +582,7 @@ class SearchMolecularFormulasLC(SearchMolecularFormulas):
                 
                 ion_type = Labels.adduct_ion
                 
-                adduct_list = self.mass_spectrum_obj.molecular_search_settings.adduct_atoms_neg if ((ion_charge < 0) and (ion_charge > -999)) else self.mass_spectrum_obj.molecular_search_settings.adduct_atoms_pos
+                adduct_list = self.mass_spectrum_obj.molecular_search_settings.adduct_atoms_neg if ion_charge < 0 else self.mass_spectrum_obj.molecular_search_settings.adduct_atoms_pos
 
                 for adduct_atom in adduct_list:
 
