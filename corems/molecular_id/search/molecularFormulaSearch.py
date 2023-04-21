@@ -429,7 +429,8 @@ class SearchMolecularFormulaWorker:
 
                 if min_ppm_error <= error <= max_ppm_error:
                     
-                    ms_peak.ion_charge = ion_charge
+                    if ms_peak.ion_charge == -999:
+                        ms_peak.ion_charge = 100 #ion_charge
                     # update the error
 
                     self.set_last_error(error, mass_spectrum_obj)
