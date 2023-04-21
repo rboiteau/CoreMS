@@ -107,7 +107,7 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
 
         SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
 
-        print('\nresults with first parameter set...')
+        print('\nresults with second parameter set...')
 
         mass_spectrum.percentile_assigned(report_error=True)
 
