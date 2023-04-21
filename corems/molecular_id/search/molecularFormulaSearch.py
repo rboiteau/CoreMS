@@ -83,12 +83,12 @@ class SearchMolecularFormulas:
         search_molfrom = SearchMolecularFormulaWorker(find_isotopologues=self.find_isotopologues)
 
         for ms_peak in mspeaks:
-            
-            ion_charge = ms_peak.ion_charge
 
-            if ion_charge == None:
+            if ms_peak.ion_charge == None:
 
                 ms_peak.ion_charge = self.mass_spectrum_obj.molecular_search_settings.ion_charge * self.mass_spectrum_obj.polarity
+
+            ion_charge = ms_peak.ion_charge
 
             #print('line 88 molecular_id.search.molecularFormulaSearch.py ion charge %s' %ion_charge)
             # already assigned a molecular formula
