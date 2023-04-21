@@ -330,7 +330,7 @@ class MolForm_SQL:
 
         if ion_type == Labels.protonated_de_ion:
             for z in ion_charge:
-                print('assigning ions with charge = ' %(z))
+                print('assigning ions with charge = %s' %z)
                 if self.type == 'normal':
                     query = query.filter(and_(
                                     MolecularFormulaLink._protonated_mz(z).cast(Integer).in_(nominal_mzs)
@@ -339,7 +339,7 @@ class MolForm_SQL:
         
         if ion_type == Labels.radical_ion:
             for z in ion_charge:
-                print('assigning ions with charge = ' %(z))
+                print('assigning ions with charge = %s' %z)
                 if self.type == 'normal':
                     query = query.filter(MolecularFormulaLink._radical_mz(z).cast(Integer).in_(nominal_mzs))    
                 return add_dict_formula(query, ion_type, z)
@@ -349,7 +349,7 @@ class MolForm_SQL:
             if adducts: 
                 for atom in adducts:
                     for z in ion_charge:
-                        print('assigning ions with charge = ' %(z))
+                        print('assigning ions with charge = %s' %z)
                         if self.type == 'normal':
                             query = query.filter(MolecularFormulaLink._adduct_mz(z, atom).cast(Integer).in_(nominal_mzs))    
                         dict_res[atom] = add_dict_formula(query, ion_type, z, adduct_atom=atom)
