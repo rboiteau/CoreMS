@@ -148,7 +148,8 @@ class SearchMolecularFormulas:
         # under the current structure is possible to search for individual m/z but it takes longer than allow all the m/z to be search against
 
         ion_charge_list = [p.ion_charge for p in self.mass_spectrum_obj.mspeaks if p.ion_charge != None]
-        ion_charge = list(set(ion_charge_list)) #None #self.mass_spectrum_obj.polarity #* self.mass_spectrum_obj.molecular_search_settings.ion_charge
+        #None #self.mass_spectrum_obj.polarity #* self.mass_spectrum_obj.molecular_search_settings.ion_charge
+
         # use to limit the calculation of possible isotopologues
         min_abundance = self.mass_spectrum_obj.min_abundance
 
@@ -226,8 +227,9 @@ class SearchMolecularFormulas:
                                 self.run_search(ms_peaks, candidate_formulas,
                                                 min_abundance, ion_type, adduct_atom=adduct_atom)
 
-        run()
-        self.sql_db.close()
+        for ion_charge in list(set(ion_charge_list)):
+            run()
+            self.sql_db.close()
 
     def search_mol_formulas(self, possible_formulas_list: List[MolecularFormula], ion_type:str, 
                             neutral_molform=True, find_isotopologues=True, adduct_atom=None) -> List[_MSPeak]:
@@ -361,7 +363,7 @@ class SearchMolecularFormulaWorker:
             raise Exception("Please set mz_calc first")
 
     def find_formulas(self, formulas, min_abundance,
-                      mass_spectrum_obj, ms_peak, ion_type, z, adduct_atom=None):
+                      mass_spectrum_obj, ms_peak, ion_type, ion_charge, adduct_atom=None):
         '''
         # uses the closest error the next search (this is not ideal, it needs to use confidence
         # metric to choose the right candidate then propagate the error using the error from the best candidate
@@ -385,19 +387,19 @@ class SearchMolecularFormulaWorker:
         ms_peak_mz_exp, ms_peak_abundance = ms_peak.mz_exp, ms_peak.abundance
         # min_error = min([pmf.mz_error for pmf in possible_formulas])
 
-        def mass_by_ion_type(possible_formula_obj, z):
+        def mass_by_ion_type(possible_formula_obj, ion_charge):
 
             if ion_type == Labels.protonated_de_ion:
 
-                return possible_formula_obj._protonated_mz(z)
+                return possible_formula_obj._protonated_mz(ion_charge)
 
             elif ion_type == Labels.radical_ion:
 
-                return possible_formula_obj._radical_mz(z)
+                return possible_formula_obj._radical_mz(ion_charge)
 
             elif ion_type == Labels.adduct_ion and adduct_atom:
 
-                return possible_formula._adduct_mz(z, adduct_atom)
+                return possible_formula._adduct_mz(ion_charge, adduct_atom)
 
             else:
                 # will return externally calculated mz if is set, #use on Bruker Reference list import
@@ -418,7 +420,7 @@ class SearchMolecularFormulaWorker:
 
             if possible_formula:
 
-                error = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula, z))
+                error = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula, ion_charge))
 
                 # error = possible_formula.mz_error
 
@@ -442,7 +444,7 @@ class SearchMolecularFormulaWorker:
                     # create the molecular formula obj to be stored
                     if possible_mf_class:
 
-                        molecular_formula = LCMSLibRefMolecularFormula(formula_dict, z, ion_type=ion_type, adduct_atom=adduct_atom)
+                        molecular_formula = LCMSLibRefMolecularFormula(formula_dict, ion_charge, ion_type=ion_type, adduct_atom=adduct_atom)
                         
                         molecular_formula.name = possible_formula.name
                         molecular_formula.kegg_id = possible_formula.kegg_id
@@ -450,7 +452,7 @@ class SearchMolecularFormulaWorker:
 
                     else:
 
-                        molecular_formula = MolecularFormula(formula_dict, z, ion_type=ion_type, adduct_atom=adduct_atom)
+                        molecular_formula = MolecularFormula(formula_dict, ion_charge, ion_type=ion_type, adduct_atom=adduct_atom)
                     # add the molecular formula obj to the mspeak obj
                     # add the mspeak obj and it's index for tracking next assignment step
 
@@ -554,7 +556,7 @@ class SearchMolecularFormulasLC(SearchMolecularFormulas):
 
             self.mass_spectrum_obj = peak.mass_spectrum
 
-            ion_charge = self.mass_spectrum_obj.molecular_search_settings.ion_charge
+            ion_charge = self.mass_spectrum_obj.molecular_search_settings.ion_charge * self.mass_spectrum_obj.polarity
             
             candidate_formulas = peak.targeted_molecular_formulas
 
