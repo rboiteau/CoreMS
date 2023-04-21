@@ -195,7 +195,7 @@ class SearchMolecularFormulas:
                         candidate_formulas = dict_res.get(ion_type).get(classe_str)
 
                         self.run_search(ms_peaks,candidate_formulas,
-                                            min_abundance, ion_type)
+                                            min_abundance, ion_type, ion_charge)
      
                     if self.mass_spectrum_obj.molecular_search_settings.isRadical:
 
@@ -208,7 +208,7 @@ class SearchMolecularFormulas:
                         if candidate_formulas:
 
                             self.run_search(ms_peaks, candidate_formulas,
-                                            min_abundance, ion_type)
+                                            min_abundance, ion_type, ion_charge)
                     # looks for adduct, used_atom_valences should be 0 
                     # this code does not support H exchance by halogen atoms
                     if self.mass_spectrum_obj.molecular_search_settings.isAdduct:
@@ -224,7 +224,7 @@ class SearchMolecularFormulas:
 
                             if candidate_formulas:
                                 self.run_search(ms_peaks, candidate_formulas,
-                                                min_abundance, ion_type, adduct_atom=adduct_atom)
+                                                min_abundance, ion_type, ion_charge, adduct_atom=adduct_atom)
 
         run()
         self.sql_db.close()
