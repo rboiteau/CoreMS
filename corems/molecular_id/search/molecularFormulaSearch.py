@@ -93,24 +93,28 @@ class SearchMolecularFormulas:
                     continue
 
             if ms_peak.ion_charge == (1 * self.mass_spectrum_obj.polarity):
+                print('assigining known z = %s peaks' %(1 * self.mass_spectrum_obj.polarity)  )
                 query = query_z1
                 ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, ms_peak.ion_charge, adduct_atom)    
                 all_assigned_indexes.extend(ms_peak_indexes)
 
             elif ms_peak.ion_charge == (2 * self.mass_spectrum_obj.polarity):
+                print('assigining known z = %s peaks' %(2 * self.mass_spectrum_obj.polarity)  )
                 query = query_z2
                 ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, ms_peak.ion_charge, adduct_atom)    
                 all_assigned_indexes.extend(ms_peak_indexes)
 
             else:
+                print('trying assignments with z = %s on remaining peaks' %(1 * self.mass_spectrum_obj.polarity)  )
                 query = query_z1
                 ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, ion_charge[0], adduct_atom)    
                 all_assigned_indexes.extend(ms_peak_indexes)
 
                 for ms_peak in mspeaks:
-
+                    print('trying assignments with z = %s on remaining peaks' %(2 * self.mass_spectrum_obj.polarity)  )
                     if ms_peak.is_assigned:
                         continue
+
                     query = query_z2
                     ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, ion_charge[1], adduct_atom)    
                     all_assigned_indexes.extend(ms_peak_indexes)
