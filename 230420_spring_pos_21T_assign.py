@@ -70,9 +70,10 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
         scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
         print('\nassigning with first parameter set...')
 
-        MSParameters.molecular_search.ion_charge = 1
+        
         mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)  
 
+        mass_spectrum.molecular_search_settings.ion_charge = 1
         setAssingmentParams(ion_charge = 1)
 
         #print("MS Obj loaded - "+str(len(mass_spectrum.mspeaks))+" peaks found.")
@@ -109,7 +110,7 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
 
         print('\nassigning with second parameter set...')
 
-        MSParameters.molecular_search.ion_charge = 2
+        mass_spectrum.molecular_search_settings.ion_charge = 2
         
         setAssingmentParams2(ion_charge =2 )
 
