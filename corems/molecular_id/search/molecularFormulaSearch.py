@@ -95,7 +95,6 @@ class SearchMolecularFormulas:
                 all_assigned_indexes.extend(ms_peak_indexes)
 
             elif ms_peak.ion_charge == (2 * self.mass_spectrum_obj.polarity):
-                print('assigining known z = %s peaks' %(2 * self.mass_spectrum_obj.polarity)  )
                 ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, ms_peak.ion_charge, adduct_atom)    
                 all_assigned_indexes.extend(ms_peak_indexes)
 
