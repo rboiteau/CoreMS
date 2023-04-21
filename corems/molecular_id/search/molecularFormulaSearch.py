@@ -426,9 +426,12 @@ class SearchMolecularFormulaWorker:
                 
                 
                 error_z1 = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula, ion_charge_list[0]))
+
                 error_z2 = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula, ion_charge_list[1]))
+
                 if error_z1 <= error_z2:
 
+                    print('z1')
                     error = error_z1
 
                     ion_charge = ion_charge_list[0]
@@ -436,6 +439,8 @@ class SearchMolecularFormulaWorker:
                     ms_peak.ion_charge = ion_charge
 
                 else:
+
+                    print('z2')
 
                     error = error_z2
 
@@ -445,7 +450,8 @@ class SearchMolecularFormulaWorker:
 
 
                 if min_ppm_error <= error <= max_ppm_error:
-
+                    
+                    print(error)
                     # update the error
 
                     self.set_last_error(error, mass_spectrum_obj)
