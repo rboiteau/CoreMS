@@ -199,6 +199,7 @@ class SearchMolecularFormulas:
 
                         if candidate_formulas:
                             
+                            print(type(candidate_formulas))
                             for c in candidate_formulas:
                                 print(c, type(c))
 
