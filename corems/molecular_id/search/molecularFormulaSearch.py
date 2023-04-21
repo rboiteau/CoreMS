@@ -83,9 +83,11 @@ class SearchMolecularFormulas:
 
         search_molfrom = SearchMolecularFormulaWorker(find_isotopologues=self.find_isotopologues)
 
-       
+        i = 0 
 
         for ms_peak in mspeaks:
+            i = i+1
+            print(i)
             # already assigned a molecular formula
             if self.first_hit:
 
@@ -150,6 +152,7 @@ class SearchMolecularFormulas:
                 adduct_list = mf_search_settings.adduct_atoms_neg if ion_charge[0] < 0 else mf_search_settings.adduct_atoms_pos
                 dict_res[Labels.adduct_ion] = sql_db.get_dict_by_classes(classe_str_list, Labels.adduct_ion, nominal_mzs, ion_charge, mf_search_settings, adducts=adduct_list)    
 
+            print(len(dict_res))
         return dict_res
 
     @timeit       
