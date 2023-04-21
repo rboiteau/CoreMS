@@ -86,7 +86,7 @@ class SearchMolecularFormulas:
             
             ion_charge = ms_peak.ion_charge
 
-            if ion_charge == -999:
+            if ion_charge == None:
 
                 ms_peak.ion_charge = self.mass_spectrum_obj.molecular_search_settings.ion_charge * self.mass_spectrum_obj.polarity
 
