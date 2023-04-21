@@ -430,7 +430,7 @@ class SearchMolecularFormulaWorker:
                 if min_ppm_error <= error <= max_ppm_error:
                     
                     if ms_peak.ion_charge == -999:
-                        ms_peak.ion_charge = 100 #ion_charge
+                        ms_peak.ion_charge = ion_charge
                     # update the error
 
                     self.set_last_error(error, mass_spectrum_obj)
@@ -479,6 +479,9 @@ class SearchMolecularFormulaWorker:
                                 error = self.calc_error(ms_peak_iso.mz_exp, isotopologue_formula.mz_calc)
 
                                 if min_ppm_error <= error <= max_ppm_error:
+
+                                    if ms_peak.ion_charge == -999:
+                                        ms_peak.ion_charge = ion_charge
 
                                     # need to define error distribution for abundance measurements
 
