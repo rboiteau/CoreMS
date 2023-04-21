@@ -68,9 +68,13 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
         print('\nfile: %s\ntimestart:%s'  %(esifile,timestart))
     
         scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
+        print('\nassigning with first parameter set...')
 
         MSParameters.molecular_search.ion_charge = 1
         mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)  
+
+        setAssingmentParams(ion_charge = 1)
+
         #print("MS Obj loaded - "+str(len(mass_spectrum.mspeaks))+" peaks found.")
 
         if refmasslist:
@@ -90,11 +94,6 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
             pmzrfs.to_csv('cal_mzs_%s.csv' %esifile.split('.')[0])
             calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=corder)
 
-        
-        print('\nassigning with first parameter set...')
-
-        setAssingmentParams(ion_charge = 1)
-
         SearchMolecularFormulas(mass_spectrum, first_hit=False).run_worker_mass_spectrum()
 
         print('\nresults with first parameter set...')
@@ -109,27 +108,8 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
 
 
         MSParameters.molecular_search.ion_charge = 2
-        mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)  
+        #mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)  
         
-        if refmasslist:
-        
-            corder=2
-
-            mass_spectrum.settings.min_calib_ppm_error = 10
-            mass_spectrum.settings.max_calib_ppm_error = -10
-            calfn = MzDomainCalibration(mass_spectrum, refmasslist)
-            ref_mass_list_fmt = calfn.load_ref_mass_list(refmasslist)
-
-            imzmeas, mzrefs = calfn.find_calibration_points(mass_spectrum, ref_mass_list_fmt,
-                                                        calib_ppm_error_threshold=cal_ppm_threshold,
-                                                        calib_snr_threshold=3)
-
-            pmzrfs = pd.DataFrame(mzrefs)
-            pmzrfs.to_csv('cal_mzs_%s.csv' %esifile.split('.')[0])
-            calfn.recalibrate_mass_spectrum(mass_spectrum, imzmeas, mzrefs, order=corder)
-            
-        print('\nassigning with second parameter set...')
-
         setAssingmentParams2(ion_charge =2 )
 
         SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
@@ -150,36 +130,6 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
     return(results_1, results_2)   
 
 
-def calAssingmentParams():
-    # set assignment parameters
-    MSParameters.molecular_search.error_method = 'None'
-    MSParameters.molecular_search.min_ppm_error = -0.25
-    MSParameters.molecular_search.max_ppm_error = 0.25
-
-    MSParameters.molecular_search.isProtonated = True
-    MSParameters.molecular_search.isRadical = False
-    MSParameters.molecular_search.isAdduct = False
-
-    MSParameters.molecular_search.score_method = "prob_score"
-    MSParameters.molecular_search.output_score_method = "prob_score"
-
-    MSParameters.molecular_search.url_database = 'postgresql+psycopg2://coremsappdb:coremsapppnnl@localhost:5432/coremsapp'
-    MSParameters.molecular_search.min_dbe = -1
-    MSParameters.molecular_search.max_dbe = 20
-    MSParameters.molecular_search.ion_charge = 1 # absolute value; multiplied by polarity w/in code
-
-    MSParameters.molecular_search.usedAtoms['C'] = (1,50)  
-    MSParameters.molecular_search.usedAtoms['H'] = (4,100)
-    MSParameters.molecular_search.usedAtoms['O'] = (0,20)
-    MSParameters.molecular_search.usedAtoms['N'] = (0,4)
-    MSParameters.molecular_search.usedAtoms['S'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['P'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['Na'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['Cu'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['K'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['Fe'] = (0,0)
-
-
 def setAssingmentParams(ion_charge):
     # set assignment parameters
     MSParameters.molecular_search.error_method = 'None'
@@ -198,16 +148,16 @@ def setAssingmentParams(ion_charge):
     MSParameters.molecular_search.max_dbe = 20
     MSParameters.molecular_search.ion_charge = ion_charge # absolute value; multiplied by polarity w/in code
 
-    MSParameters.molecular_search.usedAtoms['C'] = (1,30)  
-    MSParameters.molecular_search.usedAtoms['H'] = (4,80)
-    MSParameters.molecular_search.usedAtoms['O'] = (0,10)
-    MSParameters.molecular_search.usedAtoms['N'] = (0,3)
+    MSParameters.molecular_search.usedAtoms['C'] = (1,50)  
+    MSParameters.molecular_search.usedAtoms['H'] = (4,100)
+    MSParameters.molecular_search.usedAtoms['O'] = (0,20)
+    MSParameters.molecular_search.usedAtoms['N'] = (0,4)
     MSParameters.molecular_search.usedAtoms['S'] = (0,1)
     MSParameters.molecular_search.usedAtoms['P'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['Na'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['Cu'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['K'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['Fe'] = (0,0)
+    MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['K'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
 
 
 def setAssingmentParams2(ion_charge):
@@ -229,15 +179,15 @@ def setAssingmentParams2(ion_charge):
     MSParameters.molecular_search.ion_charge = ion_charge # absolute value; multiplied by polarity w/in code
 
     MSParameters.molecular_search.usedAtoms['C'] = (10,100)  
-    MSParameters.molecular_search.usedAtoms['H'] = (20,150)
+    MSParameters.molecular_search.usedAtoms['H'] = (10,150)
     MSParameters.molecular_search.usedAtoms['O'] = (0,20)
-    MSParameters.molecular_search.usedAtoms['N'] = (0,5)
-    MSParameters.molecular_search.usedAtoms['S'] = (0,2)
-    MSParameters.molecular_search.usedAtoms['P'] = (0,2)
-    MSParameters.molecular_search.usedAtoms['Na'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['Cu'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['K'] = (0,0)
-    MSParameters.molecular_search.usedAtoms['Fe'] = (0,0)
+    MSParameters.molecular_search.usedAtoms['N'] = (0,10)
+    MSParameters.molecular_search.usedAtoms['S'] = (0,5)
+    MSParameters.molecular_search.usedAtoms['P'] = (0,5)
+    MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['K'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
 
 
 if __name__ == '__main__':
