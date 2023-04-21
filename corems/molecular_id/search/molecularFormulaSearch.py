@@ -55,7 +55,7 @@ class SearchMolecularFormulas:
 
         return False
 
-    def run_search(self, mspeaks, query, min_abundance, ion_type, adduct_atom=None):
+    def run_search(self, mspeaks, query, min_abundance, ion_type, ion_charge, adduct_atom=None):
 
         def get_formulas(nominal_overlay=0.1):
 
@@ -89,12 +89,7 @@ class SearchMolecularFormulas:
                 if ms_peak.is_assigned:
                     continue
 
-            if ms_peak.ion_charge == (1 * self.mass_spectrum_obj.polarity):
-                #print('assigining known z = %s peaks' %(1 * self.mass_spectrum_obj.polarity)  )
-                ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, ms_peak.ion_charge, adduct_atom)    
-                all_assigned_indexes.extend(ms_peak_indexes)
-
-            elif ms_peak.ion_charge == (2 * self.mass_spectrum_obj.polarity):
+            if ms_peak.ion_charge == ion_charge:
                 ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, ms_peak.ion_charge, adduct_atom)    
                 all_assigned_indexes.extend(ms_peak_indexes)
 
@@ -126,7 +121,6 @@ class SearchMolecularFormulas:
 
         dict_res = {}
 
-        #for ion_charge in ion_charge_list:
 
         if mf_search_settings.isProtonated:
             dict_res[Labels.protonated_de_ion] = sql_db.get_dict_by_classes(classe_str_list, Labels.protonated_de_ion, nominal_mzs, ion_charge, mf_search_settings)    
