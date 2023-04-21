@@ -126,8 +126,8 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
 def setAssingmentParams():
     # set assignment parameters
     MSParameters.molecular_search.error_method = 'None'
-    MSParameters.molecular_search.min_ppm_error = -0.25
-    MSParameters.molecular_search.max_ppm_error = 0.25
+    MSParameters.molecular_search.min_ppm_error = -0.1
+    MSParameters.molecular_search.max_ppm_error = 0.1
 
     MSParameters.molecular_search.isProtonated = True
     MSParameters.molecular_search.isRadical = False
