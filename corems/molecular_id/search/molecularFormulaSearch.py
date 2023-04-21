@@ -424,7 +424,7 @@ class SearchMolecularFormulaWorker:
 
             if possible_formula:
                 
-                
+                print(ms_peak_mz_exp, ion_charge_list[0])
                 error_z1 = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula, ion_charge_list[0]))
 
                 error_z2 = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula, ion_charge_list[1]))
