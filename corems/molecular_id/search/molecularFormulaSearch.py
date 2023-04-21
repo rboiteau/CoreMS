@@ -155,7 +155,7 @@ class SearchMolecularFormulas:
                 
         #ion_charge_list = [ i * self.mass_spectrum_obj.polarity for i in [1, 2] ] #self.mass_spectrum_obj.polarity * self.mass_spectrum_obj.molecular_search_settings
 
-        ion_charge = self.mass_spectrum_obj.polarity * self.mass_spectrum_obj.molecular_search_settings
+        ion_charge = self.mass_spectrum_obj.polarity * self.mass_spectrum_obj.molecular_search_settings.ion_charge
         
         # use to limit the calculation of possible isotopologues
         min_abundance = self.mass_spectrum_obj.min_abundance
