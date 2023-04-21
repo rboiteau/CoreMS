@@ -73,7 +73,7 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
         MSParameters.molecular_search.ion_charge = 2
         mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)  
 
-        setAssingmentParams(ion_charge = 2)
+        setAssingmentParams2(ion_charge = 2)
 
         #print("MS Obj loaded - "+str(len(mass_spectrum.mspeaks))+" peaks found.")
 
