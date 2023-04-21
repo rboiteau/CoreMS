@@ -393,8 +393,6 @@ class SearchMolecularFormulaWorker:
 
         def mass_by_ion_type(possible_formula_obj, ion_charge):
 
-            print(ion_type)
-
             if ion_type == Labels.protonated_de_ion:
 
                 return possible_formula_obj._protonated_mz(ion_charge)
@@ -428,9 +426,7 @@ class SearchMolecularFormulaWorker:
                 
                 
                 error_z1 = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula, ion_charge_list[0]))
-                print('z1 ran')
                 error_z2 = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula, ion_charge_list[1]))
-                print('z2 ran')
                 if error_z1 <= error_z2:
 
                     error = error_z1
