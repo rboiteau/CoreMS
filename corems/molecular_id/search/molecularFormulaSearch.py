@@ -167,7 +167,7 @@ class SearchMolecularFormulas:
         # split the database load to not blowout the memory
         # TODO add to the settings
 
-        def run():
+        def run(ion_charge):
 
             for classe_chunk in chunks(classes, 300): 
 
@@ -228,7 +228,8 @@ class SearchMolecularFormulas:
                                                 min_abundance, ion_type, adduct_atom=adduct_atom)
 
         for ion_charge in list(set(ion_charge_list)):
-            run()
+            print('\nassigning ions with charge = %s' %ion_charge)
+            run(ion_charge)
             self.sql_db.close()
 
     def search_mol_formulas(self, possible_formulas_list: List[MolecularFormula], ion_type:str, 

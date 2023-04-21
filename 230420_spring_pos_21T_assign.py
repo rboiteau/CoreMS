@@ -107,6 +107,8 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
         results_1.append(assignments_z1)
 
 
+        print('\nassigning with second parameter set...')
+
         MSParameters.molecular_search.ion_charge = 2
         #mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)  
         
