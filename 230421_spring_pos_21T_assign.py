@@ -62,6 +62,7 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
     tic_df=pd.DataFrame({'time': tic.time,'scan': tic.scans})
 
     results = []
+    results2 = []
     
     for timestart in times:
         print('\nfile: %s\ntimestart:%s'  %(esifile,timestart))
