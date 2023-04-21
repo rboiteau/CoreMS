@@ -83,11 +83,8 @@ class SearchMolecularFormulas:
 
         search_molfrom = SearchMolecularFormulaWorker(find_isotopologues=self.find_isotopologues)
 
-        i = 0 
-
         for ms_peak in mspeaks:
-            i = i+1
-            print(i)
+
             # already assigned a molecular formula
             if self.first_hit:
 
