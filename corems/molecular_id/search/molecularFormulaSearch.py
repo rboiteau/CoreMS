@@ -55,7 +55,7 @@ class SearchMolecularFormulas:
 
         return False
 
-    def run_search(self, mspeaks, query_z1, query_z2, min_abundance, ion_type, ion_charge, adduct_atom=None):
+    def run_search(self, mspeaks, query, min_abundance, ion_type, ion_charge, adduct_atom=None):
 
         def get_formulas(nominal_overlay=0.1):
 
@@ -94,19 +94,16 @@ class SearchMolecularFormulas:
 
             if ms_peak.ion_charge == (1 * self.mass_spectrum_obj.polarity):
                 #print('assigining known z = %s peaks' %(1 * self.mass_spectrum_obj.polarity)  )
-                query = query_z1
                 ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, ms_peak.ion_charge, adduct_atom)    
                 all_assigned_indexes.extend(ms_peak_indexes)
 
             elif ms_peak.ion_charge == (2 * self.mass_spectrum_obj.polarity):
                 #print('assigining known z = %s peaks' %(2 * self.mass_spectrum_obj.polarity)  )
-                query = query_z2
                 ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, ms_peak.ion_charge, adduct_atom)    
                 all_assigned_indexes.extend(ms_peak_indexes)
 
             else:
                 #print('trying assignments with z = %s on remaining peaks' %(1 * self.mass_spectrum_obj.polarity)  )
-                query = query_z1
                 ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, ion_charge[0], adduct_atom)    
                 all_assigned_indexes.extend(ms_peak_indexes)
 
@@ -115,7 +112,6 @@ class SearchMolecularFormulas:
                     if ms_peak.is_assigned:
                         continue
 
-                    query = query_z2
                     ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, ion_charge[1], adduct_atom)    
                     all_assigned_indexes.extend(ms_peak_indexes)
 
@@ -135,22 +131,24 @@ class SearchMolecularFormulas:
         self.run_molecular_formula(ms_peaks)           
 
     @staticmethod
-    def database_to_dict(classe_str_list, nominal_mzs, mf_search_settings, ion_charge):
+    def database_to_dict(classe_str_list, nominal_mzs, mf_search_settings, ion_charge_list):
 
         sql_db = MolForm_SQL(url=mf_search_settings.url_database)
 
         dict_res = {}
 
-        if mf_search_settings.isProtonated:
-            dict_res[Labels.protonated_de_ion] = sql_db.get_dict_by_classes(classe_str_list, Labels.protonated_de_ion, nominal_mzs, ion_charge, mf_search_settings)    
+        for ion_charge in ion_charge_list:
 
-        if mf_search_settings.isRadical:
-            dict_res[Labels.radical_ion] = sql_db.get_dict_by_classes(classe_str_list, Labels.radical_ion, nominal_mzs, ion_charge,  mf_search_settings)    
+            if mf_search_settings.isProtonated:
+                dict_res[Labels.protonated_de_ion] = sql_db.get_dict_by_classes(classe_str_list, Labels.protonated_de_ion, nominal_mzs, ion_charge, mf_search_settings)    
 
-        if mf_search_settings.isAdduct:
+            if mf_search_settings.isRadical:
+                dict_res[Labels.radical_ion] = sql_db.get_dict_by_classes(classe_str_list, Labels.radical_ion, nominal_mzs, ion_charge,  mf_search_settings)    
 
-            adduct_list = mf_search_settings.adduct_atoms_neg if ion_charge[0] < 0 else mf_search_settings.adduct_atoms_pos
-            dict_res[Labels.adduct_ion] = sql_db.get_dict_by_classes(classe_str_list, Labels.adduct_ion, nominal_mzs, ion_charge, mf_search_settings, adducts=adduct_list)    
+            if mf_search_settings.isAdduct:
+
+                adduct_list = mf_search_settings.adduct_atoms_neg if ion_charge[0] < 0 else mf_search_settings.adduct_atoms_pos
+                dict_res[Labels.adduct_ion] = sql_db.get_dict_by_classes(classe_str_list, Labels.adduct_ion, nominal_mzs, ion_charge, mf_search_settings, adducts=adduct_list)    
 
         return dict_res
 
@@ -195,8 +193,7 @@ class SearchMolecularFormulas:
 
                 # load the molecular formula objs binned by ion type and heteroatoms classes, {ion type:{classe:[list_formula]}}
                 # for adduct ion type a third key is added {atoms:{ion type:{classe:[list_formula]}}} 
-                dict_res_z1 = self.database_to_dict(classes_str_list, nominal_mzs, self.mass_spectrum_obj.molecular_search_settings, ion_charge_list[0])
-                dict_res_z2 = self.database_to_dict(classes_str_list, nominal_mzs, self.mass_spectrum_obj.molecular_search_settings, ion_charge_list[1])
+                dict_res = self.database_to_dict(classes_str_list, nominal_mzs, self.mass_spectrum_obj.molecular_search_settings, ion_charge_list)
 
                 pbar = tqdm.tqdm(classe_chunk)
 
@@ -212,23 +209,10 @@ class SearchMolecularFormulas:
 
                         pbar.set_description_str(desc="Started molecular formula search for class %s, (de)protonated " % classe_str, refresh=True)
 
-                        candidate_formulas_z1 = dict_res_z1.get(ion_type).get(classe_str)
+                        candidate_formulas = dict_res.get(ion_type).get(classe_str)
 
-                        candidate_formulas_z2 = dict_res_z2.get(ion_type).get(classe_str)
-
-                        if candidate_formulas_z1:
-
-                            if candidate_formulas_z2:
-                                self.run_search(ms_peaks, candidate_formulas_z1, candidate_formulas_z2,
-                                                min_abundance, ion_type, ion_charge_list)
-                            
-                            else:
-                                self.run_search(ms_peaks, candidate_formulas_z1, None,
-                                                min_abundance, ion_type, ion_charge_list)
-                        
-                        else:
-                            self.run_search(ms_peaks, None, candidate_formulas_z2,
-                                                min_abundance, ion_type, ion_charge_list)
+                        self.run_search(ms_peaks,candidate_formulas,
+                                            min_abundance, ion_type, ion_charge_list)
      
                     if self.mass_spectrum_obj.molecular_search_settings.isRadical:
 
