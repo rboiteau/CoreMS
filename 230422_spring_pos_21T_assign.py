@@ -130,8 +130,8 @@ def assign_formula(esifile, times, cal_ppm_threshold=(-1,1), refmasslist=None):
 def setAssingmentParams():
     # set assignment parameters
     MSParameters.molecular_search.error_method = 'None'
-    MSParameters.molecular_search.min_ppm_error = -0.1
-    MSParameters.molecular_search.max_ppm_error = 0.1
+    MSParameters.molecular_search.min_ppm_error = -0.05
+    MSParameters.molecular_search.max_ppm_error = 0.05
 
     MSParameters.molecular_search.isProtonated = True
     MSParameters.molecular_search.isRadical = False
@@ -154,16 +154,16 @@ def setAssingmentParams():
     MSParameters.molecular_search.usedAtoms['P'] = (0,1)
     MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
     MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
-    #MSParameters.molecular_search.usedAtoms['K'] = (0,1)
-    #MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['K'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
     #MSParameters.molecular_search.usedAtoms['Zn'] = (0,1)
 
 
 def setAssingmentParams2():
     # set assignment parameters
     MSParameters.molecular_search.error_method = 'None'
-    MSParameters.molecular_search.min_ppm_error = -0.25
-    MSParameters.molecular_search.max_ppm_error = 0.25
+    MSParameters.molecular_search.min_ppm_error = -0.05
+    MSParameters.molecular_search.max_ppm_error = 0.05
 
     MSParameters.molecular_search.isProtonated = True
     MSParameters.molecular_search.isRadical = False
@@ -186,8 +186,8 @@ def setAssingmentParams2():
     MSParameters.molecular_search.usedAtoms['P'] = (0,1)
     MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
     MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
-    #MSParameters.molecular_search.usedAtoms['K'] = (0,1)
-    #MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['K'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
     #MSParameters.molecular_search.usedAtoms['Zn'] = (0,1)
 
 
@@ -198,8 +198,8 @@ if __name__ == '__main__':
     
     data_dir = '/mnt/disks/orca-data/mz-windowing/pos/spring/'
 
-    fname = '230421_spring-env_pos-1.csv'
-    fname2 = '230421_spring-env_pos-2.csv'
+    fname = '230422_spring-env_pos-1.csv'
+    fname2 = '230422_spring-env_pos-2.csv'
 
     mzref = "/home/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
     
