@@ -180,8 +180,8 @@ def setAssingmentParams2():
 
     MSParameters.molecular_search.usedAtoms['C'] = (10,150)  
     MSParameters.molecular_search.usedAtoms['H'] = (10,200)
-    MSParameters.molecular_search.usedAtoms['O'] = (0,20)
-    MSParameters.molecular_search.usedAtoms['N'] = (0,20)
+    MSParameters.molecular_search.usedAtoms['O'] = (1,20)
+    MSParameters.molecular_search.usedAtoms['N'] = (0,15)
     MSParameters.molecular_search.usedAtoms['S'] = (0,2)
     MSParameters.molecular_search.usedAtoms['P'] = (0,2)
     MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
