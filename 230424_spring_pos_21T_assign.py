@@ -145,8 +145,8 @@ def setAssingmentParams():
 
     MSParameters.molecular_search.ion_charge = 1 # absolute value; multiplied by polarity w/in code
 
-    MSParameters.molecular_search.usedAtoms['C'] = (1,100)  
-    MSParameters.molecular_search.usedAtoms['H'] = (4,200)
+    MSParameters.molecular_search.usedAtoms['C'] = (1,50)  
+    MSParameters.molecular_search.usedAtoms['H'] = (4,100)
     MSParameters.molecular_search.usedAtoms['O'] = (0,20)
     MSParameters.molecular_search.usedAtoms['N'] = (0,4)
     MSParameters.molecular_search.usedAtoms['S'] = (0,1)
@@ -154,7 +154,7 @@ def setAssingmentParams():
     MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
     MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
     MSParameters.molecular_search.usedAtoms['K'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Fe'] = (0,0)
     #MSParameters.molecular_search.usedAtoms['Zn'] = (0,1)
 
 
@@ -177,16 +177,16 @@ def setAssingmentParams2():
 
     MSParameters.molecular_search.ion_charge = 2 # absolute value; multiplied by polarity w/in code
 
-    MSParameters.molecular_search.usedAtoms['C'] = (10,150)  
+    MSParameters.molecular_search.usedAtoms['C'] = (10,100)  
     MSParameters.molecular_search.usedAtoms['H'] = (10,200)
     MSParameters.molecular_search.usedAtoms['O'] = (1,20)
-    MSParameters.molecular_search.usedAtoms['N'] = (0,16)
-    MSParameters.molecular_search.usedAtoms['S'] = (0,4)
-    MSParameters.molecular_search.usedAtoms['P'] = (0,4)
+    MSParameters.molecular_search.usedAtoms['N'] = (0,15)
+    MSParameters.molecular_search.usedAtoms['S'] = (0,2)
+    MSParameters.molecular_search.usedAtoms['P'] = (0,2)
     MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['Cu'] = (0,2)
+    MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
     MSParameters.molecular_search.usedAtoms['K'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Fe'] = (0,0)
     #MSParameters.molecular_search.usedAtoms['Zn'] = (0,1)
 
 
@@ -195,12 +195,13 @@ if __name__ == '__main__':
     start = time.time()  #for duration
     startdt = datetime.now()
     
-    data_dir = '/mnt/disks/orca-data/mz-windowing/pos/spring/'
+    #data_dir = '/mnt/disks/orca-data/mz-windowing/pos/spring/'
+    data_dir = '/Volumes/Samsung_T5/NHMFL/mzwindowing/pos/spring/'
 
-    fname = '230423_spring-env_pos-1.csv'
-    fname2 = '230423_spring-env_pos-2.csv'
+    fname = '230424_spring-env_pos-1.csv'
+    fname2 = '230424_spring-env_pos-2.csv'
 
-    mzref = "/home/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
+    mzref = "/Users/christiandewey/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
     
     interval = 2     # window in which scans are averaged
     time_range = [8,12]    
