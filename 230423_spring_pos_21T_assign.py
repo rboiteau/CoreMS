@@ -198,13 +198,13 @@ if __name__ == '__main__':
     
     data_dir = '/mnt/disks/orca-data/mz-windowing/pos/spring/'
 
-    fname = '230422_spring-env_pos-1.csv'
-    fname2 = '230422_spring-env_pos-2.csv'
+    fname = '230423_spring-env_pos-1.csv'
+    fname2 = '230423_spring-env_pos-2.csv'
 
     mzref = "/home/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
     
-    interval = 4     # window in which scans are averaged
-    time_range = [8,12]    
+    interval = 2     # window in which scans are averaged
+    time_range = [4,24]    
 
     results = []
     results2 = []
