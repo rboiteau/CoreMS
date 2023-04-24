@@ -195,14 +195,15 @@ if __name__ == '__main__':
     start = time.time()  #for duration
     startdt = datetime.now()
     
-    #data_dir = '/mnt/disks/orca-data/mz-windowing/pos/spring/'
-    data_dir = '/Volumes/Samsung_T5/NHMFL/mzwindowing/pos/spring/'
+    data_dir = '/mnt/disks/orca-data/mz-windowing/pos/spring/'
+    #data_dir = '/Volumes/Samsung_T5/NHMFL/mzwindowing/pos/spring/'
 
     fname = '230424_spring-env_pos-1.csv'
     fname2 = '230424_spring-env_pos-2.csv'
 
-    mzref = "/Users/christiandewey/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
-    
+    mzref = "/home/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
+    #mzref = "/Users/christiandewey/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
+
     interval = 2     # window in which scans are averaged
     time_range = [8,12]    
 
