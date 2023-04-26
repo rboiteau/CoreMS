@@ -171,7 +171,7 @@ def setAssingmentParams2():
     MSParameters.molecular_search.score_method = "prob_score"
     MSParameters.molecular_search.output_score_method = "prob_score"
 
-    MSParameters.molecular_search.url_database = 'postgresql+psycopg2://coremsappdb:coremsapppnnl@localhost:5432/coremsapp'
+    MSParameters.molecular_search.url_database = 'postgresql+psycopg2://coremsappdb:coremsapppnnl:5432/coremsapp'
     MSParameters.molecular_search.min_dbe = -1
     MSParameters.molecular_search.max_dbe = 40
 
@@ -195,13 +195,12 @@ if __name__ == '__main__':
     start = time.time()  #for duration
     startdt = datetime.now()
     
-    data_dir = '/mnt/disks/orca-data/mz-windowing/pos/spring/'
-    #data_dir = '/Volumes/Samsung_T5/NHMFL/mzwindowing/pos/spring/'
+    data_dir = '/mnt/'
 
     fname = '230424_spring-env_pos-1.csv'
     fname2 = '230424_spring-env_pos-2.csv'
 
-    mzref = "/home/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
+    mzref = "/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
     #mzref = "/Users/christiandewey/CoreMS/tests/tests_data/ftms/nom_pos.ref" 
 
     interval = 2     # window in which scans are averaged
