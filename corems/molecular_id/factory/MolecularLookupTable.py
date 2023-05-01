@@ -417,6 +417,7 @@ class MolecularCombinations:
                 
                 clean_atom = ''.join([i for i in atom if not i.isdigit()]) 
                 
+                #Valence is defined here: Only uses the first valence in the tuple from 
                 valencia = MSParameters.molecular_search.used_atom_valences.get(clean_atom)
                 
                 if type(valencia) is tuple:

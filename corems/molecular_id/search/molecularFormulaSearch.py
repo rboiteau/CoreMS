@@ -10,7 +10,7 @@ import tqdm
 
 
 from corems import chunks, timeit
-from corems.encapsulation.constant import Labels
+from corems.encapsulation.constant import Atoms, Labels
 from corems.molecular_formula.factory.MolecularFormulaFactory import LCMSLibRefMolecularFormula, MolecularFormula
 from corems.ms_peak.factory.MSPeakClasses import _MSPeak
 from corems.molecular_id.factory.molecularSQL import MolForm_SQL
@@ -79,8 +79,6 @@ class SearchMolecularFormulas:
 
         all_assigned_indexes = list()
 
-        # molecular_search_settings = self.mass_spectrum_obj.molecular_search_settings
-
         search_molfrom = SearchMolecularFormulaWorker(find_isotopologues=self.find_isotopologues)
 
         for ms_peak in mspeaks:
@@ -91,9 +89,15 @@ class SearchMolecularFormulas:
                 if ms_peak.is_assigned:
                     continue
 
-            ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, ion_charge, adduct_atom)    
+            if ms_peak.ion_charge == ion_charge:
+                ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, ms_peak.ion_charge, adduct_atom)    
+                all_assigned_indexes.extend(ms_peak_indexes)
 
-            all_assigned_indexes.extend(ms_peak_indexes)
+            elif ms_peak.ion_charge == -999:
+                ion_charge = self.mass_spectrum_obj.polarity * self.mass_spectrum_obj.molecular_search_settings.ion_charge
+                ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, ion_charge, adduct_atom)    
+                all_assigned_indexes.extend(ms_peak_indexes)
+
 
         # all_assigned_indexes = MolecularFormulaSearchFilters().filter_isotopologue(all_assigned_indexes, self.mass_spectrum_obj)
 
@@ -116,6 +120,7 @@ class SearchMolecularFormulas:
         sql_db = MolForm_SQL(url=mf_search_settings.url_database)
 
         dict_res = {}
+
 
         if mf_search_settings.isProtonated:
             dict_res[Labels.protonated_de_ion] = sql_db.get_dict_by_classes(classe_str_list, Labels.protonated_de_ion, nominal_mzs, ion_charge, mf_search_settings)    
@@ -140,10 +145,14 @@ class SearchMolecularFormulas:
 
         # ion charge for all the ion in the mass spectrum
         # under the current structure is possible to search for individual m/z but it takes longer than allow all the m/z to be search against
-        ion_charge = self.mass_spectrum_obj.polarity
+                
+        #ion_charge_list = [ i * self.mass_spectrum_obj.polarity for i in [1, 2] ] #self.mass_spectrum_obj.polarity * self.mass_spectrum_obj.molecular_search_settings
 
+        ion_charge = self.mass_spectrum_obj.polarity * self.mass_spectrum_obj.molecular_search_settings.ion_charge
+        
         # use to limit the calculation of possible isotopologues
         min_abundance = self.mass_spectrum_obj.min_abundance
+
 
         # only query the database for formulas with the nominal m/z matching the mass spectrum data
         # default m/z overlay is m/z 0.3 unit
@@ -159,9 +168,10 @@ class SearchMolecularFormulas:
         # split the database load to not blowout the memory
         # TODO add to the settings
 
+        #Run function defines class chunks, and in batches of 300 loads database (database_to_dict) and searches for them.
         def run():
 
-            for classe_chunk in chunks(classes, self.mass_spectrum_obj.molecular_search_settings.db_chunk_size): 
+            for classe_chunk in chunks(classes, 300): 
 
                 classes_str_list = [class_tuple[0] for class_tuple in classe_chunk]
 
@@ -187,9 +197,9 @@ class SearchMolecularFormulas:
 
                         if candidate_formulas:
 
-                            self.run_search(ms_peaks, candidate_formulas,
-                                            min_abundance, ion_type, ion_charge)
-
+                            self.run_search(ms_peaks,candidate_formulas,
+                                                min_abundance, ion_type, ion_charge)
+     
                     if self.mass_spectrum_obj.molecular_search_settings.isRadical:
 
                         pbar.set_description_str(desc="Started molecular formula search for class %s, radical " % classe_str, refresh=True)
@@ -203,7 +213,7 @@ class SearchMolecularFormulas:
                             self.run_search(ms_peaks, candidate_formulas,
                                             min_abundance, ion_type, ion_charge)
                     # looks for adduct, used_atom_valences should be 0 
-                    # this code does not support H exchance by halogen atoms
+                    # this code does not support H exchange by halogen atoms
                     if self.mass_spectrum_obj.molecular_search_settings.isAdduct:
 
                         pbar.set_description_str(desc="Started molecular formula search for class %s, adduct " % classe_str, refresh=True)
@@ -337,7 +347,7 @@ class SearchMolecularFormulaWorker:
             multi_factor = 1000000
 
         elif method == 'ppb':
-            multi_factor = 1000000
+            multi_factor = 1000000000
 
         elif method == 'perc':
             multi_factor = 100
@@ -378,7 +388,7 @@ class SearchMolecularFormulaWorker:
         ms_peak_mz_exp, ms_peak_abundance = ms_peak.mz_exp, ms_peak.abundance
         # min_error = min([pmf.mz_error for pmf in possible_formulas])
 
-        def mass_by_ion_type(possible_formula_obj):
+        def mass_by_ion_type(possible_formula_obj, ion_charge):
 
             if ion_type == Labels.protonated_de_ion:
 
@@ -410,13 +420,13 @@ class SearchMolecularFormulaWorker:
         for possible_formula in formulas:
 
             if possible_formula:
-
-                error = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula))
-
-                # error = possible_formula.mz_error
+                
+                error = self.calc_error(ms_peak_mz_exp, mass_by_ion_type(possible_formula, ion_charge))                
 
                 if min_ppm_error <= error <= max_ppm_error:
-
+                    
+                    if ms_peak.ion_charge == -999:
+                        ms_peak.ion_charge = ion_charge
                     # update the error
 
                     self.set_last_error(error, mass_spectrum_obj)
@@ -465,6 +475,9 @@ class SearchMolecularFormulaWorker:
                                 error = self.calc_error(ms_peak_iso.mz_exp, isotopologue_formula.mz_calc)
 
                                 if min_ppm_error <= error <= max_ppm_error:
+
+                                    if ms_peak_iso.ion_charge == -999:
+                                        ms_peak_iso.ion_charge = ion_charge
 
                                     # need to define error distribution for abundance measurements
 
@@ -547,7 +560,7 @@ class SearchMolecularFormulasLC(SearchMolecularFormulas):
 
             self.mass_spectrum_obj = peak.mass_spectrum
 
-            ion_charge = self.mass_spectrum_obj.polarity
+            ion_charge = self.mass_spectrum_obj.molecular_search_settings.ion_charge * self.mass_spectrum_obj.polarity
             
             candidate_formulas = peak.targeted_molecular_formulas
 
@@ -577,4 +590,3 @@ class SearchMolecularFormulasLC(SearchMolecularFormulas):
                 for adduct_atom in adduct_list:
 
                     self.search_mol_formulas( candidate_formulas, ion_type, find_isotopologues=True, adduct_atom=adduct_atom)
-

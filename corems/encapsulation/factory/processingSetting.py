@@ -420,7 +420,7 @@ class MolecularFormulaSearchSettings:
     db_chunk_size: int = 300
 
     '''query setting'''
-    ion_charge: int = -1
+    ion_charge: int = 1
 
     min_hc_filter: float = 0.3
 
@@ -515,7 +515,7 @@ class MolecularFormulaSearchSettings:
         if 'H' not in self.usedAtoms.keys():
             self.usedAtoms['H'] = (1, 200)
 
-        # add cummon values
+        # add common values
         current_used_atoms = self.used_atom_valences.keys()
         for atom in Atoms.atoms_covalence.keys():
             if atom not in current_used_atoms:
