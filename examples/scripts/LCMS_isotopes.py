@@ -3,22 +3,22 @@
 ####Replicate isotope pattern algorithm in python for a single file and pattern. 
 
 ###### Settings for pattern mining
-timerange=(3,35) #in minutes
-peakwidth=0.25 #in minutes
-slope_filter=(0.5,2) # normalized slope (1=true)
-correlation=0.8 #minimum r-squared correlation cut-off. 
+timerange=(0,10) #in minutes
+peakwidth=0.5 #in minutes
+slope_filter=(0.2,3) # normalized slope (1=true)
+correlation=0.6 #minimum r-squared correlation cut-off. 
 
-mass_tolerance=0.001
+mass_tolerance=0.003
 ratio_tolerance=1.5
 
 ###### Set file folder and THERMO RAW file name here:
-file_location = '/Users/boiteaur/Desktop/CoreMS_metallomics/CoreMS_Metallomics_Data/'
-file_name="RMB_190828_TABPooled_12.raw"
+file_location = 'C://Users/boiteaur/Desktop/Current data/'
+file_name="AS_230522_VA_wFe_neg_7.raw"
 
 #####Set isotope pattern using atom.epattern. Just requires elements and max number of isotopes used
-element='Cu'
+element='Fe'
 nisotope_used=2
-valence=2
+valence=3
 
 save_file="_"+element
 
@@ -92,14 +92,14 @@ parser = rawFileReader.ImportMassSpectraThermoMSFileReader(file_location+file_na
 pattern=atom.epattern(element,nisotope_used,atom.atoms)
 
 # pattern=atom.ipattern(isotopes,requirement,atom.atoms)
-print(pd.DataFrame(pattern))
 
 #Mine pattern.
 results=parser.isotopehunter(pattern,timerange,mass_tolerance,ratio_tolerance,peakwidth,correlation,slope_filter)
 
+print(results)
 #Assign molecular formula.
-for result in results[2]:
-    ip.metal_assignment(parser,result,pattern,file_name)
+#for result in results[2]:
+#   ip.metal_assignment(parser,result,pattern,file_name)
 ######################### Main reporting functions
 
 pdf = matplotlib.backends.backend_pdf.PdfPages(file_location+file_name+save_file+'.pdf')
