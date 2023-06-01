@@ -100,10 +100,16 @@ class PeakPicking:
             peak_height_plus = peak_height
 
             index_minus = current_index
-            while peak_height_minus  >= target_peak_height:
+            while peak_height_minus  > target_peak_height:
 
                 index_minus = index_minus -1
-                peak_height_minus = intes[index_minus]
+                try:
+                    peak_height_minus = intes[index_minus]
+                except IndexError:
+                    print('Resolution calculation warning: Mass range too close to spectrum edge')
+                    print(massa)
+                    peak_height_minus = target_peak_height
+                    index_plus=index_plus + 1
                 #print "massa", "," , "intes", "," , massa[index_minus], "," , peak_height_minus
             x = [ massa[index_minus],  massa[index_minus+1]]
             y = [ intes[index_minus],  intes[index_minus+1]]
@@ -112,14 +118,21 @@ class PeakPicking:
             a = coefficients[0]
             b = coefficients[1]
 
-            y_intercept =  intes[index_minus] + ((intes[index_minus+1] - intes[index_minus])/2)
+            #y_intercept =  intes[index_minus] + ((intes[index_minus+1] - intes[index_minus])/2)
+            y_intercept =  target_peak_height
             massa1 = (y_intercept -b)/a
 
             index_plus = current_index
-            while peak_height_plus  >= target_peak_height:
+            while peak_height_plus  > target_peak_height:
 
                 index_plus = index_plus + 1
-                peak_height_plus = intes[index_plus]
+                try:
+                    peak_height_plus = intes[index_plus] 
+                except IndexError:
+                    print('Resolution calculation warning: Mass range too close to spectrum edge')
+                    print(massa)
+                    peak_height_plus = target_peak_height
+                    index_plus=index_plus - 1
                 #print "massa", "," , "intes", "," , massa[index_plus], "," , peak_height_plus
 
             x = [massa[index_plus],  massa[index_plus - 1]]
@@ -129,7 +142,7 @@ class PeakPicking:
             a = coefficients[0]
             b = coefficients[1]
 
-            y_intercept =  intes[index_plus - 1] + ((intes[index_plus] - intes[index_plus - 1])/2)
+            #y_intercept =  intes[index_plus - 1] + ((intes[index_plus] - intes[index_plus - 1])/2)
             massa2 = (y_intercept -b)/a
 
             if massa1 > massa2:

@@ -35,8 +35,8 @@ refmasslist = file_location+"cal_pos.ref"
 os.chdir('/Users/boiteaur/Desktop/CoreMS_metallomics/CoreMS/')
 
 ### Set time bins in minutes
-interval=4
-timerange=[0,28]
+interval=2
+timerange=[0,30]
 internal_cal_setting='Y' # Should be 'Y' to do internal calibration first, 'N' to skip internal calibration.
 
 
@@ -53,16 +53,16 @@ MSParameters.mass_spectrum.noise_threshold_std = 50
 MSParameters.ms_peak.peak_min_prominence_percent = 0.1
 
 MSParameters.mass_spectrum.min_picking_mz=100
-MSParameters.mass_spectrum.max_picking_mz=650
+MSParameters.mass_spectrum.max_picking_mz=900
 
 
 # Core Molecular formula search
 MSParameters.molecular_search.min_dbe = 0
-MSParameters.molecular_search.max_dbe = 20
+MSParameters.molecular_search.max_dbe = 16
 
-MSParameters.molecular_search.usedAtoms['C'] = (4,40)
-MSParameters.molecular_search.usedAtoms['H'] = (4,80)
-MSParameters.molecular_search.usedAtoms['O'] = (1,18)
+MSParameters.molecular_search.usedAtoms['C'] = (4,50)
+MSParameters.molecular_search.usedAtoms['H'] = (4,100)
+MSParameters.molecular_search.usedAtoms['O'] = (1,16)
 MSParameters.molecular_search.usedAtoms['N'] = (0,1)
 MSParameters.molecular_search.usedAtoms['S'] = (0,0)
 MSParameters.molecular_search.usedAtoms['Si'] = (0,0)
@@ -178,35 +178,13 @@ ax2.set_title('b', fontweight='bold', loc='left')
 
 fig.tight_layout()
 
-#fig.savefig(file_location+'Phycosphere_library_errorplot.eps',dpi=300,format='eps')
-#fig.savefig(file_location+'Phycosphere_library_errorplot.pdf',dpi=300,format='pdf')
-
-
-#### Plot library assignments over time
-
-assign_summary=[]
-for time in allresults['Time'].unique():
-    current={}
-    current['Time']=time
-    for mol_class in allresults['Molecular class'].unique():
-        current[mol_class]=len(allresults[(allresults['Molecular class']==mol_class) & (allresults['Time']==time)])
-    assign_summary.append(current)
-    #mzdiff=result['m/z'].sort_values(ascending=True).diff().iloc[1:]/result['m/z'].sort_values(ascending=True).iloc[1:]*1E6
-
-
-df=pd.DataFrame(assign_summary)
-df.plot.bar(x='Time',y=df.columns[1:],stacked=True,ylabel='Peaks')
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,frameon=False)
-
-
-
 #Here, we create a new reference mass list.
 cal_list=results[results['Confidence Score']>.5]
 cal_list=results[results['Ion Charge']==1]
 cal_list=cal_list[cal_list['Molecular class']!='Isotope'].drop_duplicates(subset=['Molecular Formula'])
 
 fig, (ax1) = plt.subplots(1,1)
-sns.scatterplot(x='m/z',y='m/z Error (ppm)',hue='Molecular class',data=cal_list, ax=ax1, edgecolor='none')
+sns.scatterplot(x='m/z',y='m/z Error (ppm)',hue='Time',data=cal_list, ax=ax1, edgecolor='none')
 
 plt.show()
 

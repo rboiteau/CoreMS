@@ -33,31 +33,34 @@ refmasslist = file_location+"cal_pos.ref"
 #os.chdir('/Users/boiteaur/Desktop/CoreMS_metallomics/CoreMS/')
 
 ### Set time bins in minutes
-interval=4
-timerange=[0,32]
-internal_cal_setting='Y' # Should be 'Y' to do internal calibration first, 'N' to skip internal calibration.
+interval=2
+timerange=[0,30]
 
 
 #Molecular search parameters. 
-MSParameters.molecular_search.error_method = 'None'
-MSParameters.molecular_search.min_ppm_error = -0.25
-MSParameters.molecular_search.max_ppm_error = 0.25
+
+#First iteration, run with a high mass error and no calibration. 
+#internal_cal_setting='N' # Should be 'Y' to do internal calibration first, 'N' to skip internal calibration.
+#MSParameters.molecular_search.min_ppm_error = -2
+#MSParameters.molecular_search.max_ppm_error = 2
+
+#Second iteration, run with a low mass error.
+internal_cal_setting='Y' # Should be 'Y' to do internal calibration first, 'N' to skip internal calibration.
+MSParameters.molecular_search.min_ppm_error = -0.5
+MSParameters.molecular_search.max_ppm_error = 0.5
 MSParameters.molecular_search.ion_charge = 1
 
-MSParameters.mass_spectrum.threshold_method = 'minima'
-MSParameters.mass_spectrum.noise_threshold_std = 10
-#MSParameters.mass_spectrum.threshold_method = 's2n'
-#MSParameters.mass_spectrum.s2n_threshold=20
+MSParameters.mass_spectrum.threshold_method = 'signal_noise'
+MSParameters.mass_spectrum.s2n_threshold=5
 MSParameters.ms_peak.peak_min_prominence_percent = 0.1
 
 MSParameters.mass_spectrum.min_picking_mz=200
-MSParameters.mass_spectrum.max_picking_mz=800
+MSParameters.mass_spectrum.max_picking_mz=900
 
 
 # Core Molecular formula search
 MSParameters.molecular_search.min_dbe = 0
-MSParameters.molecular_search.max_dbe = 18
-
+MSParameters.molecular_search.max_dbe = 20
 MSParameters.molecular_search.usedAtoms['C'] = (4,50)
 MSParameters.molecular_search.usedAtoms['H'] = (4,100)
 MSParameters.molecular_search.usedAtoms['O'] = (1,16)
@@ -175,28 +178,6 @@ sns.kdeplot(x='m/z Error (ppm)',data=results,hue='Time',ax=ax2,legend=False)
 ax2.set_title('b', fontweight='bold', loc='left')
 
 fig.tight_layout()
-
-#fig.savefig(file_location+'Phycosphere_library_errorplot.eps',dpi=300,format='eps')
-#fig.savefig(file_location+'Phycosphere_library_errorplot.pdf',dpi=300,format='pdf')
-
-
-#### Plot library assignments over time
-
-assign_summary=[]
-for time in allresults['Time'].unique():
-    current={}
-    current['Time']=time
-    for mol_class in allresults['Molecular class'].unique():
-        current[mol_class]=len(allresults[(allresults['Molecular class']==mol_class) & (allresults['Time']==time)])
-    assign_summary.append(current)
-    #mzdiff=result['m/z'].sort_values(ascending=True).diff().iloc[1:]/result['m/z'].sort_values(ascending=True).iloc[1:]*1E6
-
-
-df=pd.DataFrame(assign_summary)
-df.plot.bar(x='Time',y=df.columns[1:],stacked=True,ylabel='Peaks')
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,frameon=False)
-
-
 
 #Here, we create a new reference mass list.
 cal_list=results[results['Confidence Score']>.5]

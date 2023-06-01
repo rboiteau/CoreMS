@@ -26,7 +26,7 @@ from corems.mass_spectrum.calc.Calibration import MzDomainCalibration
 ######## Set files here 
 # Set file folder and THERMO RAW file name here:
 file_location='/Users/boiteaur/Desktop/Major projects/Bermuda Atlantic Time Series data processing/Thermo RAW data/'
-sample_list_name='BATS_samplelist.csv' #Sample list must contain column with header 'File'
+sample_list_name='BATS_sample_list_short.csv' #Sample list must contain column with header 'File'
 refmasslist = file_location+"cal_pos.ref"
 
 # Change the current working directory to where CoreMS is located
@@ -34,7 +34,7 @@ refmasslist = file_location+"cal_pos.ref"
 
 ### Set time bins in minutes
 interval=2
-timerange=[0,30]
+timerange=[4,10]
 internal_cal_setting='Y' # Should be 'Y' to perform internal calibration.
 
 #Molecular search parameters. 
@@ -43,12 +43,15 @@ MSParameters.molecular_search.min_ppm_error = -0.25
 MSParameters.molecular_search.max_ppm_error = 0.25
 MSParameters.molecular_search.ion_charge = 1
 
+MSParameters.mass_spectrum.min_calib_ppm_error = -2
+MSParameters.mass_spectrum.max_calib_ppm_error = 2
+
 MSParameters.mass_spectrum.threshold_method = 'signal_noise'
-MSParameters.mass_spectrum.s2n_threshold=2
+MSParameters.mass_spectrum.s2n_threshold=3
 MSParameters.ms_peak.peak_min_prominence_percent = 0.01
 
 MSParameters.mass_spectrum.min_picking_mz=200
-MSParameters.mass_spectrum.max_picking_mz=800
+MSParameters.mass_spectrum.max_picking_mz=900
 
 ####### End of parameters
 
@@ -56,26 +59,15 @@ MSParameters.molecular_search.url_database = "postgresql+psycopg2://coremsappdb:
 MSParameters.molecular_search.score_method = "prob_score"
 MSParameters.molecular_search.output_score_method = "prob_score"
 
-
 #Read in sample list and load MS data
 samplelist=pd.read_csv(file_location+sample_list_name)
 MSfiles={}
-for file in samplelist['File'][samplelist['Sample type']=='sample']:
+for file in samplelist['File']:
     parser = rawFileReader.ImportMassSpectraThermoMSFileReader(file_location+file)
     MSfiles[file]=parser
 
-samplelist=samplelist[samplelist['File'].isin(MSfiles.keys())]
-
-
-print("Loading file: "+ file)
-# Read in sample list and load MS data
-MSfiles={}
-parser = rawFileReader.ImportMassSpectraThermoMSFileReader(file_location+file)
-
-MSfiles[file]=parser
-
-#Function to calibrate the spectra in an LCMS run
-def lcmsspectra_cal(parser,interval,timerange,internal_cal_setting):
+#Function to calibrate and assign formula to the spectra in an LCMS run
+def lcms_cal_assign(parser,interval,timerange,internal_cal_setting):
     
     tic=parser.get_tic(ms_type='MS')[0]
     tic_df=pd.DataFrame({'time': tic.time,'scan': tic.scans})
@@ -91,84 +83,98 @@ def lcmsspectra_cal(parser,interval,timerange,internal_cal_setting):
         
         #Now, get an average mass spectrum and list the centroided m/z values of the spectrum. One of these should be the molecule of interest.
         mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)
-            
-        mass_spectrum.settings.calib_sn_threshold = 5
-        mass_spectrum.settings.min_calib_ppm_error = -2
-        mass_spectrum.settings.max_calib_ppm_error = 2
-        
+
+        #Calibrate spectrum based on reference mass list:
         if(internal_cal_setting=='Y'):
+
+            mass_spectrum.settings.calib_sn_threshold = 5
+            mass_spectrum.settings.min_calib_ppm_error = -3
+            mass_spectrum.settings.max_calib_ppm_error = 3
             MzDomainCalibration(mass_spectrum, refmasslist,mzsegment=[0,1000]).run()
 
+        #Assign molecular formula based on specified elemental criteria
+
+        #First assignment iteration (CHON with adducts)
+        mass_spectrum.molecular_search_settings.min_dbe = 0
+        mass_spectrum.molecular_search_settings.max_dbe = 20
+        mass_spectrum.molecular_search_settings.adduct_atoms_pos: tuple = ('Na','K')
+
+        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
+        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
+        mass_spectrum.molecular_search_settings.usedAtoms['O'] = (1, 20)
+        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 8)
+        mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['Si'] = (0, 0)
+        mass_spectrum.molecular_search_settings.isProtonated = True
+        mass_spectrum.molecular_search_settings.isRadical = False
+        mass_spectrum.molecular_search_settings.isAdduct = True
+        mass_spectrum.molecular_search_settings.max_oc_filter=1.2
+        mass_spectrum.molecular_search_settings.max_hc_filter=3
+    
+        SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
+        mass_spectrum.percentile_assigned(report_error=True)
+
+        #Second assignment iteration (Sulfur containing)
+        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
+        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
+        mass_spectrum.molecular_search_settings.usedAtoms['O'] = (1, 20)
+        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['S'] = (1, 3)
+        mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['Si'] = (0, 0)
+        mass_spectrum.molecular_search_settings.isProtonated = True
+        mass_spectrum.molecular_search_settings.isRadical = False
+        mass_spectrum.molecular_search_settings.isAdduct = True
+        mass_spectrum.molecular_search_settings.max_oc_filter=1.2
+        mass_spectrum.molecular_search_settings.max_hc_filter=3
+
+        SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
+        mass_spectrum.percentile_assigned(report_error=True)
+
+        #Third assignment iteration (Organo-Phosphates)
+        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
+        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
+        mass_spectrum.molecular_search_settings.usedAtoms['O'] = (1, 20)
+        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 8)
+        mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['P'] = (1, 1)
+        mass_spectrum.molecular_search_settings.usedAtoms['Si'] = (0, 0)
+        mass_spectrum.molecular_search_settings.isProtonated = True
+        mass_spectrum.molecular_search_settings.isRadical = False
+        mass_spectrum.molecular_search_settings.isAdduct = True
+        mass_spectrum.molecular_search_settings.max_oc_filter=1.2
+        mass_spectrum.molecular_search_settings.max_hc_filter=3
+
+        #SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
+        #mass_spectrum.percentile_assigned(report_error=True)
+
+        #Fourth assignment iteration (Siloxanes)
+        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 40)
+        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 80)
+        mass_spectrum.molecular_search_settings.usedAtoms['O'] = (1, 20)
+        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['Si'] = (0, 10)
+        mass_spectrum.molecular_search_settings.isProtonated = True
+        mass_spectrum.molecular_search_settings.isRadical = False
+        mass_spectrum.molecular_search_settings.isAdduct = False
+        mass_spectrum.molecular_search_settings.max_oc_filter=2
+        mass_spectrum.molecular_search_settings.max_hc_filter=6
+
+        #SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
+        #mass_spectrum.percentile_assigned(report_error=True)
+
+        #Add assigned spectrum to the calibrated_spectra dictionary
         calibrated_spectra[timestart]=mass_spectrum
     
     return(calibrated_spectra)
 
-#Function to build formula assignment lists from calibrated spectra
-def lcmsformula(spectra_dict):
-    for key in spectra_dict:    
-        print(key)
-        SearchMolecularFormulas(spectra_dict[key], first_hit=True).run_worker_mass_spectrum()
-        spectra_dict[key].percentile_assigned(report_error=True)
-
 MSspectra={}
 for file in MSfiles:
-    MSspectra[file]=lcmsspectra_cal(MSfiles[file],interval,timerange,internal_cal_setting)
-
-
-
-# Core Molecular formula search
-
-MSParameters.molecular_search.min_dbe = 0
-MSParameters.molecular_search.max_dbe = 20
-
-#First, evaluate wide attribution criteria
-MSParameters.molecular_search.usedAtoms['C'] = (4,50)
-MSParameters.molecular_search.usedAtoms['H'] = (4,100)
-MSParameters.molecular_search.usedAtoms['O'] = (1,20)
-MSParameters.molecular_search.usedAtoms['N'] = (0,8)
-MSParameters.molecular_search.usedAtoms['S'] = (0,0)
-MSParameters.molecular_search.usedAtoms['Cu'] = (0,0)
-MSParameters.molecular_search.usedAtoms['Si'] = (0,0)
-MSParameters.molecular_search.adduct_atoms_pos: tuple = ('Na')
-MSParameters.molecular_search.isProtonated = True
-MSParameters.molecular_search.isRadical = False
-MSParameters.molecular_search.isAdduct = True
-MSParameters.molecular_search.max_oc_filter=1.2
-MSParameters.molecular_search.max_hc_filter=3
-#MSParameters.molecular_search.adduct_atoms_pos: tuple = ('Na', 'K')
-lcmsformula(MSspectra[file])
-
-#First, evaluate wide attribution criteria
-MSParameters.molecular_search.usedAtoms['C'] = (4,50)
-MSParameters.molecular_search.usedAtoms['H'] = (4,100)
-MSParameters.molecular_search.usedAtoms['O'] = (1,20)
-MSParameters.molecular_search.usedAtoms['N'] = (0,0)
-MSParameters.molecular_search.usedAtoms['S'] = (0,3)
-MSParameters.molecular_search.usedAtoms['Cu'] = (0,0)
-MSParameters.molecular_search.usedAtoms['Si'] = (0,0)
-MSParameters.molecular_search.isProtonated = True
-MSParameters.molecular_search.isRadical = False
-MSParameters.molecular_search.isAdduct = True
-MSParameters.molecular_search.max_oc_filter=2
-MSParameters.molecular_search.max_hc_filter=6
-
-lcmsformula(MSspectra[file])
-
-#First, evaluate wide attribution criteria
-MSParameters.molecular_search.usedAtoms['C'] = (4,50)
-MSParameters.molecular_search.usedAtoms['H'] = (4,100)
-MSParameters.molecular_search.usedAtoms['O'] = (1,20)
-MSParameters.molecular_search.usedAtoms['N'] = (0,0)
-MSParameters.molecular_search.usedAtoms['S'] = (0,0)
-MSParameters.molecular_search.usedAtoms['Cu'] = (0,0)
-MSParameters.molecular_search.usedAtoms['Si'] = (0,10)
-MSParameters.molecular_search.isProtonated = True
-MSParameters.molecular_search.isRadical = False
-MSParameters.molecular_search.isAdduct = False
-MSParameters.molecular_search.max_oc_filter=2
-MSParameters.molecular_search.max_hc_filter=6
-
-lcmsformula(MSspectra[file])
+    print(file)
+    MSspectra[file]=lcms_cal_assign(MSfiles[file],interval,timerange,internal_cal_setting)
 
 masterresults={}
 for file in MSspectra:
@@ -186,8 +192,6 @@ for file in MSspectra:
 
 allresults=pd.concat(masterresults.values())
 
-allresults.to_csv(file_location+'/'+'BATS_assigned_results.csv')
-
 #Fill zeros for elements involved in ratio calcs. 
 elements=['C','H','O','N']
 for element in elements:
@@ -197,28 +201,29 @@ allresults['Molecular class']=allresults['Molecular Formula'].str.replace('\d+',
 allresults['Molecular class'][allresults['Heteroatom Class']=='unassigned']='unassigned'
 allresults['Molecular class'][allresults['Is Isotopologue']==1]='Isotope'
 
-results=allresults[allresults['Molecular class']!='unassigned']
+assignedresults=allresults[allresults['Molecular class']!='unassigned']
 
 # Calculate atomic stoichiometries and Nominal Oxidation State of Carbon (NOSC)
-results['O/C']=results['O']/results['C']
-results['H/C']=results['H']/results['C']
-results['N/C']=results['N']/results['C']
-results['NOSC'] =  4 -(4*results['C'] + results['H'] - 3*results['N'] - 2*results['O'])/results['C']
+assignedresults['O/C']=assignedresults['O']/assignedresults['C']
+assignedresults['H/C']=assignedresults['H']/assignedresults['C']
+assignedresults['N/C']=assignedresults['N']/assignedresults['C']
+assignedresults['NOSC'] =  4 -(4*assignedresults['C'] + assignedresults['H'] - 3*assignedresults['N'] - 2*assignedresults['O'])/assignedresults['C']
 
 print('All peaks:', len(allresults))
 
-print('All monoisotopic assignments:', len(results))
+print('All assignments:', len(assignedresults))
 
+allresults.to_csv(file_location+'/'+'BATS_allfiles_assigned_results.csv')
 
-#### Plot and save error distribution figure
+ #### Plot and save error distribution figure
 fig, ((ax1, ax2)) = plt.subplots(1,2)
 fig.set_size_inches(12, 6)
 
-sns.scatterplot(x='m/z',y='m/z Error (ppm)',hue='Molecular Class',data=results,ax=ax1, edgecolor='none')
+sns.scatterplot(x='m/z',y='m/z Error (ppm)',hue='Molecular class',data=assignedresults,ax=ax1, edgecolor='none')
 ax1.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,frameon=False)
 ax1.set_title('a', fontweight='bold', loc='left')
 
-sns.kdeplot(x='m/z Error (ppm)',data=results,hue='Molecular Class',ax=ax2,legend=False)
+sns.kdeplot(x='m/z Error (ppm)',data=assignedresults,hue='Molecular class',ax=ax2,legend=False)
 ax2.set_title('b', fontweight='bold', loc='left')
 
 fig.tight_layout()
@@ -236,33 +241,31 @@ for time in allresults['Time'].unique():
     for mol_class in allresults['Molecular class'].unique():
         current[mol_class]=len(allresults[(allresults['Molecular class']==mol_class) & (allresults['Time']==time)])
     assign_summary.append(current)
-    #mzdiff=result['m/z'].sort_values(ascending=True).diff().iloc[1:]/result['m/z'].sort_values(ascending=True).iloc[1:]*1E6
-
 
 df=pd.DataFrame(assign_summary)
 df.plot.bar(x='Time',y=df.columns[1:],stacked=True,ylabel='Peaks')
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,frameon=False)
+plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,frameon=True)
 
-# #Calculate Dispersity Index. 
-# EIC={}
-# for file in allresults['File'].unique():
-#     masses=allresults[allresults['File']==file]['m/z'].unique().tolist()
-#     EIC[file]=MSfiles[file].get_eics(target_mzs=masses,tic_data={},peak_detection=False,smooth=False)
+#Calculate Dispersity Index. 
+'''
+EIC={}
+for file in allresults['File'].unique():
+    masses=allresults[allresults['File']==file]['m/z'].unique().tolist()
+    EIC[file]=MSfiles[file].get_eics(target_mzs=masses,tic_data={},peak_detection=False,smooth=False)
     
-# dispersity=[]
-# for ind in allresults.index:
-#     current=allresults.loc[ind]
-#     time=[0,2]+current.Time
-#     file=current.File
-#     mass=current['m/z']
-#     chroma=pd.DataFrame({'EIC':EIC[file][0][mass].eic,'time':EIC[file][0][mass].time})
-#     chroma=chroma[chroma['time'].between(time[0],time[1])]
-#     chroma=chroma.sort_values(by='EIC',ascending=False)
-#     d=chroma[chroma.cumsum()['EIC']<0.5*chroma.sum()['EIC']].time.std()
-#     dispersity.append(d)
+dispersity=[]
+for ind in allresults.index:
+    current=allresults.loc[ind]
+    time=[0,2]+current.Time
+    file=current.File
+    mass=current['m/z']
+    chroma=pd.DataFrame({'EIC':EIC[file][0][mass].eic,'time':EIC[file][0][mass].time})
+    chroma=chroma[chroma['time'].between(time[0],time[1])]
+    chroma=chroma.sort_values(by='EIC',ascending=False)
+    d=chroma[chroma.cumsum()['EIC']<0.5*chroma.sum()['EIC']].time.std()
+    dispersity.append(d)
 
-# allresults['Dispersity']=dispersity
-
+allresults['Dispersity']=dispersity
+'''
 plt.show()
 
-allresults.to_csv(file_location+'/'+'BATS_assigned_results.csv')
