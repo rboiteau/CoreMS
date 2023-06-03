@@ -13,7 +13,7 @@ from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql.operators import exists
-from sqlalchemy import event, and_
+from sqlalchemy import event, and_, or_
 from sqlalchemy import func
 
 from corems.encapsulation.constant import Atoms, Labels
@@ -330,8 +330,9 @@ class MolForm_SQL:
 
         if ion_type == Labels.protonated_de_ion:
             if self.type == 'normal':
-                query = query.filter(and_(
-                                MolecularFormulaLink._protonated_mz(ion_charge).cast(Integer).in_(nominal_mzs)
+                query = query.filter(or_(
+                                MolecularFormulaLink._protonated_mz(ion_charge).cast(Integer).in_(nominal_mzs),
+                                MolecularFormulaLink._protonated_mz(ion_charge*2).cast(Integer).in_(nominal_mzs)
                                 ))
             return add_dict_formula(query, ion_type, ion_charge)
         
