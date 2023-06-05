@@ -119,21 +119,36 @@ def setAssingmentParams():
 
     MSParameters.molecular_search.url_database = 'postgresql+psycopg2://coremsappdb:coremsapppnnl@localhost:5432/coremsapp'
     MSParameters.molecular_search.min_dbe = -1
-    MSParameters.molecular_search.max_dbe = 20
+    MSParameters.molecular_search.max_dbe = 50
 
     MSParameters.molecular_search.ion_charge = 1 # absolute value; multiplied by polarity w/in code
 
-    MSParameters.molecular_search.usedAtoms['C'] = (1,100)  
-    MSParameters.molecular_search.usedAtoms['H'] = (4,150)
-    MSParameters.molecular_search.usedAtoms['O'] = (0,20)
-    MSParameters.molecular_search.usedAtoms['N'] = (0,15)
+    #MSParameters.molecular_search.adduct_atoms_pos = ('Co')
+    MSParameters.molecular_search.usedAtoms['C'] = (1,65)  
+    MSParameters.molecular_search.usedAtoms['H'] = (4,100)
+    MSParameters.molecular_search.usedAtoms['O'] = (0,14)
+    MSParameters.molecular_search.usedAtoms['N'] = (0,14)
     MSParameters.molecular_search.usedAtoms['P'] = (0,1)
-    MSParameters.molecular_search.usedAtoms['S'] = (0,2)
-    #MSParameters.molecular_search.usedAtoms['Na'] = (0,1)
-    #MSParameters.molecular_search.usedAtoms['Cu'] = (0,1)
+    #MSParameters.molecular_search.usedAtoms['S'] = (0,0)
+   # MSParameters.molecular_search.usedAtoms['Co'] = (0,1)
+    MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
     #MSParameters.molecular_search.usedAtoms['K'] = (0,1)
     #MSParameters.molecular_search.usedAtoms['Fe'] = (0,1)
     #MSParameters.molecular_search.usedAtoms['Zn'] = (0,1)
+
+    MSParameters.molecular_search.used_atom_valences = {'C': 4,
+                                                            '13C': 4,
+                                                            'H': 1,
+                                                            'O': 2,
+                                                            '18O': 2,
+                                                            'N': 3,
+                                                           # 'S': 2,
+                                                           # '34S': 2,
+                                                           # 'Na': 1,
+                                                            'Fe': 3,
+                                                            'P': 3,
+                                                            'Co': 3
+                                                            }
 
 if __name__ == '__main__':
 
@@ -142,12 +157,12 @@ if __name__ == '__main__':
     
     data_dir = '/Users/christiandewey/data-temp/spring/'
 
-    fname = '230601_spring-env_pos.csv'
+    fname = '230601_spring-env_pos-1.csv'
 
     mzref = "/Users/christiandewey/CoreMS/db/nom_pos.ref" 
     
-    interval = 2     # window in which scans are averaged
-    time_range = [7,11]    
+    interval = 7     # window in which scans are averaged
+    time_range = [5,12]    
 
     results = []
 

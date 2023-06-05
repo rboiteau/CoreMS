@@ -403,7 +403,7 @@ class MolecularCombinations:
                 
                 mass = mass + Atoms.atomic_masses[atom]  *  datadict.get(atom)
             
-        return mass 
+        return mass
         
     def calc_dbe_class(self, datadict):
             
@@ -456,19 +456,22 @@ class MolecularCombinations:
         
         if 'HC' in class_dict:
             del class_dict['HC']
-            
+        
         class_dbe = self.calc_dbe_class(class_dict)    
         class_mass = self.calc_mz(class_dict)
         
-        carbonHydrogen_mass = self.odd_ch_mass if odd_even_tag == 'odd' else self.even_ch_mass 
+        carbonHydrogen_mass = self.odd_ch_mass if odd_even_tag == 'odd' else self.even_ch_mass
         carbonHydrogen_dbe = self.odd_ch_dbe if odd_even_tag == 'odd' else self.even_ch_dbe 
         carbonHydrogen_id = self.odd_ch_id if odd_even_tag == 'odd' else self.even_ch_id 
         
         for index, carbonHydrogen_obj in enumerate(carbonHydrogen_id):
             
+
             mass = carbonHydrogen_mass[index] + class_mass
             dbe =  carbonHydrogen_dbe[index] + class_dbe
-    
+            if ('N' in class_dict.keys()) and ('O' in class_dict.keys()) and ('P' in class_dict.keys()) and ('Co' in class_dict.keys()):
+                if (class_dict['N'] == 14) and (class_dict['O'] == 14) and (class_dict['P'] == 1) and (class_dict['Co'] == 1): 
+                        print(class_dict, class_mass, carbonHydrogen_mass[index], mass)
             if settings.min_mz <= mass <= settings.max_mz:
                 
                 if settings.min_dbe <= dbe <= settings.max_dbe:
@@ -490,6 +493,8 @@ class MolecularCombinations:
 
         number_of_halogen = self.get_total_halogen_atoms(class_dict)
 
+        number_of_metals = self.get_total_metal_atoms(class_dict)
+
         if number_of_halogen > 0:
 
             TEM_HALOGEN = True
@@ -497,6 +502,16 @@ class MolecularCombinations:
         else:
 
             TEM_HALOGEN = False
+
+
+        if number_of_metals > 0:
+
+            TEM_METAL = True
+        
+        else:
+
+            TEM_METAL = False
+
 
         if TEM_HALOGEN:
 
@@ -533,6 +548,11 @@ class MolecularCombinations:
                         return 'odd'
                     else:
                         return 'even'
+                
+                elif TEM_METAL:
+
+                    return 'even'
+                
                 else:
                     return 'odd'
 
@@ -572,3 +592,18 @@ class MolecularCombinations:
                     total_number = total_number + class_dict.get(atom)
             
             return total_number    
+
+    @staticmethod
+    def get_total_metal_atoms(class_dict):
+
+            atoms = ['Fe', 'Co', 'Cu', 'Zn', 'Ni', 'Mn', 'Pb', 'Cd', 'Cr']
+
+            total_number = 0
+            
+            for atom in atoms:
+
+                if atom in class_dict.keys():
+
+                    total_number = total_number + class_dict.get(atom)
+            
+            return total_number  

@@ -330,7 +330,7 @@ class MolecularLookupDictSettings:
 
         self.min_mz = 50
 
-        self.max_mz = 1600
+        self.max_mz = 1400
 
         self.min_dbe = 0
 
@@ -370,6 +370,7 @@ class MolecularLookupDictSettings:
                                    'Na': 1,
                                    'F': 1,
                                    'K': 0,
+                                   'Co': 2
                                    }
 
 @dataclasses.dataclass
@@ -417,7 +418,7 @@ class MolecularFormulaSearchSettings:
     # look for close shell ions [M + Adduct]+ only considers metal set in the list adduct_atoms  
     adduct_atoms_neg: tuple = ('Cl', 'Br')
 
-    adduct_atoms_pos: tuple = ('Na', 'K')
+    adduct_atoms_pos: tuple = ('Na', 'K', 'Co')
 
     score_methods: tuple = ('S_P_lowest_error', 'N_S_P_lowest_error', 'lowest_error', 'prob_score',
                             'air_filter_error', 'water_filter_error', 'earth_filter_error')
@@ -503,6 +504,7 @@ class MolecularFormulaSearchSettings:
                                         'Na': 1,
                                         'F': 1,
                                         'K': 1,
+                                        'Co':2
                                         })
         '''
 
