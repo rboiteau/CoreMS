@@ -31,12 +31,12 @@ from corems.mass_spectrum.calc.Calibration import MzDomainCalibration
 file_location='/Users/boiteaur/Desktop/Major projects/Bermuda Atlantic Time Series data processing/Thermo RAW data/'
 sample_list_name='BATS_sample_list.csv' #Sample list must contain column with header 'File'
 refmasslist = file_location+"Seawater_NOM_pos.ref"
-savefile='BATS_allfiles_assigned_results.csv'
+savefile='BATS_allfiles_assigned_results_round2.csv'
 
 
 ### Set time bins in minutes
 interval=2
-timerange=[0,36]
+timerange=[0,30]
 internal_cal_setting='Y' # Should be 'Y' to perform internal calibration.
 
 #Molecular search parameters. 
@@ -103,13 +103,13 @@ def lcms_cal_assign(parser,interval,timerange,internal_cal_setting):
         mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
         mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
         mass_spectrum.molecular_search_settings.usedAtoms['O'] = (1, 20)
-        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 8)
-        mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 2)
+        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 4)
+        mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 0)
         mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 0)
         mass_spectrum.molecular_search_settings.usedAtoms['Si'] = (0, 0)
         mass_spectrum.molecular_search_settings.isProtonated = True
         mass_spectrum.molecular_search_settings.isRadical = False
-        mass_spectrum.molecular_search_settings.isAdduct = True
+        mass_spectrum.molecular_search_settings.isAdduct = False
         mass_spectrum.molecular_search_settings.max_oc_filter=1.2
         mass_spectrum.molecular_search_settings.max_hc_filter=3
     

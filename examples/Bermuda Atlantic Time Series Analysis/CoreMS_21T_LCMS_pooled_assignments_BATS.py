@@ -32,28 +32,34 @@ from corems.mass_spectrum.calc.Calibration import MzDomainCalibration
 # Set file folder and THERMO RAW file name here:
 file_location='/Users/boiteaur/Desktop/Major projects/Bermuda Atlantic Time Series data processing/Thermo RAW data/'
 file="RMB_190828_BATSpooled_30.RAW" #pooled sample for formula assignments
-refmasslist = file_location+"cal_pos.ref"
-savefile='assigned_results.csv'
+#refmasslist = file_location+"revisedcal.ref"
+refmasslist = file_location+"Seawater_NOM_pos_extend2.ref"
+savefile='BATSpooled_assigned_results_original.csv'
 
 
 ### Set time bins in minutes
-interval=4
-timerange=[0,24]
+interval=2
+timerange=[8,12]
 
 internal_cal_setting='Y' # Should be 'Y' to perform internal calibration.
+Save_calibration='N' # Should be 'Y' to perform internal calibration.
 
 #Molecular search parameters. 
 MSParameters.molecular_search.error_method = 'None'
-MSParameters.molecular_search.min_ppm_error = -0.25
-MSParameters.molecular_search.max_ppm_error = 0.25
+MSParameters.molecular_search.min_ppm_error = -0.5
+MSParameters.molecular_search.max_ppm_error = 0.5
 MSParameters.molecular_search.ion_charge = 1
 
-MSParameters.mass_spectrum.threshold_method = 'signal_noise'
-MSParameters.mass_spectrum.s2n_threshold=3
-MSParameters.ms_peak.peak_min_prominence_percent = 0.01
-
+MSParameters.mass_spectrum.min_calib_ppm_error = -3
+MSParameters.mass_spectrum.max_calib_ppm_error = 3
+MSParameters.mass_spectrum.calib_pol_order = 2
+MSParameters.mass_spectrum.calib_sn_threshold = 10
 MSParameters.mass_spectrum.min_picking_mz=200
 MSParameters.mass_spectrum.max_picking_mz=900
+MSParameters.mass_spectrum.threshold_method = 'signal_noise'
+MSParameters.mass_spectrum.s2n_threshold=3
+
+MSParameters.ms_peak.peak_min_prominence_percent = 0.01
 
 ####### End of parameters
 MSParameters.molecular_search.url_database = "postgresql+psycopg2://coremsappdb:coremsapppnnl@localhost:5432/coremsapp"
@@ -88,10 +94,6 @@ def lcms_cal_assign(parser,interval,timerange,internal_cal_setting):
         #Calibrate spectrum based on reference mass list:
         if(internal_cal_setting=='Y'):
 
-            mass_spectrum.settings.calib_sn_threshold = 5
-            mass_spectrum.settings.min_calib_ppm_error = -2
-            mass_spectrum.settings.max_calib_ppm_error = 2
-
             MzDomainCalibration(mass_spectrum, refmasslist,mzsegment=[0,1000]).run()
 
         #Assign molecular formula based on specified elemental criteria
@@ -99,24 +101,27 @@ def lcms_cal_assign(parser,interval,timerange,internal_cal_setting):
         #First assignment iteration (CHON with adducts)
         mass_spectrum.molecular_search_settings.min_dbe = 0
         mass_spectrum.molecular_search_settings.max_dbe = 20
-        mass_spectrum.molecular_search_settings.adduct_atoms_pos: tuple = ('Na','K')
+        #Note: Adduct tuple needs to have at least two elements..
+        mass_spectrum.molecular_search_settings.adduct_atoms_pos = ('Na',)
 
-        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
-        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
+        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 40)
+        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 80)
         mass_spectrum.molecular_search_settings.usedAtoms['O'] = (1, 20)
-        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 8)
+        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 1)
         mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 0)
         mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['Na'] = (0, 0)
         mass_spectrum.molecular_search_settings.usedAtoms['Si'] = (0, 0)
         mass_spectrum.molecular_search_settings.isProtonated = True
         mass_spectrum.molecular_search_settings.isRadical = False
-        mass_spectrum.molecular_search_settings.isAdduct = True
+        mass_spectrum.molecular_search_settings.isAdduct = False
         mass_spectrum.molecular_search_settings.max_oc_filter=1.2
         mass_spectrum.molecular_search_settings.max_hc_filter=3
     
         SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
         mass_spectrum.percentile_assigned(report_error=True)
 
+        '''
         #Second assignment iteration (Sulfur containing)
         mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
         mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
@@ -124,10 +129,11 @@ def lcms_cal_assign(parser,interval,timerange,internal_cal_setting):
         mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 0)
         mass_spectrum.molecular_search_settings.usedAtoms['S'] = (1, 3)
         mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['Na'] = (0, 1)
         mass_spectrum.molecular_search_settings.usedAtoms['Si'] = (0, 0)
         mass_spectrum.molecular_search_settings.isProtonated = True
         mass_spectrum.molecular_search_settings.isRadical = False
-        mass_spectrum.molecular_search_settings.isAdduct = True
+        mass_spectrum.molecular_search_settings.isAdduct = False
         mass_spectrum.molecular_search_settings.max_oc_filter=1.2
         mass_spectrum.molecular_search_settings.max_hc_filter=3
 
@@ -141,10 +147,11 @@ def lcms_cal_assign(parser,interval,timerange,internal_cal_setting):
         mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 8)
         mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 0)
         mass_spectrum.molecular_search_settings.usedAtoms['P'] = (1, 1)
+        mass_spectrum.molecular_search_settings.usedAtoms['Na'] = (0, 1)
         mass_spectrum.molecular_search_settings.usedAtoms['Si'] = (0, 0)
         mass_spectrum.molecular_search_settings.isProtonated = True
         mass_spectrum.molecular_search_settings.isRadical = False
-        mass_spectrum.molecular_search_settings.isAdduct = True
+        mass_spectrum.molecular_search_settings.isAdduct = False
         mass_spectrum.molecular_search_settings.max_oc_filter=1.2
         mass_spectrum.molecular_search_settings.max_hc_filter=3
 
@@ -167,7 +174,7 @@ def lcms_cal_assign(parser,interval,timerange,internal_cal_setting):
 
         SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
         mass_spectrum.percentile_assigned(report_error=True)
-
+        '''
         calibrated_spectra[timestart]=mass_spectrum
     
     return(calibrated_spectra)
@@ -220,11 +227,11 @@ print('All monoisotopic assignments:', len(results))
 fig, ((ax1, ax2)) = plt.subplots(1,2)
 fig.set_size_inches(12, 6)
 
-sns.scatterplot(x='m/z',y='m/z Error (ppm)',hue='Molecular class',data=results,ax=ax1, edgecolor='none')
+sns.scatterplot(x='m/z',y='m/z Error (ppm)',hue='Time',data=results,ax=ax1, edgecolor='none')
 ax1.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,frameon=False)
 ax1.set_title('a', fontweight='bold', loc='left')
 
-sns.kdeplot(x='m/z Error (ppm)',data=results,hue='Molecular class',ax=ax2,legend=False)
+sns.kdeplot(x='m/z Error (ppm)',data=results,hue='Time',ax=ax2,legend=False)
 ax2.set_title('b', fontweight='bold', loc='left')
 
 fig.tight_layout()
@@ -249,7 +256,7 @@ df=pd.DataFrame(assign_summary)
 df.plot.bar(x='Time',y=df.columns[1:],stacked=True,ylabel='Peaks')
 plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,frameon=False)
 
-
+'''
 #Calculate Dispersity Index. 
 EIC={}
 for file in allresults['File'].unique():
@@ -269,8 +276,26 @@ for ind in allresults.index:
     dispersity.append(d)
 
 allresults['Dispersity']=dispersity
-
+'''
 
 allresults.to_csv(file_location+savefile)
+
+plt.show()
+
+if (Save_calibration=='Y'):
+    #Here, we create a new reference mass list.
+    cal_list=results[results['Confidence Score']>.6]
+    cal_list=results[results['S/N']>20]
+
+    cal_list=results[results['Ion Charge']==1]
+    cal_list=cal_list[cal_list['Molecular class']!='Isotope'].drop_duplicates(subset=['Molecular Formula'])
+
+    fig, (ax1) = plt.subplots(1,1)
+    sns.scatterplot(x='m/z',y='m/z Error (ppm)',hue='Molecular class',data=cal_list, ax=ax1, edgecolor='none')
+
+
+    cal=pd.DataFrame({'# Name':cal_list['Molecular Formula'], 'm/z value':cal_list['Calculated m/z'], 'charge':cal_list['Ion Charge'],' ion formula':cal_list['Molecular Formula'],'collision cross section [A^2]':cal_list['Ion Charge']})
+
+    cal.to_csv(file_location+'revisedcal.ref',sep='\t',index=False)
 
 plt.show()

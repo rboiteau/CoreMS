@@ -172,6 +172,11 @@ class MzDomainCalibration:
 
         cal_peaks_mz = list(tmpdf.values)
         cal_refs_mz = list(tmpdf.index)
+        
+        ###Troubleshooting.
+        print(cal_peaks_mz)
+        print('refs')
+        print(cal_refs_mz)
 
         if False:
             min_calib_ppm_error = calib_ppm_error_threshold[0]
@@ -374,6 +379,7 @@ class MzDomainCalibration:
                                                        calib_ppm_error_threshold=(min_calib_ppm_error,
                                                                                   max_calib_ppm_error),
                                                        calib_snr_threshold=calib_ppm_error_threshold)
+        #print(cal_peaks_mz)
         if len(cal_peaks_mz)==2:
             self.mass_spectrum.settings.calib_pol_order = 1
             calib_pol_order = 1
