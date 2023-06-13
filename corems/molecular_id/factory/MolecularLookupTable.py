@@ -573,3 +573,18 @@ class MolecularCombinations:
                     total_number = total_number + class_dict.get(atom)
             
             return total_number    
+    
+    def get_heteroatom_valence(class_dict):
+
+            atoms = ['F', 'Cl', 'Br', 'I']
+
+            total_number = 0
+            
+            for atom in class_dict.keys():
+
+                if atom in class_dict.keys():
+
+                    total_number = total_number + class_dict.get(atom)
+            
+            return total_number    
+        

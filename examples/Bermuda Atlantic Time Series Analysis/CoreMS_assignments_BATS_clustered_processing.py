@@ -16,6 +16,8 @@ sample_list_name='BATS_sample_list.csv' #Sample list must contain column with he
 samplelist=pd.read_csv(file_location+sample_list_name)
 samplelist['Depth']=samplelist['Depth (m)']
 
+clustermethod='ward'
+
 depth=[]
 for file in results_clustered['File'].unique():
     d=samplelist[samplelist['File']==file]['Depth'].iloc[0]
@@ -26,18 +28,21 @@ for file in results_clustered['File'].unique():
 ### Module defines clusters based on depth distribution and plots density distribution of properties of each cluster:
 
 #Define clusters
-results_clustered.cluster[results_clustered.cluster==0]='3.SRDOM'
-results_clustered.cluster[results_clustered.cluster==1]='2.SLDOM'
+results_clustered.cluster[results_clustered.cluster==0]='4.RDOM'
+results_clustered.cluster[results_clustered.cluster==1]='4.RDOM'
 results_clustered.cluster[results_clustered.cluster==2]='out'
-results_clustered.cluster[results_clustered.cluster==3]='out'
-results_clustered.cluster[results_clustered.cluster==4]='4.RDOM'
+results_clustered.cluster[results_clustered.cluster==3]='3.SRDOM'
+results_clustered.cluster[results_clustered.cluster==4]='out'
 results_clustered.cluster[results_clustered.cluster==5]='1.SLDOM'
-results_clustered.cluster[results_clustered.cluster==6]='4.RDOM'
-results_clustered.cluster[results_clustered.cluster==7]='3.SRDOM'
-results_clustered.cluster[results_clustered.cluster==8]='4.RDOM'
+results_clustered.cluster[results_clustered.cluster==6]='3.SRDOM'
+results_clustered.cluster[results_clustered.cluster==7]='2.SLDOM'
+results_clustered.cluster[results_clustered.cluster==8]='out'
 
 # Save clustered results (Table S1)
 results_clustered.to_csv(file_location+'TableS1_rev_clustered_results.csv')
+
+print('out')
+print(len(results_clustered[results_clustered.cluster=='out']))
 
 # Discard out cluster
 results_clustered=results_clustered[results_clustered.cluster!='out']
@@ -79,5 +84,55 @@ sns.violinplot(x='NOSC',y='cluster', data=results_clustered, ax=axs['e'], common
 axs['e'].set_title('e', fontweight='bold', loc='left')
 sns.violinplot(x='Time',y='cluster', data=results_clustered, ax=axs['f'], common_norm=False,legend=False)
 axs['f'].set_title('f', fontweight='bold', loc='left')
+
+
+### (7) Cluster analysis
+### Module determines and plots the mean depth distribution of each cluster
+
+norm_abundances=results_clustered[results_clustered['File'].unique()].fillna(0)
+norm_abundances=norm_abundances.div(norm_abundances.max(axis=1),axis=0)
+
+depth=[]
+for file in results_clustered['File'].unique():
+    d=samplelist[samplelist['File']==file]['Depth'].iloc[0]
+    depth.append(d)
+
+clustered_results=[]
+for i in results_clustered['cluster'].unique():
+    current=pd.DataFrame({'abundance':norm_abundances[results_clustered['cluster']==i].sum(axis=0)/len(results_clustered[results_clustered['cluster']==i]),'Depth':depth,'cluster':i})
+    clustered_results.append(current)
+
+clustered_results=pd.concat(clustered_results)
+
+h = sns.relplot(data=clustered_results, col='cluster', x='abundance', y='Depth', kind='scatter', height=3)
+for ax in h.axes[0]:
+    ax.set_ylim(1000,0)
+    ax.set_xlabel('Normalized Abundance')
+
+h.savefig(file_location+'CoreLCMS_FigS6.eps',dpi=300,format='eps')
+h.savefig(file_location+'CoreLCMS_FigS6.pdf',dpi=300,format='pdf')
+
+#Print number of features in each cluster
+print(len(results_clustered))
+print(len(results_clustered[results_clustered.cluster=='1.SLDOM']))
+print(len(results_clustered[results_clustered.cluster=='2.SLDOM']))
+print(len(results_clustered[results_clustered.cluster=='3.SRDOM']))
+print(len(results_clustered[results_clustered.cluster=='4.RDOM']))
+
+
+#Create and saves heatmap for each cluster (Fig. 5)
+
+for cluster in results_clustered['cluster'].unique():
+    current=results_clustered[results_clustered['cluster']==cluster]
+    current=current[results_clustered['File'].unique()].fillna(0)
+    current=current.div(current.max(axis=1),axis=0)
+    clusterplot=norm_abundances
+    current=current.transpose()
+    current['Depth']=depth
+    current=current.sort_values(by='Depth')
+    current=current.drop(['Depth'],axis=1)
+    h=sns.clustermap(current,row_cluster=False,cmap='mako',method=clustermethod)
+    h.savefig(file_location+'CoreLCMS_Fig3'+cluster+'.eps',dpi=300,format='eps')
+
 
 plt.show()

@@ -174,10 +174,10 @@ class MzDomainCalibration:
         cal_refs_mz = list(tmpdf.index)
         
         ###Troubleshooting.
-        print(cal_peaks_mz)
-        print('refs')
-        print(cal_refs_mz)
-
+        #print(cal_peaks_mz)
+        #print('refs')
+        #print(cal_refs_mz)
+        
         if False:
             min_calib_ppm_error = calib_ppm_error_threshold[0]
             max_calib_ppm_error = calib_ppm_error_threshold[1]
@@ -379,11 +379,48 @@ class MzDomainCalibration:
                                                        calib_ppm_error_threshold=(min_calib_ppm_error,
                                                                                   max_calib_ppm_error),
                                                        calib_snr_threshold=calib_ppm_error_threshold)
-        #print(cal_peaks_mz)
+
         if len(cal_peaks_mz)==2:
             self.mass_spectrum.settings.calib_pol_order = 1
             calib_pol_order = 1
             print('Only 2 calibration points found, forcing a linear recalibration')
         elif len(cal_peaks_mz)<2:
             print('Too few calibration points found, function will fail')
+        self.recalibrate_mass_spectrum(cal_peaks_mz, cal_refs_mz, order=calib_pol_order)
+
+    def run_savecal(self):
+
+            calib_ppm_error_threshold = self.mass_spectrum.settings.calib_sn_threshold
+            max_calib_ppm_error = self.mass_spectrum.settings.max_calib_ppm_error
+            min_calib_ppm_error = self.mass_spectrum.settings.min_calib_ppm_error
+            calib_pol_order = self.mass_spectrum.settings.calib_pol_order
+
+            # load reference mass list
+            df_ref = self.load_ref_mass_list()
+
+            # find calibration points
+            cal_peaks_mz, cal_refs_mz = self.find_calibration_points(df_ref,
+                                                        calib_ppm_error_threshold=(min_calib_ppm_error,
+                                                                                    max_calib_ppm_error),
+                                                        calib_snr_threshold=calib_ppm_error_threshold)
+            print(cal_peaks_mz)
+            print(cal_refs_mz)
+
+            if len(cal_peaks_mz)==2:
+                self.mass_spectrum.settings.calib_pol_order = 1
+                calib_pol_order = 1
+                print('Only 2 calibration points found, forcing a linear recalibration')
+            elif len(cal_peaks_mz)<2:
+                print('Too few calibration points found, function will fail')
+            self.recalibrate_mass_spectrum(cal_peaks_mz, cal_refs_mz, order=calib_pol_order)
+
+            file_location='/Users/boiteaur/Desktop/Major projects/Zoe Metabolomics/'
+            pd.DataFrame({'cal_peaks_mz':cal_peaks_mz,'cal_refs_mz':cal_refs_mz}).to_csv(file_location+'cal_mz.csv')
+
+    def manual_run(self,cal_peaks_mz,cal_refs_mz):
+
+        calib_ppm_error_threshold = self.mass_spectrum.settings.calib_sn_threshold
+        max_calib_ppm_error = self.mass_spectrum.settings.max_calib_ppm_error
+        min_calib_ppm_error = self.mass_spectrum.settings.min_calib_ppm_error
+        calib_pol_order = self.mass_spectrum.settings.calib_pol_order
         self.recalibrate_mass_spectrum(cal_peaks_mz, cal_refs_mz, order=calib_pol_order)
