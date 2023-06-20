@@ -33,8 +33,6 @@ print('Good assignments:', len(results_1))
 print('Questionable assignments:', len(results_2))
 
 
-
-
 fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2,2)
 fig.set_size_inches(8, 5)
 

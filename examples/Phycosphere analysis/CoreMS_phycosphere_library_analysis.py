@@ -38,7 +38,7 @@ featurelist_file='Phycosphere_Height_0_2023661719.csv'
 m_rt='Average Rt(min)'
 m_mz='Average Mz'
 offset=-0.4 #rt of library - retention time of files 
-threshold=0.01 #Mass accuracy of metabolomic data in Da. 
+threshold=0.003 #Mass accuracy of metabolomic data in Da. 
 
 MSParameters.mass_spectrum.min_picking_mz=150
 MSParameters.mass_spectrum.max_picking_mz=800

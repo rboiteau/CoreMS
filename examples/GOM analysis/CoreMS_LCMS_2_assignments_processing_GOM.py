@@ -12,12 +12,18 @@ sys.path.append("./")
 from corems.mass_spectra.input import rawFileReader
 
 
-file_location='/Users/boiteaur/Desktop/Major projects/Bermuda Atlantic Time Series data processing/Thermo RAW data/'
-sample_list_name='BATS_sample_list.csv' #Sample list must contain column with header 'File'
-savefile='BATS_allfiles_assigned_results_round4.csv'
+#### Change file settings here
+
+file_location='/Users/boiteaur/Desktop/Major projects/GOM cruises 2023/'
+sample_list_name='GOMFeb_SampleList_short.csv' #Sample list must contain column with header 'File'
+results_file='GOMpooled_assigned_results.csv'
+uniqueresults_file='GOMpooled_unique_results.csv'
+##### End user input
+
+
 
 samplelist=pd.read_csv(file_location+sample_list_name)
-allresults=pd.read_csv(file_location+savefile)
+allresults=pd.read_csv(file_location+results_file)
 samplefiles=samplelist.loc[samplelist['Sample type']=='sample','File']
 
 allresults=allresults[allresults['File'].isin(samplefiles)]
@@ -73,6 +79,8 @@ print("All Unique results: " + str(len(uniqueresults)))
 
 
 ### Performs statistical tests to evaluate reference classes
+
+'''
 uniqueresults['rank class']=uniqueresults['Molecular Formula'].str.replace(' ', '',regex=True).str.replace('C','',regex=True).str.replace('H','',regex=True).str.replace('O','',regex=True).str.replace('\d+', '',1,regex=True)
 uniqueresults['class flag']=0
 
@@ -128,18 +136,18 @@ fig.tight_layout()
 
 fig.savefig(file_location+'CoreLCMS_FigS3_rev.eps',dpi=300,format='eps')
 fig.savefig(file_location+'CoreLCMS_FigS3_rev.pdf',dpi=300,format='pdf')
-
+'''
 
 ### (4) Feature filtering (abundance, blank subtraction, minimum samples) and metric plots
 
 #remove low abundance hits
-uniqueresults=uniqueresults[uniqueresults["S/N"]>3]
-print("Unique results, S/N>3: " + str(len(uniqueresults)))
+#uniqueresults=uniqueresults[uniqueresults["S/N"]>3]
+#print("Unique results, S/N>3: " + str(len(uniqueresults)))
 
 #remove features detected in the blank within 50% of the max intensity. 
-uniqueresults['blank']=uniqueresults['RMB_190828_BATS24_blnk.raw'].fillna(0)/uniqueresults['Peak Height']
-uniqueresults=uniqueresults[uniqueresults['blank']<0.5]
-print("Unique results, blank subtracted: " + str(len(uniqueresults)))
+#uniqueresults['blank']=uniqueresults['RMB_190828_BATS24_blnk.raw'].fillna(0)/uniqueresults['Peak Height']
+#uniqueresults=uniqueresults[uniqueresults['blank']<0.5]
+#print("Unique results, blank subtracted: " + str(len(uniqueresults)))
 
 #remove hits that don't appear in a minimum of 5 samples:
 uniqueresults['occurrence']=uniqueresults[results['File'].unique()].gt(0).sum(axis=1)
@@ -216,7 +224,7 @@ axs['c'].sharex(axs['b'])
 fig.savefig(file_location+'CoreLCMS_Fig2.eps',dpi=300,format='eps')
 fig.savefig(file_location+'CoreLCMS_Fig2.pdf',dpi=300,format='pdf')
 
-uniqueresults.to_csv(file_location+'BATS_unique_results_round4.csv')
+uniqueresults.to_csv(file_location+uniqueresults_file)
 ### (6) Hierarchical Clustering
 ### Generate clusters of ms features across depth.
 plt.show()

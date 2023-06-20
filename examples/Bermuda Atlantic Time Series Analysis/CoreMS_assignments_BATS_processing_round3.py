@@ -4,12 +4,24 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+from scipy.stats import ks_2samp
+from scipy.stats import ranksums
 
 file_location='/Users/boiteaur/Desktop/Major projects/Bermuda Atlantic Time Series data processing/Thermo RAW data/'
+sample_list_name='BATS_sample_list.csv' #Sample list must contain column with header 'File'
+savefile='BATS_allfiles_assigned_results_round3.csv'
 
-allresults=pd.read_csv(file_location+'BATS_allfiles_assigned_results_round3.csv')
+samplelist=pd.read_csv(file_location+sample_list_name)
+allresults=pd.read_csv(file_location+savefile)
+samplefiles=samplelist.loc[samplelist['Sample type']=='sample','File']
 
-#sample_list_name='BATS_sample_list.csv' #Sample list must contain column with header 'File'
+allresults=allresults[allresults['File'].isin(samplefiles)]
+allresults=allresults[allresults['Time']<31]
+allresults=allresults[allresults['Time']<31]
+
+
+
+
 
 #Load MS data from sample list as MSfiles dictionary (keys=file name, values= parser objects)
 #samplelist=pd.read_csv(file_location+sample_list_name)
@@ -73,6 +85,66 @@ for time in results.Time.unique():
 uniqueresults=pd.concat(uniquelist,ignore_index=True)
 print("All Unique results: " + str(len(uniqueresults)))
 
+
+### Performs statistical tests to evaluate reference classes
+uniqueresults['rank class']=uniqueresults['Molecular Formula'].str.replace(' ', '',regex=True).str.replace('C','',regex=True).str.replace('H','',regex=True).str.replace('O','',regex=True).str.replace('\d+', '',1,regex=True)
+uniqueresults['class flag']=0
+
+ref_class='CHO'
+filterby='rank class'
+
+for c in uniqueresults[filterby].unique():
+    #Calculate adjusted p-value from rank sum test (probability that distributions have same mean)
+    ranksum=ranksums(uniqueresults[uniqueresults[filterby]==c]['m/z Error (ppm)'],
+                   uniqueresults[uniqueresults['Molecular class']==ref_class]['m/z Error (ppm)'])
+    class_size=len(uniqueresults[uniqueresults[filterby]==c])
+
+    #Calculate statistic from (how similar distributions are)
+    ks=ks_2samp(uniqueresults[uniqueresults[filterby]==c]['m/z Error (ppm)'],
+                   uniqueresults[uniqueresults['Molecular class']==ref_class]['m/z Error (ppm)'])
+
+    if class_size>5:
+        if ranksum.pvalue*len(uniqueresults[filterby].unique())>0.01:
+            if ks.statistic<0.4:
+                uniqueresults.loc[uniqueresults[filterby]==c,'class flag']=1
+
+
+results1=uniqueresults[uniqueresults['class flag']==1]
+results2=uniqueresults[uniqueresults['class flag']==0]
+
+uniqueresults.loc[uniqueresults['class flag']==0,'Molecular class']=='Unassigned'
+
+print(len(results1))
+print(len(results2))
+
+uniqueresults=uniqueresults[uniqueresults['class flag']==1]
+
+#### Plot and save error distribution figure
+
+fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2,2)
+fig.set_size_inches(8, 6)
+
+sns.scatterplot(x='m/z',y='m/z Error (ppm)',hue='Molecular class',data=results1,ax=ax1, edgecolor='none')
+ax1.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,frameon=False)
+ax1.set_title('a', fontweight='bold', loc='left')
+
+sns.kdeplot(x='m/z Error (ppm)',data=results1,hue='Molecular class',ax=ax2,legend=False,common_norm=False)
+ax2.set_title('b', fontweight='bold', loc='left')
+
+sns.scatterplot(x='m/z',y='m/z Error (ppm)',hue='Molecular class',data=results2,ax=ax3, edgecolor='none')
+ax3.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.,frameon=False)
+ax3.set_title('c', fontweight='bold', loc='left')
+
+sns.kdeplot(x='m/z Error (ppm)',data=results2,hue='Molecular class',ax=ax4,legend=False)
+ax4.set_title('d', fontweight='bold', loc='left')
+
+fig.tight_layout()
+
+fig.savefig(file_location+'CoreLCMS_FigS3_rev.eps',dpi=300,format='eps')
+fig.savefig(file_location+'CoreLCMS_FigS3_rev.pdf',dpi=300,format='pdf')
+
+plt.show()
+
 ### (4) Feature filtering (abundance, blank subtraction, minimum samples) and metric plots
 
 #remove low abundance hits
@@ -135,7 +207,7 @@ axs['c'].sharex(axs['b'])
 fig.savefig(file_location+'CoreLCMS_Fig2.eps',dpi=300,format='eps')
 fig.savefig(file_location+'CoreLCMS_Fig2.pdf',dpi=300,format='pdf')
 
-uniqueresults.to_csv(file_location+'BATS_unique_results.csv')
+uniqueresults.to_csv(file_location+'BATS_unique_results_round3.csv')
 ### (6) Hierarchical Clustering
 ### Generate clusters of ms features across depth.
 plt.show()

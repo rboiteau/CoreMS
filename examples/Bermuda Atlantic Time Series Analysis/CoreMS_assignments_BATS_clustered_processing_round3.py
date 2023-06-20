@@ -10,7 +10,7 @@ from matplotlib.colors import LogNorm, Normalize
 
 file_location='/Users/boiteaur/Desktop/Major projects/Bermuda Atlantic Time Series data processing/Thermo RAW data/'
 
-results_clustered=pd.read_csv(file_location+'BATS_clustered_results.csv')
+results_clustered=pd.read_csv(file_location+'BATS_clustered_results_round3.csv')
 
 sample_list_name='BATS_sample_list.csv' #Sample list must contain column with header 'File'
 samplelist=pd.read_csv(file_location+sample_list_name)
@@ -28,15 +28,15 @@ for file in results_clustered['File'].unique():
 ### Module defines clusters based on depth distribution and plots density distribution of properties of each cluster:
 
 #Define clusters
-results_clustered.cluster[results_clustered.cluster==0]='out'
-results_clustered.cluster[results_clustered.cluster==1]='2.SLDOM'
+results_clustered.cluster[results_clustered.cluster==0]='1.SLDOM'
+results_clustered.cluster[results_clustered.cluster==1]='out'
 results_clustered.cluster[results_clustered.cluster==2]='out'
-results_clustered.cluster[results_clustered.cluster==3]='1.SLDOM'
-results_clustered.cluster[results_clustered.cluster==4]='4.RDOM'
-results_clustered.cluster[results_clustered.cluster==5]='out'
-results_clustered.cluster[results_clustered.cluster==6]='4.RDOM'
+results_clustered.cluster[results_clustered.cluster==3]='4.RDOM'
+results_clustered.cluster[results_clustered.cluster==4]='out'
+results_clustered.cluster[results_clustered.cluster==5]='2.SLDOM'
+results_clustered.cluster[results_clustered.cluster==6]='3.SRDOM'
 results_clustered.cluster[results_clustered.cluster==7]='out'
-results_clustered.cluster[results_clustered.cluster==8]='3.SRDOM'
+results_clustered.cluster[results_clustered.cluster==8]='out'
 
 # Save clustered results (Table S1)
 results_clustered.to_csv(file_location+'TableS1_rev_clustered_results.csv')
