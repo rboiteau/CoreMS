@@ -42,8 +42,8 @@ class Labels: #pragma: no cover
 class Atoms: #pragma: no cover
 
     electron_mass = 0.0005485
-    
 
+    atomic_masses = {'H': 1.007825032239,
                      'D': 2.0141017781212,
                      'T': 3.016049277924,
                      '3He': 3.016029320125,
