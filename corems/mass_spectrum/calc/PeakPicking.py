@@ -105,7 +105,13 @@ class PeakPicking:
             while peak_height_minus  >= target_peak_height:
 
                 index_minus = index_minus -1
-                peak_height_minus = intes[index_minus]
+                try: 
+                    peak_height_minus = intes[index_minus]
+                except IndexError:
+                    print('Res. calc. warning - peak index adjacent to spectrum edge')
+                    print(massa)
+                    peak_height_minus = target_peak_height
+                    index_minus -= 1 
                 #print "massa", "," , "intes", "," , massa[index_minus], "," , peak_height_minus
             x = [ massa[index_minus],  massa[index_minus+1]]
             y = [ intes[index_minus],  intes[index_minus+1]]
@@ -113,15 +119,23 @@ class PeakPicking:
 
             a = coefficients[0]
             b = coefficients[1]
-
-            y_intercept =  intes[index_minus] + ((intes[index_minus+1] - intes[index_minus])/2)
+            if self.mspeaks_settings.legacy_resolving_power:
+                y_intercept =  intes[index_minus] + ((intes[index_minus+1] - intes[index_minus])/2)
+            else:
+                y_intercept =  target_peak_height
             massa1 = (y_intercept -b)/a
 
             index_plus = current_index
             while peak_height_plus  >= target_peak_height:
 
                 index_plus = index_plus + 1
-                peak_height_plus = intes[index_plus]
+                try: 
+                    peak_height_plus = intes[index_plus]
+                except IndexError:
+                    print('Res. calc. warning - peak index adjacent to spectrum edge')
+                    print(massa)
+                    peak_height_plus = target_peak_height
+                    index_plus += 1 
                 #print "massa", "," , "intes", "," , massa[index_plus], "," , peak_height_plus
 
             x = [massa[index_plus],  massa[index_plus - 1]]
@@ -131,7 +145,11 @@ class PeakPicking:
             a = coefficients[0]
             b = coefficients[1]
 
-            y_intercept =  intes[index_plus - 1] + ((intes[index_plus] - intes[index_plus - 1])/2)
+            if self.mspeaks_settings.legacy_resolving_power:
+                y_intercept =  intes[index_plus - 1] + ((intes[index_plus] - intes[index_plus - 1])/2)
+            else:
+                y_intercept =  target_peak_height
+
             massa2 = (y_intercept -b)/a
 
             if massa1 > massa2:
@@ -204,10 +222,9 @@ class PeakPicking:
                     
                     peak_resolving_power = self.calculate_resolving_power( abund, mass, apex_index)
                     s2n = intes_centr/self.baselise_noise_std
-                    ion_charge = -999 #self.polarity * MSParameters.molecular_search.ion_charge
-                    self.add_mspeak(ion_charge, mz_exp_centroid, abund[apex_index] , peak_resolving_power, s2n, indexes_tuple, exp_freq=freq_centr, ms_parent=self)
-
-        self.determine_ion_charge()
+                    self.add_mspeak(self.polarity, mz_exp_centroid, abund[apex_index] , peak_resolving_power, s2n, indexes_tuple, exp_freq=freq_centr, ms_parent=self)
+                #pyplot.plot(domain[start_index: final_index + 1], signal[start_index:final_index + 1], c='black')
+                #pyplot.show()
 
     def calc_centroid_legacy(self, mass, abund, freq):
         pass
@@ -270,11 +287,11 @@ class PeakPicking:
         
     def get_threshold(self, intes):
         
-        intes = array(intes).astype(npfloat)
+        intes = array(intes).astype(float)
        
         threshold_method = self.settings.threshold_method
 
-        if threshold_method == 'auto':
+        if threshold_method == 'minima':
             
             if self.is_centroid:
                 warn("Auto threshould is disabled for centroid data, returning 0")
@@ -295,6 +312,17 @@ class PeakPicking:
             abundance_threshold = self.settings.relative_abundance_threshold
             factor = intes.max()/100
 
+        elif threshold_method == "absolute_abundance":
+
+            abundance_threshold = self.settings.absolute_abundance_threshold
+            factor = 1
+
+        elif threshold_method == 'log':
+            if self.is_centroid:
+                raise  Exception("log noise Not tested for centroid data")
+            abundance_threshold = self.settings.log_nsigma
+            factor = self.baselise_noise_std
+
         else:
             raise  Exception("%s method was not implemented, please refer to corems.mass_spectrum.calc.NoiseCalc Class" % threshold_method)
         
@@ -314,8 +342,8 @@ class PeakPicking:
         list_mass = [mass[current_index - 1], mass[current_index], mass[current_index +1]]
         list_y = [abund[current_index - 1],abund[current_index], abund[current_index +1]]
         
-        z = poly1d(polyfit(list_mass, list_y, 2))
-        a = z[2]
+        z = polyfit(list_mass, list_y, 2)
+        a = z[0]
         b = z[1]
 
         calculated = -b/(2*a)
@@ -332,8 +360,8 @@ class PeakPicking:
             
             # fit parabola to three most abundant frequency datapoints
             list_freq = [freq[current_index - 1], freq[current_index], freq[current_index +1]]
-            z = poly1d(polyfit(list_freq, list_y, 2))
-            a = z[2]
+            z = polyfit(list_freq, list_y, 2)
+            a = z[0]
             b = z[1]
 
             calculated_freq = -b/(2*a)
@@ -376,6 +404,8 @@ class PeakPicking:
         else:    
             
             return mass[current_index], abund[current_index], peak_indexes
+
+
 
     def determine_ion_charge(self): 
 

@@ -403,7 +403,7 @@ class MolecularCombinations:
                 
                 mass = mass + Atoms.atomic_masses[atom]  *  datadict.get(atom)
             
-        return mass
+        return mass 
         
     def calc_dbe_class(self, datadict):
             
@@ -456,22 +456,19 @@ class MolecularCombinations:
         
         if 'HC' in class_dict:
             del class_dict['HC']
-        
+            
         class_dbe = self.calc_dbe_class(class_dict)    
         class_mass = self.calc_mz(class_dict)
         
-        carbonHydrogen_mass = self.odd_ch_mass if odd_even_tag == 'odd' else self.even_ch_mass
+        carbonHydrogen_mass = self.odd_ch_mass if odd_even_tag == 'odd' else self.even_ch_mass 
         carbonHydrogen_dbe = self.odd_ch_dbe if odd_even_tag == 'odd' else self.even_ch_dbe 
         carbonHydrogen_id = self.odd_ch_id if odd_even_tag == 'odd' else self.even_ch_id 
         
         for index, carbonHydrogen_obj in enumerate(carbonHydrogen_id):
             
-
             mass = carbonHydrogen_mass[index] + class_mass
             dbe =  carbonHydrogen_dbe[index] + class_dbe
-            if ('N' in class_dict.keys()) and ('O' in class_dict.keys()) and ('P' in class_dict.keys()) and ('Co' in class_dict.keys()):
-                if (class_dict['N'] == 14) and (class_dict['O'] == 14) and (class_dict['P'] == 1) and (class_dict['Co'] == 1): 
-                        print(class_dict, class_mass, carbonHydrogen_mass[index], mass)
+    
             if settings.min_mz <= mass <= settings.max_mz:
                 
                 if settings.min_dbe <= dbe <= settings.max_dbe:

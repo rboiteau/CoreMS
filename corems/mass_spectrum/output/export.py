@@ -6,7 +6,7 @@ from pathlib import Path
 
 from numpy import string_, array, NaN, empty
 from pandas import DataFrame
-import json
+import json, toml
 
 from corems.encapsulation.constant import Atoms
 from corems.encapsulation.constant import Labels
@@ -37,6 +37,7 @@ class HighResMassSpecExport(Thread):
         self.atoms_order_list = self.get_all_used_atoms_in_order(self.mass_spectrum)
 
         self._init_columns()
+
 
     def _init_columns(self):
 
@@ -130,6 +131,7 @@ class HighResMassSpecExport(Thread):
         dict_data_list = self.get_list_dict_data(self.mass_spectrum)
 
         df = DataFrame(dict_data_list, columns=columns)
+
         df.to_pickle(self.output_file.with_suffix('.pkl'))
 
         if write_metadata:
@@ -254,6 +256,24 @@ class HighResMassSpecExport(Thread):
 
             processed_dset.attrs['MassSpectrumSetting'] = json.dumps(setting_dicts.get('MassSpectrum'), sort_keys=False, indent=4, separators=(',', ': '))
 
+    def parameters_to_toml(self):
+        
+        dict_setting = parameter_to_dict.get_dict_data_ms(self.mass_spectrum)
+
+        dict_setting['MassSpecAttrs'] = self.get_mass_spec_attrs(self.mass_spectrum)
+        dict_setting['analyzer'] = self.mass_spectrum.analyzer
+        dict_setting['instrument_label'] = self.mass_spectrum.instrument_label
+        dict_setting['sample_name'] = self.mass_spectrum.sample_name
+
+        import re
+        #pretty print 
+        output = toml.dumps(dict_setting)
+        #output = json.dumps(dict_setting, sort_keys=False, indent=4, separators=(',', ': '))
+        
+        #output = re.sub(r'",\s+', '", ', output)
+        
+        return output
+
     def parameters_to_json(self):
 
         dict_setting = parameter_to_dict.get_dict_data_ms(self.mass_spectrum)
@@ -356,6 +376,7 @@ class HighResMassSpecExport(Thread):
             Export dictionary of mspeak info for assigned (match) data
             '''
             formula_dict = mformula.to_dict()
+
             dict_result = {'Index': index,
                            'm/z': ms_peak._mz_exp,
                            'Calibrated m/z': ms_peak.mz_exp,
@@ -384,6 +405,7 @@ class HighResMassSpecExport(Thread):
             for atom in self.atoms_order_list:
                 if atom in formula_dict.keys():
                     dict_result[atom] = formula_dict.get(atom)
+
             dict_data_list.append(dict_result)
 
         score_methods = mass_spectrum.molecular_search_settings.score_methods
@@ -396,6 +418,8 @@ class HighResMassSpecExport(Thread):
             mass_spectrum.molecular_search_settings.score_method = selected_score_method
 
             for index, ms_peak in enumerate(mass_spectrum):
+
+                # print(ms_peak.mz_exp)
 
                 if ms_peak:
 

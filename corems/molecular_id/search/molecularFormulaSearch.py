@@ -10,7 +10,7 @@ import tqdm
 
 
 from corems import chunks, timeit
-from corems.encapsulation.constant import Atoms, Labels
+from corems.encapsulation.constant import Labels
 from corems.molecular_formula.factory.MolecularFormulaFactory import LCMSLibRefMolecularFormula, MolecularFormula
 from corems.ms_peak.factory.MSPeakClasses import _MSPeak
 from corems.molecular_id.factory.molecularSQL import MolForm_SQL
@@ -88,15 +88,14 @@ class SearchMolecularFormulas:
             list_formulas_candidates = []
 
             for nominal_mass in nominal_masses:
-                #print(nominal_mass)
-                qlist = list(query.keys())
                 if nominal_mass in query.keys():
-                    #print('\t',query.get(nominal_mass))
                     list_formulas_candidates.extend(query.get(nominal_mass))
 
             return list_formulas_candidates
 
         all_assigned_indexes = list()
+
+        # molecular_search_settings = self.mass_spectrum_obj.molecular_search_settings
 
         search_molfrom = SearchMolecularFormulaWorker(find_isotopologues=self.find_isotopologues)
 
@@ -191,7 +190,7 @@ class SearchMolecularFormulas:
 
         def run():
 
-            for classe_chunk in chunks(classes, 300): 
+            for classe_chunk in chunks(classes, self.mass_spectrum_obj.molecular_search_settings.db_chunk_size): 
 
                 classes_str_list = [class_tuple[0] for class_tuple in classe_chunk]
 
@@ -294,8 +293,9 @@ class SearchMolecularFormulas:
         self.mass_spectrum_obj.molecular_search_settings.use_runtime_kendrick_filter = initial_runtime_kendrick_filter
 
         mspeaks = [mspeak for mspeak in self.mass_spectrum_obj if mspeak.is_assigned]
-        
+
         self.sql_db.close()
+
         return mspeaks
 
 

@@ -12,6 +12,7 @@ import numpy as np
 import sys
 import site
 from pathlib import Path
+import datetime
 
 import clr
 import pandas as pd
@@ -39,7 +40,9 @@ from ThermoFisher.CommonCore.RawFileReader import RawFileReaderAdapter
 from ThermoFisher.CommonCore.Data import ToleranceUnits, Extensions
 from ThermoFisher.CommonCore.Data.Business import ChromatogramTraceSettings, TraceType, MassOptions
 from ThermoFisher.CommonCore.Data.Business import ChromatogramSignal, Range
+from ThermoFisher.CommonCore.Data.Business import Device
 from ThermoFisher.CommonCore.Data.Interfaces import IChromatogramSettings
+from ThermoFisher.CommonCore.Data.Business import MassOptions, FileHeaderReaderFactory
 from ThermoFisher.CommonCore.Data.FilterEnums import MSOrderType
 from System.Collections.Generic import List
 
@@ -67,9 +70,12 @@ class ThermoBaseClass():
 
         self.iRawDataPlus = RawFileReaderAdapter.FileFactory(str(file_path))
 
-        self.res = self.iRawDataPlus.SelectInstrument(0, 1)
+        self.res = self.iRawDataPlus.SelectInstrument(Device.MS, 1)
         
         self.file_path = file_location
+        self.iFileHeader = FileHeaderReaderFactory.ReadFile(str(file_path))
+
+        # removing tmp file
 
         self._init_settings()
 
@@ -110,6 +116,14 @@ class ThermoBaseClass():
         else:        
             return self.chromatogram_settings.end_scan
         
+    def get_creation_time(self):
+        '''
+        Extract the creation date stamp from the .RAW file
+        Return formatted creation date stamp.
+        '''
+        credate = self.iRawDataPlus.CreationDate.get_Ticks()
+        credate = datetime.datetime(1,1,1) + datetime.timedelta(microseconds=credate/10)
+        return credate
 
     def remove_temp_file(self):
         '''if the path is from S3Path data cannot be serialized to io.ByteStream and
@@ -125,12 +139,10 @@ class ThermoBaseClass():
         polarity_symbol = self.get_filter_for_scan_num(scan_number)[1]
 
         if polarity_symbol == '+':
-            print('positive')
             return 1
             # return 'POSITIVE_ION_MODE'
 
         elif polarity_symbol == '-':
-            print('negative')
             return -1
 
         else:
@@ -400,7 +412,7 @@ class ThermoBaseClass():
                         ax.plot(data.time[apex_index], data.tic[apex_index], marker='x', linewidth=0)
                     
                 
-               # plt.show()
+                # plt.show()
                 return data, ax
             
             return data, None
@@ -408,17 +420,8 @@ class ThermoBaseClass():
         else:
             return None, None
 
-    def get_average_mass_spectrum_by_scanlist(self, scans_list: List[int], auto_process: bool = True,
+    def get_average_mass_spectrum_by_scanlist(self, scans_list: List[int], auto_process: bool = True, 
                                               ppm_tolerance: float = 5.0) -> MassSpecProfile:
-
-        '''
-        Averages selected scans mass spectra using Thermo's AverageScans method
-        scans_list: list[int]
-        auto_process: bool
-            If true performs peak picking, and noise threshold calculation after creation of mass spectrum object
-        Returns:
-            MassSpecProfile
-        '''
 
         """
         Averages selected scans mass spectra using Thermo's AverageScans method
@@ -512,6 +515,7 @@ class ThermoBaseClass():
             Type of mass spectrum scan, default for full scan acquisition
          Returns:
             MassSpecProfile
+        # This Function is Broken and/or redundant.
         '''
 
         d_params = self.set_metadata(firstScanNumber=self.start_scan,
@@ -577,6 +581,8 @@ class ThermoBaseClass():
             d_params['polarity'] = self.get_polarity_mode(firstScanNumber)
 
         d_params['analyzer'] = self.iRawDataPlus.GetInstrumentData().Model
+
+        d_params['aquisition_time'] = self.iRawDataPlus.GetInstrumentData().Model
 
         d_params['instrument_label'] = self.iRawDataPlus.GetInstrumentData().Name
 
@@ -859,9 +865,6 @@ class ImportMassSpectraThermoMSFileReader(ThermoBaseClass, LC_Calculations):
             }
 
         return data_dict
-
-   
-
     
     def get_best_scans_idx(self, stdevs=2, method='mean', plot=False):
         '''
@@ -876,8 +879,10 @@ class ImportMassSpectraThermoMSFileReader(ThermoBaseClass, LC_Calculations):
 
         if method == 'median':
             tic_median = tic['TIC'].median()
+
         elif method == 'mean':
             tic_median = tic['TIC'].mean()
+        
         else:
             print('Method ' + str(method) + ' undefined')
 
@@ -898,114 +903,3 @@ class ImportMassSpectraThermoMSFileReader(ThermoBaseClass, LC_Calculations):
             return fig, scans
         else:
             return scans
-
-    def isotopehunter(self,pattern,timerange,mass_tolerance,ratio_tolerance,peakwidth,correlation,slope_filter):
-        #Function matches required ('Y') peaks in pattern to spectra in self
-        #Requires 'timerange','mass_tolerance','ratio_tolerance' for pattern matching
-        #Requires 'pattern','peakwidth','correlation','slope_filter' for QC filtering
-
-        #Define pattern boundaries
-        umass=pattern.mdiff[pattern.requirement=='Y']+mass_tolerance
-        lmass=pattern.mdiff[pattern.requirement=='Y']-mass_tolerance
-        uratio=pattern.ratio[pattern.requirement=='Y']*ratio_tolerance
-        lratio=pattern.ratio[pattern.requirement=='Y']/ratio_tolerance
-        nisotope=len(umass)
-
-        interval=peakwidth
-
-        times=np.arange(timerange[0],timerange[1],interval).tolist()
-
-        #Retrieve TIC for MS1 scans only within timerange
-        tic=self.get_tic(ms_type='MS')[0]
-        tic_df=pd.DataFrame({'time': tic.time,'scan': tic.scans})
-        #scans=tic_df[tic_df.time.between(timerange[0],timerange[1])].scan.tolist()
-
-        #Create  empty results dictionaries. Will be filed with {Scan: {1st peak:{mz,intense}, 2nd peak:{mz,intense}, npeak:{mz,intense}}}
-        results=[]
-        clean_results=[]
-        final_results=[]
-
-        #Determine 2 most abundant isotopologues for correlation analysis.  
-        req_isotopes=pattern[pattern.requirement=='Y'].isotope
-        isotope1=req_isotopes[0]
-        isotope2=req_isotopes[1]
-
-        #for s in scans:
-        for timestart in times:
-            scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
-            s=scans[0]
-            print('Scan:'+str(s)+' Time (min): '+ str(tic_df.time[tic_df.scan==s].round(2).max()))
-            ms=self.get_average_mass_spectrum_by_scanlist(scans)
-            if(ms.mspeaks):
-
-                spectrum=pd.DataFrame({'mz':ms.mz_exp, 'intense':ms.abundance})
-                print(len(spectrum))
-
-                for j in spectrum.index:
-                    k=1
-                    hitlist=[]
-                    result={}
-
-                    while(k<nisotope):
-                        hits=spectrum[(spectrum.mz > spectrum.mz[j]+lmass[k]) & (spectrum.mz < spectrum.mz[j]+umass[k]) & (spectrum.intense > spectrum.intense[j]*lratio[k]) & (spectrum.intense < spectrum.intense[j]*uratio[k])].index.tolist()
-                        if hits:
-                            hitlist.append(hits)
-                            k=k+1
-                        else:
-                            k=nisotope+1
-                    if k==(nisotope):
-                        result['scan']=scans
-                        result['time']=tic_df[tic_df.scan==s].time.iloc[0]
-
-                        result[pattern.isotope[0]]={'mz':spectrum.mz[j],'intense':spectrum.intense[j]}
-
-                        for i, iso in enumerate(req_isotopes[1:]):
-                            result[iso]={'mz':spectrum.mz[hitlist[i][0]],'intense':spectrum.intense[hitlist[i][0]]}
-                        mass1=result[isotope1]['mz']
-                        mass2=result[isotope2]['mz']
-
-                        EIC=self.get_eics(target_mzs=[mass1,mass2],tic_data={},peak_detection=False,smooth=False)
-                        df=pd.DataFrame({'mz1':EIC[0][mass1].eic,'mz2':EIC[0][mass2].eic,'time':EIC[0][mass1].time})
-                        df_sub_a=df[df['time'].between(timestart,timestart+interval)]
-                        peakmax_i=df_sub_a.mz1.max()
-                        peakmax_t=df_sub_a.time[df_sub_a.mz1==peakmax_i].max()
-                        
-                        df_sub=df[df['time'].between(peakmax_t-interval,peakmax_t+interval)]
-
-                        #Calculate correlation and slope between two main isotopologues.        
-                        corr=df_sub.corr(method='pearson').iat[0,1]**2
-                        slope=np.polyfit(df_sub.mz1,df_sub.mz2,1)[0]/(pattern.sort_values(by='ratio',ascending=False).ratio[1]/pattern.sort_values(by='ratio',ascending=False).ratio[0])
-
-                        result['corr']=corr 
-                        result['file']=self.file_path
-                        result['slope']=slope
-                        result['mass']=round(mass1,3)
-                        result['abundance']=result[isotope1]['intense']
-                        result['time_peak']=peakmax_t
-                        result['abundance_peak']=peakmax_i
-                        result['qc']='match'
-                        result['dmz']=result[isotope2]['mz']-result[isotope1]['mz']
-
-                        if corr>correlation:
-                            if ((slope > slope_filter[0]) & (slope < slope_filter[1])):
-                                clean_results.append(result)
-                                result['qc']='qc'
-
-                        results.append(result)
-
-        clean_results_df=pd.DataFrame(clean_results)
-
-        for result in clean_results:
-            masses=clean_results_df[(abs(clean_results_df.mass-result['mass']) < mass_tolerance)& (abs(clean_results_df.time - result['time']) < peakwidth*2)]
-            max_value=max(masses['abundance_peak'])
-
-            if (result['abundance_peak']==max_value):
-                final_results.append(result)
-                result['qc']='max'
-                
-        print("Results:")
-        print(len(results))
-        print("Final Results:")
-        print(len(final_results))
-
-        return(results,clean_results,final_results)   

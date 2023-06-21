@@ -15,7 +15,7 @@
         "min_oc_filter": 0.0,
         "max_oc_filter": 1.2,
         "min_op_filter": 2.0,
-        "use_pah_line_rule": true,
+        "use_pah_line_rule": false,
         "min_dbe": 0.0,
         "max_dbe": 40.0,
         "mz_error_score_weight": 0.6,
@@ -43,16 +43,16 @@
                 200
             ],
             "O": [
-                7,
-                16
+                1,
+                10
             ]
         },
         "ionization_type": "ESI", "min_ppm_error": -3,
         "max_ppm_error": 5,
-        "min_abun_error": -30,
-        "max_abun_error": 70,
+        "min_abun_error": -100.0,
+        "max_abun_error": 100.0,
         "mz_error_range": 1,
-        "error_method": "None", "mz_error_average": 0,
+        "error_method": "None", "mz_error_average": 0.0,
         "used_atom_valences": {
             "C": 4,
             "13C": 4,
@@ -393,18 +393,24 @@
     },
     "Transient": {
         "implemented_apodization_function": [
-            "Hamming", "Hanning", "Blackman"
+            "Hamming", "Hanning", "Blackman", "Full-Sine", "Half-Sine", "Kaiser", "Half-Kaiser"
         ],
         "apodization_method": "Hanning", "number_of_truncations": 0,
-        "number_of_zero_fills": 1
+        "number_of_zero_fills": 1,
+        "next_power_of_two": false,
+        "kaiser_beta": 8.6
     },
     "MassSpectrum": {
         "threshold_method": "auto", "implemented_noise_threshold_methods": [
-            "auto", "signal_noise", "relative_abundance"
+            "minima", "signal_noise", "relative_abundance", "absolute_abundance", "log"
         ],
         "noise_threshold_std": 32,
         "s2n_threshold": 4.0,
         "relative_abundance_threshold": 6.0,
+        "absolute_abundance_threshold": 1000000.0,
+        "log_Nsigma": 6,
+        "log_Nsigma_CorrFactor": 0.463,
+        "log_Nsigma_bins": 500,
         "min_noise_mz": 50.0,
         "max_noise_mz": 1200.0,
         "min_picking_mz": 50.0,
@@ -423,8 +429,11 @@
         "kendrick_rounding_method": "floor", "implemented_kendrick_rounding_methods": [
             "floor", "ceil", "round"
         ],
+        "peak_derivative_threshold": 0.0,
         "peak_min_prominence_percent": 1,
-        "peak_max_prominence_percent": 0.1
+        "min_peak_datapoints": 5.0,
+        "peak_max_prominence_percent": 0.1,
+        "peak_height_max_percent": 10.0
     },
     "DataInput": {
         "header_translate": {
