@@ -22,8 +22,8 @@ from corems.mass_spectrum.calc.Calibration import MzDomainCalibration
 def assign_formula(file, times): 
 
     MSParameters.molecular_search.error_method = 'None'
-    MSParameters.molecular_search.min_ppm_error = -3
-    MSParameters.molecular_search.max_ppm_error = 3
+    MSParameters.molecular_search.min_ppm_error = -0.25
+    MSParameters.molecular_search.max_ppm_error = 0.25
     MSParameters.molecular_search.ion_charge = 1
     MSParameters.molecular_search.db_chunk_size = 500
 
@@ -68,12 +68,11 @@ def assign_formula(file, times):
         mass_spectrum.molecular_search_settings.min_dbe = 0
         mass_spectrum.molecular_search_settings.max_dbe = 30
 
-        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 30)
-        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 45)
-        mass_spectrum.molecular_search_settings.usedAtoms['O'] = (1, 9)
-        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (1, 6)
-        #mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 0)
-        #mass_spectrum.molecular_search_settings.usedAtoms['Co'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 70)
+        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
+        mass_spectrum.molecular_search_settings.usedAtoms['O'] = (0, 20)
+        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 10)
+        mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 1)
         mass_spectrum.molecular_search_settings.usedAtoms['Fe'] = (0, 1)
 
         mass_spectrum.molecular_search_settings.isProtonated = True
@@ -81,6 +80,15 @@ def assign_formula(file, times):
         mass_spectrum.molecular_search_settings.isAdduct = False
         #mass_spectrum.molecular_search_settings.max_oc_filter=1.2
         #mass_spectrum.molecular_search_settings.max_hc_filter=3
+        mass_spectrum.molecular_search_settings.used_atom_valences = {'C': 4,
+                                                                        '13C': 4,
+                                                                        'H': 1,
+                                                                        'O': 2,
+                                                                        'N': 3,
+                                                                        'P': 3,
+                                                                        'Fe': 2,
+                                                                        }
+
     
         SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
         mass_spectrum.percentile_assigned(report_error=True)
@@ -97,12 +105,12 @@ def assign_formula(file, times):
 
 if __name__ == '__main__':
 
-    data_dir = '/Users/christiandewey/data-temp/stdmix/'
+    data_dir = '/Users/christiandewey/data-temp/spring/'
     results = []
 
     interval = 2
-    time_min = 8
-    time_max = 10
+    time_min = 4
+    time_max = 24
     times = list(range(time_min,time_max,interval))
 
     flist = os.listdir(data_dir)
@@ -118,3 +126,5 @@ if __name__ == '__main__':
         fname = 'test_assignments.csv'
         output.to_csv(data_dir+fname)
         i = i + 1 
+
+    #os.system("sh /Users/christiandewey/CoreMS/reset_docker.sh")

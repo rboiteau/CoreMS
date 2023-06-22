@@ -443,8 +443,10 @@ class SearchMolecularFormulaWorker:
             if possible_formula:
                 mass_a = mass_by_ion_type(possible_formula, ms_peak.ion_charge)
                 error = self.calc_error(ms_peak_mz_exp, mass_a)                
-                if  (ms_peak_mz_exp >= 653.24) & (ms_peak_mz_exp <= 653.26):
-                        print('\t',possible_formula, ms_peak.ion_charge, mass_a,ms_peak_mz_exp, error)
+                #if  (ms_peak_mz_exp >= 654.24) & (ms_peak_mz_exp <= 654.26):
+                #    print('\t',possible_formula, mass_a, ms_peak_mz_exp, error)
+                #elif  (ms_peak_mz_exp >= 678.2) & (ms_peak_mz_exp <= 678.3):
+                #    print('\t',possible_formula, mass_a, ms_peak_mz_exp, error)
                 if min_ppm_error <= error <= max_ppm_error:
                     
                     # update the error
