@@ -66,14 +66,15 @@ def assign_formula(file, times):
 
         #First assignment iteration (CHON with adducts)
         mass_spectrum.molecular_search_settings.min_dbe = 0
-        mass_spectrum.molecular_search_settings.max_dbe = 40
+        mass_spectrum.molecular_search_settings.max_dbe = 30
 
-        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 65)
-        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 90)
-        mass_spectrum.molecular_search_settings.usedAtoms['O'] = (1, 14)
-        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 14)
-        mass_spectrum.molecular_search_settings.usedAtoms['P'] = (1, 1)
-        mass_spectrum.molecular_search_settings.usedAtoms['Co'] = (1, 1)
+        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 30)
+        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 45)
+        mass_spectrum.molecular_search_settings.usedAtoms['O'] = (1, 9)
+        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (1, 6)
+        #mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 0)
+        #mass_spectrum.molecular_search_settings.usedAtoms['Co'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['Fe'] = (0, 1)
 
         mass_spectrum.molecular_search_settings.isProtonated = True
         mass_spectrum.molecular_search_settings.isRadical = False
@@ -96,7 +97,7 @@ def assign_formula(file, times):
 
 if __name__ == '__main__':
 
-    data_dir = '/Users/christiandewey/data-temp/spring/'
+    data_dir = '/Users/christiandewey/data-temp/stdmix/'
     results = []
 
     interval = 2
