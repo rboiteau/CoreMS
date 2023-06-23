@@ -24,7 +24,7 @@ def assign_formula(file, times):
     MSParameters.molecular_search.error_method = 'None'
     MSParameters.molecular_search.min_ppm_error = -0.25
     MSParameters.molecular_search.max_ppm_error = 0.25
-    MSParameters.molecular_search.ion_charge = 1
+    MSParameters.molecular_search.ion_charge = 2
     MSParameters.molecular_search.db_chunk_size = 500
 
     MSParameters.mass_spectrum.min_calib_ppm_error = -1
@@ -74,6 +74,7 @@ def assign_formula(file, times):
         mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 10)
         mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 1)
         mass_spectrum.molecular_search_settings.usedAtoms['Fe'] = (0, 1)
+        mass_spectrum.molecular_search_settings.usedAtoms['Cl'] = (0, 1)
 
         mass_spectrum.molecular_search_settings.isProtonated = True
         mass_spectrum.molecular_search_settings.isRadical = False
@@ -86,7 +87,8 @@ def assign_formula(file, times):
                                                                         'O': 2,
                                                                         'N': 3,
                                                                         'P': 3,
-                                                                        'Fe': 2,
+                                                                        'Fe': 3,
+                                                                        'Cl': 1
                                                                         }
 
     
@@ -105,12 +107,12 @@ def assign_formula(file, times):
 
 if __name__ == '__main__':
 
-    data_dir = '/Users/christiandewey/data-temp/spring/'
+    data_dir = '/Users/christiandewey/data-temp/'
     results = []
 
     interval = 2
-    time_min = 4
-    time_max = 24
+    time_min = 10
+    time_max = 16
     times = list(range(time_min,time_max,interval))
 
     flist = os.listdir(data_dir)
