@@ -508,7 +508,6 @@ class MolecularCombinations:
 
             number_of_hetero = self.get_total_heteroatoms(class_dict)
             
-
             if number_of_hetero > 0:
 
                 HAS_OTHER_HETERO = True

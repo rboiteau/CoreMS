@@ -15,7 +15,7 @@ from corems.molecular_formula.factory.MolecularFormulaFactory import LCMSLibRefM
 from corems.ms_peak.factory.MSPeakClasses import _MSPeak
 from corems.molecular_id.factory.molecularSQL import MolForm_SQL
 from corems.molecular_id.factory.MolecularLookupTable import MolecularCombinations
-
+from numpy import NaN
 
 
 last_error = 0
@@ -58,10 +58,10 @@ class SearchMolecularFormulas:
     def run_search(self, mspeaks, query, min_abundance, ion_type, adduct_atom=None):
 
         def get_formulas(nominal_overlay=0.1):
-            
-            if ms_peak.ion_charge == -999:
-                ms_peak.ion_charge = self.mass_spectrum_obj.molecular_search_settings.ion_charge
 
+            if ms_peak.ion_charge == -99999:
+                ms_peak.ion_charge = self.mass_spectrum_obj.molecular_search_settings.ion_charge
+            
             if ms_peak.ion_charge ==  1:
 
                 nominal_mz = ms_peak.nominal_mz_exp
@@ -84,6 +84,7 @@ class SearchMolecularFormulas:
                 
                 elif (defect_mass) <= nominal_overlay*2:
                     nominal_masses.append((nominal_mz + 0.5)*2)
+            
 
             list_formulas_candidates = []
 
@@ -107,14 +108,6 @@ class SearchMolecularFormulas:
                 if ms_peak.is_assigned:
                     continue
 
-            '''if ms_peak.ion_charge == -999:
-                ion_charge = self.mass_spectrum_obj.polarity * self.mass_spectrum_obj.molecular_search_settings.ion_charge
-                ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, ion_charge, adduct_atom)    
-                all_assigned_indexes.extend(ms_peak_indexes)
-
-            else:'''
-            #if ms_peak.ion_charge ==  2:
-                #print("runsearch",ms_peak.ion_charge)
             ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, adduct_atom)    
             all_assigned_indexes.extend(ms_peak_indexes)
 
@@ -166,8 +159,6 @@ class SearchMolecularFormulas:
         # ion charge for all the ion in the mass spectrum
         # under the current structure is possible to search for individual m/z but it takes longer than allow all the m/z to be search against
                 
-        #ion_charge_list = [ i * self.mass_spectrum_obj.polarity for i in [1, 2] ] #self.mass_spectrum_obj.polarity * self.mass_spectrum_obj.molecular_search_settings
-
         ion_charge = self.mass_spectrum_obj.polarity * self.mass_spectrum_obj.molecular_search_settings.ion_charge
         
         # use to limit the calculation of possible isotopologues
@@ -196,8 +187,19 @@ class SearchMolecularFormulas:
 
                 # load the molecular formula objs binned by ion type and heteroatoms classes, {ion type:{classe:[list_formula]}}
                 # for adduct ion type a third key is added {atoms:{ion type:{classe:[list_formula]}}} 
-                dict_res = self.database_to_dict(classes_str_list, nominal_mzs, self.mass_spectrum_obj.molecular_search_settings)
 
+                dict_res = self.database_to_dict(classes_str_list, nominal_mzs, self.mass_spectrum_obj.molecular_search_settings)
+                '''
+                    dict_res example:
+                                  ion_type                 class        nominal_mz    candidate_formula
+                    dict_res = {"DE_OR_PROTONATED": {...{"N":9, "O":5}: {...664: [ MolecularFormulaLink_Model C32 H73 N9 O5,
+                                                                                   MolecularFormulaLink_Model C33 H61 N9 O5,   
+                                                                                   ...
+                                                                                   MolecularFormulaLink_Model C337 H13 N9 O5 ]
+                                                                        ...}
+                                                    ...}
+                                }
+                '''
                 pbar = tqdm.tqdm(classe_chunk)
 
                 for classe_tuple in pbar:
