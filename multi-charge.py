@@ -107,6 +107,7 @@ def assign_formula(file, times):
 if __name__ == '__main__':
 
     data_dir = '/Users/christiandewey/data-temp/stdmix/'
+    data_dir = '/Users/christiandewey/data-temp'
     results = []
 
     interval = 2

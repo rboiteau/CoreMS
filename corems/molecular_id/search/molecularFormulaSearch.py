@@ -408,7 +408,7 @@ class SearchMolecularFormulaWorker:
         # f = open("abundance_error.txt", "a+")    
         ms_peak_mz_exp, ms_peak_abundance = ms_peak.mz_exp, ms_peak.abundance
         # min_error = min([pmf.mz_error for pmf in possible_formulas])
-        if ms_peak.ion_charge == -999:
+        if ms_peak.ion_charge == -99999:
                         ms_peak.ion_charge = mass_spectrum_obj.polarity * mass_spectrum_obj.molecular_search_settings.ion_charge
 
         def mass_by_ion_type(possible_formula_obj, ion_charge):
@@ -445,10 +445,7 @@ class SearchMolecularFormulaWorker:
             if possible_formula:
                 mass_a = mass_by_ion_type(possible_formula, ms_peak.ion_charge)
                 error = self.calc_error(ms_peak_mz_exp, mass_a)                
-                #if  (ms_peak_mz_exp >= 654.24) & (ms_peak_mz_exp <= 654.26):
-                #    print('\t',possible_formula, mass_a, ms_peak_mz_exp, error)
-                #elif  (ms_peak_mz_exp >= 678.2) & (ms_peak_mz_exp <= 678.3):
-                #    print('\t',possible_formula, mass_a, ms_peak_mz_exp, error)
+                
                 if min_ppm_error <= error <= max_ppm_error:
                     
                     # update the error
@@ -495,9 +492,6 @@ class SearchMolecularFormulaWorker:
                             first_index, last_index = mass_spectrum_obj.get_nominal_mz_first_last_indexes(isotopologue_formula.mz_nominal_calc)
 
                             for ms_peak_iso in mass_spectrum_obj[first_index:last_index]:
-                                
-                                '''if ms_peak_iso.ion_charge == -999:
-                                        ms_peak_iso.ion_charge = ion_charge'''
 
                                 error = self.calc_error(ms_peak_iso.mz_exp, isotopologue_formula.mz_calc)
 
