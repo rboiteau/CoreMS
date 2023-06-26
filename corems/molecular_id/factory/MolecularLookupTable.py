@@ -594,7 +594,7 @@ class MolecularCombinations:
         
         for atom in class_dict.keys():
 
-            if atom not in ['HC','C','H','O','N']:
+            if atom not in ['HC','C','H','O','N', 'F', 'Cl', 'Br']:
                 total_number = total_number + class_dict.get(atom)
         
         return total_number                
@@ -606,7 +606,7 @@ class MolecularCombinations:
         
         for atom in class_dict.keys():
 
-            if atom not in ['HC','C','H','O','N']:
+            if atom not in ['HC','C','H','O','N', 'F', 'Cl', 'Br']:
 
                 clean_atom = ''.join([i for i in atom if not i.isdigit()]) 
 
