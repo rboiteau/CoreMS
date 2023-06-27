@@ -25,40 +25,6 @@ Run on:     26 June 23
 CoreMS run script for correlating ICPMS, ESIMS data
 """
 
-def plotICPMS(icp_data_file = None, elements = ['115In'], offset = 0, ax = None):
-    # offset in seconds, required shift of ICPMS data to align with ESIMS data, based on b12 peak 
-    if ax == None:
-        _, ax = plt.subplots()
-
-    
-    icp_data = pd.read_csv(icp_data_file)
-    try:
-        etime = 'Time ' + elements[0]
-        icp_subset = icp_data[[elements[0],etime]]
-    except:
-        icp_data = pd.read_csv(icp_data_file, sep=';', skiprows=1)
-        
-    icp_data.dropna(inplace=True)
-
-    for element in elements:
-        etime = 'Time ' + element
-        icp_subset = icp_data[[element,etime]]
-        icp_subset[etime] = (icp_subset[etime]+ offset) / 60
-        ax.plot(icp_subset[etime], icp_subset[element]/1e4, label=element)
-    ax.set_ylabel('ICP-MS Intensity (10$^4$ cps)')
-    ax.set_xlabel('Time (min)')
-    ax.set_title(icp_data_file.split('/')[-1])
-    ax.set_ylim(bottom = 0)
-    ax.legend(frameon = False)
-    return ax
-
-def mouse_event(event):
-    print('x: {} and y: {}'.format(event.xdata, event.ydata))
-    ix, iy = event.xdata, event.ydata
-    coords.append((ix,iy))
-    if len(coords) == 2:
-        fig.canvas.mpl_disconnect(cid)
-        plt.close('all')
 
 
 def subset_icpdata(icp_data_file = None, heteroAtom = '127I', timerange = [0,1], offset = 0):
@@ -82,8 +48,8 @@ def subset_icpdata(icp_data_file = None, heteroAtom = '127I', timerange = [0,1],
     return icp_subset
 
 
-def get_eics(esi_parser=None,assignments = None, timerange = None):
-
+def get_eics(esi_file=None, assignments = None, timerange = None):
+    esi_parser = rawFileReader.ImportMassSpectraThermoMSFileReader(esi_file)
     timestart = timerange[0]
     timestop = timerange[1]
     tic = esi_parser.get_tic(ms_type = 'MS')[0]
@@ -102,9 +68,9 @@ def get_eics(esi_parser=None,assignments = None, timerange = None):
     return EICdic, AverageMS
 
 
-def interpolate(esi_parser = None, icpsub=None, heteroAtom = '127I', timerange = [0,1]):
+def interpolate(esi_file = None, icpsub=None, heteroAtom = '127I', timerange = [0,1]):
     ###Interpolate LC-ICPMS data to obtain times matching ESI data
-
+    esi_parser = rawFileReader.ImportMassSpectraThermoMSFileReader(esi_file)
     timestart = timerange[0]
     timestop = timerange[1]
     etime = 'Time ' + heteroAtom
@@ -208,15 +174,19 @@ def plot_EIC_ICPMS(eic,mz,icp_data,element, trange, ax = None):
     return ax
     
 
-def assign_formula(file, times, interval): 
+def assign_formula(file, times, interval, refmasslist): 
     MSParameters.molecular_search.error_method = 'None'
     MSParameters.molecular_search.min_ppm_error = -5
     MSParameters.molecular_search.max_ppm_error = 5
-    MSParameters.molecular_search.ion_charge = 1
+
+    MSParameters.molecular_search.min_ion_charge = 1
+    MSParameters.molecular_search.max_ion_charge = 2
+    MSParameters.molecular_search.default_ion_charge = 1
+
     MSParameters.molecular_search.db_chunk_size = 500
 
-    MSParameters.mass_spectrum.min_calib_ppm_error = -5
-    MSParameters.mass_spectrum.max_calib_ppm_error = 5
+    MSParameters.mass_spectrum.min_calib_ppm_error = -8
+    MSParameters.mass_spectrum.max_calib_ppm_error = 0
     MSParameters.mass_spectrum.calib_pol_order = 2
     
     MSParameters.mass_spectrum.min_picking_mz=100
@@ -230,18 +200,12 @@ def assign_formula(file, times, interval):
     MSParameters.molecular_search.score_method = "prob_score"
     MSParameters.molecular_search.output_score_method = "prob_score"
 
-
     print("Loading file: "+ file)
-    # Read in sample list and load MS data
-    MSfiles={}
-    parser = rawFileReader.ImportMassSpectraThermoMSFileReader(file)
 
-    MSfiles[file]=parser
+    parser = rawFileReader.ImportMassSpectraThermoMSFileReader(file)
 
     tic=parser.get_tic(ms_type='MS')[0]
     tic_df=pd.DataFrame({'time': tic.time,'scan': tic.scans})
-
-    refmasslist = "/Users/christiandewey/CoreMS/db/nom_pos.ref"
 
     results = []
     for timestart in times:
@@ -252,19 +216,36 @@ def assign_formula(file, times, interval):
 
         MzDomainCalibration(mass_spectrum, refmasslist,mzsegment=[0,1000]).run()
 
-        #First assignment iteration (CHON with adducts)
         mass_spectrum.molecular_search_settings.min_dbe = 0
-        mass_spectrum.molecular_search_settings.max_dbe = 30
+        mass_spectrum.molecular_search_settings.max_dbe = 20
 
-        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 70)
+        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
         mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
-        mass_spectrum.molecular_search_settings.usedAtoms['O'] = (0, 14)
-        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 14)
-        mass_spectrum.molecular_search_settings.usedAtoms['Co'] = (0, 1)
+        mass_spectrum.molecular_search_settings.usedAtoms['O'] = (0, 15)
+        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 8)
+
+        mass_spectrum.molecular_search_settings.isProtonated = True
+        mass_spectrum.molecular_search_settings.isRadical = False
+        mass_spectrum.molecular_search_settings.isAdduct = False
+
+        mass_spectrum.molecular_search_settings.used_atom_valences = {'C': 4,
+                                                                        '13C': 4,
+                                                                        'H': 1,
+                                                                        'O': 2,
+                                                                        'N': 3
+                                                                        }
+
+        SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
+        mass_spectrum.percentile_assigned(report_error=True)
+
+
+        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
+        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
+        mass_spectrum.molecular_search_settings.usedAtoms['O'] = (0, 15)
+        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 8)
+        mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 1)
         mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 1)
-        #mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 1)
-        #mass_spectrum.molecular_search_settings.usedAtoms['I'] = (0, 1)
-        #mass_spectrum.molecular_search_settings.usedAtoms['Cl'] = (0, 1)
+        mass_spectrum.molecular_search_settings.usedAtoms['I'] = (0, 1)
 
         mass_spectrum.molecular_search_settings.isProtonated = True
         mass_spectrum.molecular_search_settings.isRadical = False
@@ -276,15 +257,41 @@ def assign_formula(file, times, interval):
                                                                         'O': 2,
                                                                         'N': 3,
                                                                         'P': 3,
-                                                                        'Co': 3
-                                                                        #'S': 2,
-                                                                        #'I': 1,
-                                                                        #'Cl': 1
+                                                                        'S': 2,
+                                                                        'I': 1
                                                                         }
-
     
         SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
         mass_spectrum.percentile_assigned(report_error=True)
+
+
+
+        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
+        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
+        mass_spectrum.molecular_search_settings.usedAtoms['O'] = (0, 15)
+        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 8)
+        mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 1)
+        mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 1)
+        mass_spectrum.molecular_search_settings.usedAtoms['I'] = (0, 1)
+
+        mass_spectrum.molecular_search_settings.isProtonated = True
+        mass_spectrum.molecular_search_settings.isRadical = False
+        mass_spectrum.molecular_search_settings.isAdduct = False
+
+        mass_spectrum.molecular_search_settings.used_atom_valences = {'C': 4,
+                                                                        '13C': 4,
+                                                                        'H': 1,
+                                                                        'O': 2,
+                                                                        'N': 3,
+                                                                        'P': 3,
+                                                                        'S': 2,
+                                                                        'I': 3
+                                                                        }
+    
+        SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
+        mass_spectrum.percentile_assigned(report_error=True)
+
+
         
         assignments=mass_spectrum.to_dataframe()
         assignments['Time']=timestart
@@ -298,26 +305,28 @@ def assign_formula(file, times, interval):
 
 if __name__ == '__main__':
 
-    data_dir = '/Users/christiandewey/data-temp/iulia/'
-    results = []
+    data_dir = '/Users/christiandewey/data/Syn-cultures-May_June-2023/7803/'
+    esifile = data_dir + 'Syn7803_neg.raw'
+    icpmsfile = data_dir + 'Syn_7803.csv'
+    refmasslist = '/Users/christiandewey/CoreMS/db/Hawkes_neg.ref'
 
     interval = 2
-    time_min = 35
-    time_max = 37
-    times = list(range(time_min,time_max,interval))
+    time_min = 36
+    time_max = 42
 
-    flist = os.listdir(data_dir)
-    f_raw = [f for f in flist if '.raw' in f]
+
     os.chdir(data_dir)
-    i=1
 
-    for f in f_raw:
-        print(f)
-        output = assign_formula(file = f, times = times, interval=interval)
-        output['file'] = f
-        #make_plots(output,f)
-        fname = 'b12_assignment.csv'
-        output.to_csv(data_dir+fname)
-        i = i + 1 
+    #icp_subset = subset_icpdata(icp_data_file = icpmsfile, heteroAtom = '127I', timerange = list(range(time_min,time_max,interval)), offset = -42)
+    
+    #icp_interp = interpolate(esifile = esifile, icpsub=icp_subset, heteroAtom = '127I', timerange = list(range(time_min,time_max,interval)))
+
+    assignment_results = assign_formula(file = esifile, times = list(range(time_min,time_max,interval)), interval=interval, refmasslist=refmasslist)
+
+    assignment_results.to_csv(data_dir+'7803-neg_assignments.csv')
+
+    #eic_dict, mass_spectrum = get_eics(esi_file=esifile, assignments = assignment_results, timerange = list(range(time_min,time_max,interval)))
+
+    #results, bestresults = correlate(icp_interp=icp_interp, EICdic=eic_dict,heteroAtom='127I',assignments = assignment_results, timerange=list(range(time_min,time_max,interval)),threshold = 0.5)
 
     #os.system("sh /Users/christiandewey/CoreMS/reset_docker.sh")

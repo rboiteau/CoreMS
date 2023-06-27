@@ -19,6 +19,7 @@ from sqlalchemy import func
 from corems.encapsulation.constant import Atoms, Labels
 import json
 from corems.encapsulation.factory.processingSetting import MolecularFormulaSearchSettings
+from corems.encapsulation.factory.parameters import MSParameters
 from sqlalchemy.orm.scoping import scoped_session
 from corems import chunks
 import tqdm
@@ -229,7 +230,7 @@ class MolForm_SQL:
         
         return self
     
-    def get_dict_by_classes(self, classes, ion_type, nominal_mzs,  molecular_search_settings, adducts=None): #ion_charge,
+    def get_dict_by_classes(self, classes, ion_type, nominal_mzs,  molecular_search_settings, polarity, adducts=None): 
                                     
         '''Known issue, when using SQLite:
          if the number of classes and nominal_m/zs are higher than 999 the query will fail
@@ -277,8 +278,10 @@ class MolForm_SQL:
                     return int(formula_obj._adduct_mz(ion_charge, adduct_atom))
             
             for formula_obj, ch_obj, classe_obj in tqdm.tqdm(formulas, desc="Loading molecular formula database"):
-
-                ion_charge_list = [ 1,2 ] #[1,2,3]
+                
+                charge_min = molecular_search_settings.min_ion_charge * polarity
+                charge_max = molecular_search_settings.max_ion_charge * polarity
+                ion_charge_list = [charge_min, charge_max]
                 
                 for ion_charge in ion_charge_list:
 
@@ -332,20 +335,29 @@ class MolForm_SQL:
         
         query = query_normal(classes, len_adducts)
 
+        charge_min = molecular_search_settings.min_ion_charge * polarity
+        charge_max = molecular_search_settings.max_ion_charge * polarity
+
+        ion_charge_list = [charge_min, charge_max]
+        
         if ion_type == Labels.protonated_de_ion:
             if self.type == 'normal':
-                query = query.filter(or_(
-                                MolecularFormulaLink._protonated_mz(ion_charge = 1).cast(Integer).in_(nominal_mzs),
-                                MolecularFormulaLink._protonated_mz(ion_charge = 2).cast(Integer).in_(nominal_mzs)
-                                ))
-                '''query = query.filter(and_(
-                                MolecularFormulaLink._protonated_mz(ion_charge).cast(Integer).in_(nominal_mzs)
-                                ))'''
+                mflinks = []
+                for ion_charge in ion_charge_list:
+                    mflinks.append(MolecularFormulaLink._protonated_mz(ion_charge).cast(Integer).in_(nominal_mzs))
+
+                query = query.filter(or_(*mflinks))
+
             return add_dict_formula(query, ion_type) #, ion_charge)
         
         if ion_type == Labels.radical_ion:
             if self.type == 'normal':
-                query = query.filter(MolecularFormulaLink._radical_mz(ion_charge).cast(Integer).in_(nominal_mzs))    
+                mflinks = []
+                for ion_charge in ion_charge_list:
+                    mflinks.append(MolecularFormulaLink._radical_mz(ion_charge).cast(Integer).in_(nominal_mzs))
+
+                query = query.filter(or_(*mflinks))
+            
             return add_dict_formula(query, ion_type, ion_charge)
         
         if ion_type == Labels.adduct_ion:
@@ -353,9 +365,12 @@ class MolForm_SQL:
             if adducts: 
                 for atom in adducts:
                     if self.type == 'normal':
-                        query = query.filter(or_(
-                            MolecularFormulaLink._adduct_mz(1, atom).cast(Integer).in_(nominal_mzs),
-                            MolecularFormulaLink._adduct_mz(2, atom).cast(Integer).in_(nominal_mzs)))    
+                        mflinks = []
+                        for ion_charge in ion_charge_list:
+                            mflinks.append(MolecularFormulaLink._adduct_mz(ion_charge).cast(Integer).in_(nominal_mzs))
+
+                        query = query.filter(or_(*mflinks))
+
                     dict_res[atom] = add_dict_formula(query, ion_type, adduct_atom=atom)
                 return dict_res
         # dump all objs to memory

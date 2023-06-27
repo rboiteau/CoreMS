@@ -422,7 +422,11 @@ class MolecularFormulaSearchSettings:
     db_chunk_size: int = 300
 
     '''query setting'''
-    ion_charge: int = -1
+    default_ion_charge: int = -1
+
+    min_ion_charge: int = -1
+
+    max_ion_charge: int = -2
 
     min_hc_filter: float = 0.3
 
