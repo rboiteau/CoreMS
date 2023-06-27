@@ -1,6 +1,5 @@
 # Import the os module
 import os
-from tempfile import tempdir
 import warnings
 import pandas as pd
 import seaborn as sns
@@ -11,24 +10,20 @@ import sys
 sys.path.append('./')
 
 from corems.mass_spectra.input import rawFileReader
-from corems.molecular_id.factory.classification import HeteroatomsClassification, Labels
-from corems.molecular_id.search.priorityAssignment import OxygenPriorityAssignment
 from corems.molecular_id.search.molecularFormulaSearch import SearchMolecularFormulas
 from corems.encapsulation.factory.parameters import MSParameters
-from corems.encapsulation.constant import Atoms
 from corems.mass_spectrum.calc.Calibration import MzDomainCalibration
 
 
-def assign_formula(file, times):
-
+def assign_formula(file, times, interval): 
     MSParameters.molecular_search.error_method = 'None'
-    MSParameters.molecular_search.min_ppm_error = -1.
-    MSParameters.molecular_search.max_ppm_error = 1.
-    MSParameters.molecular_search.ion_charge = 1
+    MSParameters.molecular_search.min_ppm_error = -0.25
+    MSParameters.molecular_search.max_ppm_error = 0.25
+    MSParameters.molecular_search.ion_charge = 2
     MSParameters.molecular_search.db_chunk_size = 500
 
-    MSParameters.mass_spectrum.min_calib_ppm_error = -5
-    MSParameters.mass_spectrum.max_calib_ppm_error = 5
+    MSParameters.mass_spectrum.min_calib_ppm_error = -1
+    MSParameters.mass_spectrum.max_calib_ppm_error = 1
     MSParameters.mass_spectrum.calib_pol_order = 2
     #MSParameters.mass_spectrum.calib_sn_threshold = 3
     MSParameters.mass_spectrum.min_picking_mz=100
@@ -59,23 +54,22 @@ def assign_formula(file, times):
     for timestart in times:
         print(timestart)
         scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
-
+        
         mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)
 
         MzDomainCalibration(mass_spectrum, refmasslist,mzsegment=[0,1000]).run()
 
         #First assignment iteration (CHON with adducts)
         mass_spectrum.molecular_search_settings.min_dbe = 0
-        mass_spectrum.molecular_search_settings.max_dbe = 40
+        mass_spectrum.molecular_search_settings.max_dbe = 30
 
-        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
-        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 80)
-        mass_spectrum.molecular_search_settings.usedAtoms['O'] = (4, 10)
-        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (4, 10)
-        #mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 1)
-        #mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 1)
+        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 70)
+        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
+        mass_spectrum.molecular_search_settings.usedAtoms['O'] = (0, 20)
+        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 10)
+        mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 1)
         mass_spectrum.molecular_search_settings.usedAtoms['Fe'] = (0, 1)
-        #mass_spectrum.molecular_search_settings.usedAtoms['Co'] = (0,1)
+        mass_spectrum.molecular_search_settings.usedAtoms['Cl'] = (0, 1)
 
         mass_spectrum.molecular_search_settings.isProtonated = True
         mass_spectrum.molecular_search_settings.isRadical = False
@@ -88,31 +82,32 @@ def assign_formula(file, times):
                                                                         'O': 2,
                                                                         'N': 3,
                                                                         'P': 3,
-                                                                        'Fe': 3}
+                                                                        'Fe': 3,
+                                                                        'Cl': 1
+                                                                        }
 
-
+    
         SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
         mass_spectrum.percentile_assigned(report_error=True)
-
+        
         assignments=mass_spectrum.to_dataframe()
         assignments['Time']=timestart
         results.append(assignments)
-
+    
     results=pd.concat(results,ignore_index=True)
-
+    
     return(results)
 
 
 
 if __name__ == '__main__':
 
-    data_dir = '/Users/christiandewey/data-temp/stdmix/'
-    data_dir = '/Users/christiandewey/data-temp'
+    data_dir = '/Users/christiandewey/data-temp/'
     results = []
 
     interval = 2
-    time_min = 8
-    time_max = 12
+    time_min = 10
+    time_max = 16
     times = list(range(time_min,time_max,interval))
 
     flist = os.listdir(data_dir)
@@ -122,11 +117,11 @@ if __name__ == '__main__':
 
     for f in f_raw:
         print(f)
-        output = assign_formula(file = f, times = times)
+        output = assign_formula(file = f, times = times, interval=interval)
         output['file'] = f
         #make_plots(output,f)
-        fname = '20221102_LBA_Boiteau_Zorbax3p5_StdMix_200nM_53.csv'
+        fname = 'test_assignments.csv'
         output.to_csv(data_dir+fname)
-        i = i + 1
+        i = i + 1 
 
     #os.system("sh /Users/christiandewey/CoreMS/reset_docker.sh")

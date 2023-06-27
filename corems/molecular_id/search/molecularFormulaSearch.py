@@ -59,7 +59,7 @@ class SearchMolecularFormulas:
 
         def get_formulas(nominal_overlay=0.1):
 
-            if ms_peak.ion_charge == -99999:
+            if not ms_peak.ion_charge:
                 ms_peak.ion_charge = self.mass_spectrum_obj.molecular_search_settings.ion_charge
             
             if ms_peak.ion_charge ==  1:
@@ -408,7 +408,7 @@ class SearchMolecularFormulaWorker:
         # f = open("abundance_error.txt", "a+")    
         ms_peak_mz_exp, ms_peak_abundance = ms_peak.mz_exp, ms_peak.abundance
         # min_error = min([pmf.mz_error for pmf in possible_formulas])
-        if ms_peak.ion_charge == -99999:
+        if not ms_peak.ion_charge:
                         ms_peak.ion_charge = mass_spectrum_obj.polarity * mass_spectrum_obj.molecular_search_settings.ion_charge
 
         def mass_by_ion_type(possible_formula_obj, ion_charge):
