@@ -209,7 +209,7 @@ def assign_formula(file, times, interval, refmasslist):
 
     results = []
     for timestart in times:
-        print(timestart)
+        print('\nAveraging scans from %s-%s min' %(timestart, timestart+interval))
         scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
         
         mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)
@@ -266,7 +266,7 @@ def assign_formula(file, times, interval, refmasslist):
 
 
 
-        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
+        '''mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
         mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
         mass_spectrum.molecular_search_settings.usedAtoms['O'] = (0, 15)
         mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 8)
@@ -290,7 +290,7 @@ def assign_formula(file, times, interval, refmasslist):
     
         SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
         mass_spectrum.percentile_assigned(report_error=True)
-
+'''
 
         
         assignments=mass_spectrum.to_dataframe()
@@ -311,22 +311,25 @@ if __name__ == '__main__':
     refmasslist = '/Users/christiandewey/CoreMS/db/Hawkes_neg.ref'
 
     interval = 2
-    time_min = 36
-    time_max = 42
+    time_min = 37
+    time_max = 49
 
 
     os.chdir(data_dir)
 
     #icp_subset = subset_icpdata(icp_data_file = icpmsfile, heteroAtom = '127I', timerange = list(range(time_min,time_max,interval)), offset = -42)
     
-    #icp_interp = interpolate(esifile = esifile, icpsub=icp_subset, heteroAtom = '127I', timerange = list(range(time_min,time_max,interval)))
+    #icp_interp = interpolate(esi_file = esifile, icpsub=icp_subset, heteroAtom = '127I', timerange = list(range(time_min,time_max,interval)))
 
     assignment_results = assign_formula(file = esifile, times = list(range(time_min,time_max,interval)), interval=interval, refmasslist=refmasslist)
 
-    assignment_results.to_csv(data_dir+'7803-neg_assignments.csv')
+    assignment_results.to_csv(data_dir+'b7803-neg_assignments.csv')
+
+    #assignment_results = pd.read_csv(data_dir + '7803-neg_assignments.csv')
 
     #eic_dict, mass_spectrum = get_eics(esi_file=esifile, assignments = assignment_results, timerange = list(range(time_min,time_max,interval)))
 
     #results, bestresults = correlate(icp_interp=icp_interp, EICdic=eic_dict,heteroAtom='127I',assignments = assignment_results, timerange=list(range(time_min,time_max,interval)),threshold = 0.5)
+
 
     #os.system("sh /Users/christiandewey/CoreMS/reset_docker.sh")

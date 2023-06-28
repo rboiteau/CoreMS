@@ -480,7 +480,9 @@ class PeakPicking:
 
         c_mz_delta = Atoms.atomic_masses['13C'] - Atoms.atomic_masses['C']
 
-        charge_range = range(abs(MSParameters.molecular_search.max_ion_charge), abs(MSParameters.molecular_search.min_ion_charge), 1)
+        charge_range = range(abs(MSParameters.molecular_search.max_ion_charge), abs(MSParameters.molecular_search.min_ion_charge)-1, -1)
+
+        charge_counter = {_z: 0 for _z in list(charge_range)}
 
         for peak_index in range(len(self._mspeaks)):
 
@@ -515,8 +517,8 @@ class PeakPicking:
                     mz_e2 = candidate_mz / candidate_res_p
                     mz_tolerance = mz_e1 + mz_e2
 
-                    for _charge in charge_range:
-
+                    for _charge in list(charge_range):
+                        
                         c_delta = c_mz_delta / _charge
 
                         if (candidate_mz  < (mz_exp + c_delta + mz_tolerance)) and (candidate_mz > (mz_exp + c_delta - mz_tolerance)): 
@@ -528,10 +530,21 @@ class PeakPicking:
                                 self._mspeaks[peak_index].ion_charge = _charge * self.polarity
                                 self._mspeaks[i].ion_charge = _charge * self.polarity
                                 found_charge = True
+                                charge_counter[_charge] = charge_counter[_charge] + 1
                                 break
                     
                     if found_charge:
                         break
+
+        assigned_charge_count = 0       
+        for _charge in list(charge_range):
+            if self.polarity == 1:
+                polarity_symbol = '+'
+            elif self.polarity == -1:
+                polarity_symbol = '-'
+            assigned_charge_count = assigned_charge_count + charge_counter[_charge]
+            print("%s peaks with charge of %s%s based on 13C" %(charge_counter[_charge],polarity_symbol, _charge))
+        print("%s peaks assigned default charge (%s%s)" %(assigned_charge_count,polarity_symbol,MSParameters.molecular_search.default_ion_charge ))
 
 
 
