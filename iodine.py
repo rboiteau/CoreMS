@@ -200,7 +200,7 @@ def assign_formula(file, times, interval, refmasslist):
     MSParameters.molecular_search.score_method = "prob_score"
     MSParameters.molecular_search.output_score_method = "prob_score"
 
-    print("Loading file: "+ file)
+    print("\nLoading file: "+ file)
 
     parser = rawFileReader.ImportMassSpectraThermoMSFileReader(file)
 
@@ -209,6 +209,7 @@ def assign_formula(file, times, interval, refmasslist):
 
     results = []
     for timestart in times:
+        
         print('\nAveraging scans from %s-%s min' %(timestart, timestart+interval))
         scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
         
@@ -223,6 +224,8 @@ def assign_formula(file, times, interval, refmasslist):
         mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
         mass_spectrum.molecular_search_settings.usedAtoms['O'] = (0, 15)
         mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 8)
+        mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['I'] = (0, 0)
 
         mass_spectrum.molecular_search_settings.isProtonated = True
         mass_spectrum.molecular_search_settings.isRadical = False
@@ -232,7 +235,9 @@ def assign_formula(file, times, interval, refmasslist):
                                                                         '13C': 4,
                                                                         'H': 1,
                                                                         'O': 2,
-                                                                        'N': 3
+                                                                        'N': 3,
+                                                                        'S': 2,
+                                                                        'I': 1
                                                                         }
 
         SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
@@ -244,7 +249,6 @@ def assign_formula(file, times, interval, refmasslist):
         mass_spectrum.molecular_search_settings.usedAtoms['O'] = (0, 15)
         mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 8)
         mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 1)
-        mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 1)
         mass_spectrum.molecular_search_settings.usedAtoms['I'] = (0, 1)
 
         mass_spectrum.molecular_search_settings.isProtonated = True
@@ -256,7 +260,6 @@ def assign_formula(file, times, interval, refmasslist):
                                                                         'H': 1,
                                                                         'O': 2,
                                                                         'N': 3,
-                                                                        'P': 3,
                                                                         'S': 2,
                                                                         'I': 1
                                                                         }
@@ -265,32 +268,6 @@ def assign_formula(file, times, interval, refmasslist):
         mass_spectrum.percentile_assigned(report_error=True)
 
 
-
-        '''mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
-        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
-        mass_spectrum.molecular_search_settings.usedAtoms['O'] = (0, 15)
-        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 8)
-        mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 1)
-        mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 1)
-        mass_spectrum.molecular_search_settings.usedAtoms['I'] = (0, 1)
-
-        mass_spectrum.molecular_search_settings.isProtonated = True
-        mass_spectrum.molecular_search_settings.isRadical = False
-        mass_spectrum.molecular_search_settings.isAdduct = False
-
-        mass_spectrum.molecular_search_settings.used_atom_valences = {'C': 4,
-                                                                        '13C': 4,
-                                                                        'H': 1,
-                                                                        'O': 2,
-                                                                        'N': 3,
-                                                                        'P': 3,
-                                                                        'S': 2,
-                                                                        'I': 3
-                                                                        }
-    
-        SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
-        mass_spectrum.percentile_assigned(report_error=True)
-'''
 
         
         assignments=mass_spectrum.to_dataframe()
@@ -311,8 +288,25 @@ if __name__ == '__main__':
     refmasslist = '/Users/christiandewey/CoreMS/db/Hawkes_neg.ref'
 
     interval = 2
+    '''#peak A
+    time_min = 12
+    time_max = 16
+
+    #peak B
     time_min = 37
-    time_max = 49
+    time_max = 41'''
+
+    #peak C
+    time_min = 44
+    time_max = 46
+
+    '''#peak D
+    time_min = 46
+    time_max = 48
+
+    #peak E
+    time_min = 48
+    time_max = 52'''
 
 
     os.chdir(data_dir)
@@ -323,7 +317,7 @@ if __name__ == '__main__':
 
     assignment_results = assign_formula(file = esifile, times = list(range(time_min,time_max,interval)), interval=interval, refmasslist=refmasslist)
 
-    assignment_results.to_csv(data_dir+'b7803-neg_assignments.csv')
+    assignment_results.to_csv(data_dir+'7803_peakC_neg_assignments.csv')
 
     #assignment_results = pd.read_csv(data_dir + '7803-neg_assignments.csv')
 
