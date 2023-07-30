@@ -37,26 +37,27 @@ savefile='GOMpooled_assigned_results.csv'
 
 
 ### Set time bins in minutes
-interval=2
+interval=4
 timerange=[2,30]
 
-internal_cal_setting='Y' # Should be 'Y' to perform internal calibration.
-Save_calibration='Y' # Should be 'Y' to perform internal calibration.
+internal_cal_setting='N' # Should be 'Y' to perform internal calibration.
+Save_calibration='N' # Should be 'Y' to perform internal calibration.
 
 #Molecular search parameters. 
 MSParameters.molecular_search.error_method = 'None'
-MSParameters.molecular_search.min_ppm_error = -0.5
-MSParameters.molecular_search.max_ppm_error = 0.5
+MSParameters.molecular_search.min_ppm_error = -2
+MSParameters.molecular_search.max_ppm_error = 2
 MSParameters.molecular_search.ion_charge = 1
 
-MSParameters.mass_spectrum.min_calib_ppm_error = -1
-MSParameters.mass_spectrum.max_calib_ppm_error = 1
+MSParameters.mass_spectrum.min_calib_ppm_error = -3
+MSParameters.mass_spectrum.max_calib_ppm_error = 3
 MSParameters.mass_spectrum.calib_pol_order = 2
-MSParameters.mass_spectrum.calib_sn_threshold = 3
+MSParameters.mass_spectrum.calib_sn_threshold = 2
 MSParameters.mass_spectrum.min_picking_mz=100
-MSParameters.mass_spectrum.max_picking_mz=800
-MSParameters.mass_spectrum.threshold_method = 'signal_noise'
-MSParameters.mass_spectrum.s2n_threshold=3
+MSParameters.mass_spectrum.max_picking_mz=900
+MSParameters.mass_spectrum.threshold_method = 'log'
+MSParameters.mass_spectrum.log_nsigma=300
+MSParameters.mass_spectrum.s2n_threshold=2
 MSParameters.ms_peak.peak_min_prominence_percent = 0.001
 
 ####### End of parameters
@@ -71,6 +72,8 @@ MSfiles={}
 parser = rawFileReader.ImportMassSpectraThermoMSFileReader(file_location+file)
 
 MSfiles[file]=parser
+
+mflibrary=MolecularCombinations(MolForm_SQL(url=MSParameters.molecular_search.url_database)).runworker(MSParameters.molecular_search)
 
 #Function to calibrate and assign formula to the spectra in an LCMS run
 def lcms_cal_assign(parser,interval,timerange,internal_cal_setting):
@@ -94,7 +97,7 @@ def lcms_cal_assign(parser,interval,timerange,internal_cal_setting):
         if(internal_cal_setting=='Y'):
 
             MzDomainCalibration(mass_spectrum, refmasslist,mzsegment=[0,1000]).run()
-            #MzDomainCalibration(mass_spectrum, refmasslist,mzsegment=[0,450]).run()
+            MzDomainCalibration(mass_spectrum, refmasslist,mzsegment=[0,350]).run()
 
         #Assign molecular formula based on specified elemental criteria
 
@@ -104,8 +107,8 @@ def lcms_cal_assign(parser,interval,timerange,internal_cal_setting):
         #Note: Adduct tuple needs to have at least two elements..
         mass_spectrum.molecular_search_settings.adduct_atoms_pos = ('Na',)
 
-        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 40)
-        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 80)
+        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
+        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
         mass_spectrum.molecular_search_settings.usedAtoms['O'] = (1, 16)
         mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 2)
         mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 0)

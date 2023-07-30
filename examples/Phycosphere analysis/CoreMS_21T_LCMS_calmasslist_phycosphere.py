@@ -27,20 +27,21 @@ from corems.mass_spectrum.calc.Calibration import MzDomainCalibration
 # Set file folder and THERMO RAW file name here:
 file_location='/Users/boiteaur/Desktop/Major projects/Phycosphere LCMS/'
 file="20221031_LBA_Boiteau_Zorbax3p5_AZTDpooled_T7_02.raw" #pooled sample for formula assignments
-refmasslist = file_location+"cal_pos.ref"
+file="20230303_NRC_AZTDI_t14_pooled_03.raw" #pooled sample for formula assignments
+refmasslist = file_location+"siloxanes_lowmz_pos.ref"
 
 # Change the current working directory to where CoreMS is located
 #os.chdir('/Users/boiteaur/Desktop/CoreMS_metallomics/CoreMS/')
 
 ### Set time bins in minutes
-interval=4
+interval=2
 timerange=[0,36]
 
 
 #Molecular search parameters. 
 
 #First iteration, run with a high mass error and no calibration. 
-internal_cal_setting='N' # Should be 'Y' to do internal calibration first, 'N' to skip internal calibration.
+internal_cal_setting='Y' # Should be 'Y' to do internal calibration first, 'N' to skip internal calibration.
 MSParameters.molecular_search.min_ppm_error = -2
 MSParameters.molecular_search.max_ppm_error = 2
 
@@ -50,11 +51,13 @@ MSParameters.molecular_search.max_ppm_error = 2
 #MSParameters.molecular_search.max_ppm_error = 0.5
 #MSParameters.molecular_search.ion_charge = 1
 
-MSParameters.mass_spectrum.threshold_method = 'signal_noise'
-MSParameters.mass_spectrum.s2n_threshold=5
-MSParameters.ms_peak.peak_min_prominence_percent = 0.1
+#MSParameters.mass_spectrum.threshold_method = 'signal_noise'
+#MSParameters.mass_spectrum.s2n_threshold=5
+MSParameters.mass_spectrum.threshold_method = 'log'
+MSParameters.mass_spectrum.log_nsigma=200
+MSParameters.ms_peak.peak_min_prominence_percent = 0.01
 
-MSParameters.mass_spectrum.min_picking_mz=200
+MSParameters.mass_spectrum.min_picking_mz=100
 MSParameters.mass_spectrum.max_picking_mz=900
 
 
@@ -64,11 +67,13 @@ MSParameters.molecular_search.max_dbe = 20
 MSParameters.molecular_search.usedAtoms['C'] = (4,50)
 MSParameters.molecular_search.usedAtoms['H'] = (4,100)
 MSParameters.molecular_search.usedAtoms['O'] = (1,16)
-MSParameters.molecular_search.usedAtoms['N'] = (0,1)
-MSParameters.molecular_search.usedAtoms['S'] = (0,0)
+MSParameters.molecular_search.usedAtoms['N'] = (0,8)
+MSParameters.molecular_search.usedAtoms['S'] = (0,1)
+MSParameters.molecular_search.usedAtoms['P'] = (0,1)
 MSParameters.molecular_search.usedAtoms['Si'] = (0,0)
 MSParameters.molecular_search.isProtonated = True
-MSParameters.molecular_search.isAdduct = False
+MSParameters.molecular_search.adduct_atoms_pos=['Na',]
+MSParameters.molecular_search.isAdduct = True
 MSParameters.molecular_search.max_oc_filter=1.2
 MSParameters.molecular_search.max_hc_filter=3
 
@@ -153,6 +158,7 @@ allresults['Molecular class']=allresults['Molecular Formula'].str.replace('\d+',
 allresults['Molecular class'][allresults['Heteroatom Class']=='unassigned']='unassigned'
 allresults['Molecular class'][allresults['Is Isotopologue']==1]='Isotope'
 
+allresults.to_csv(file_location+'pooled_library.csv')
 results=allresults[allresults['Molecular class']!='unassigned']
 
 # Calculate atomic stoichiometries and Nominal Oxidation State of Carbon (NOSC)

@@ -21,7 +21,7 @@ allresults=pd.read_csv(file_location+savefile)
 samplefiles=samplelist.loc[samplelist['Sample type']=='sample','File']
 
 allresults=allresults[allresults['File'].isin(samplefiles)]
-allresults=allresults[allresults['Time']<31]
+#allresults=allresults[allresults['Time']<31]
 
 #Load MS data from sample list as MSfiles dictionary (keys=file name, values= parser objects)
 MSfiles={}

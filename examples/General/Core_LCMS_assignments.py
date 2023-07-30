@@ -30,38 +30,56 @@ from corems.mass_spectrum.calc.Calibration import MzDomainCalibration
 
 ######## Set files here 
 # Set file folder and THERMO RAW file name here:
-file_location='/Users/boiteaur/Desktop/Major projects/Bermuda Atlantic Time Series data processing/Thermo RAW data/'
-file="RMB_190828_BATSpooled_30.RAW" #pooled sample for formula assignments
-#refmasslist = file_location+"revisedcal.ref"
-refmasslist = file_location+"Seawater_NOM_pos.ref"
-savefile='BATSpooled_assigned_results_classic.csv'
+file_location='/Users/boiteaur/Desktop/Major projects/GOM cruises 2023/'
+file="ILF_230513_GOMFeb_pooled100523_5_pos.raw" #pooled sample for formula assignments
+refmasslist = file_location+"revisedcal.ref"
+savefile='GOMpooled_assigned_results.csv'
 
 
 ### Set time bins in minutes
 interval=4
-timerange=[4,26]
+timerange=[2,30]
 
-internal_cal_setting='Y' # Should be 'Y' to perform internal calibration.
+internal_cal_setting='N' # Should be 'Y' to perform internal calibration.
 Save_calibration='N' # Should be 'Y' to perform internal calibration.
 
 #Molecular search parameters. 
 MSParameters.molecular_search.error_method = 'None'
-MSParameters.molecular_search.min_ppm_error = -0.25
-MSParameters.molecular_search.max_ppm_error = 0.25
+MSParameters.molecular_search.min_ppm_error = -2
+MSParameters.molecular_search.max_ppm_error = 2
 MSParameters.molecular_search.ion_charge = 1
 
-MSParameters.mass_spectrum.min_calib_ppm_error = 0.5
-MSParameters.mass_spectrum.max_calib_ppm_error = 2
+MSParameters.mass_spectrum.min_calib_ppm_error = -3
+MSParameters.mass_spectrum.max_calib_ppm_error = 3
 MSParameters.mass_spectrum.calib_pol_order = 2
-MSParameters.mass_spectrum.calib_sn_threshold = 10
-MSParameters.mass_spectrum.min_picking_mz=200
-MSParameters.mass_spectrum.max_picking_mz=800
-MSParameters.mass_spectrum.threshold_method = 'signal_noise'
-MSParameters.mass_spectrum.s2n_threshold=7
+MSParameters.mass_spectrum.calib_sn_threshold = 2
+MSParameters.mass_spectrum.min_picking_mz=100
+MSParameters.mass_spectrum.max_picking_mz=900
 
-MSParameters.ms_peak.peak_min_prominence_percent = 0.001
+MSParameters.mass_spectrum.threshold_method = 'log'
+MSParameters.mass_spectrum.log_nsigma=300
+#MSParameters.mass_spectrum.threshold_method = 'minima'
+#MSParameters.mass_spectrum.noise_threshold_std = 50
+#MSParameters.mass_spectrum.threshold_method = 's2n'
+#MSParameters.mass_spectrum.s2n_threshold=20
+MSParameters.ms_peak.peak_min_prominence_percent = 0.1
+
+# Core Molecular formula search
+MSParameters.molecular_search.min_dbe = 0
+MSParameters.molecular_search.max_dbe = 16
+
+MSParameters.molecular_search.usedAtoms['C'] = (4,40)
+MSParameters.molecular_search.usedAtoms['H'] = (4,80)
+MSParameters.molecular_search.usedAtoms['O'] = (1,16)
+MSParameters.molecular_search.usedAtoms['N'] = (0,2)
+MSParameters.molecular_search.usedAtoms['S'] = (0,0)
+MSParameters.molecular_search.isProtonated = True
+MSParameters.molecular_search.isAdduct = False
+MSParameters.molecular_search.max_oc_filter=1.2
+MSParameters.molecular_search.max_hc_filter=3
 
 ####### End of parameters
+
 MSParameters.molecular_search.url_database = "postgresql+psycopg2://coremsappdb:coremsapppnnl@localhost:5432/coremsapp"
 MSParameters.molecular_search.score_method = "prob_score"
 MSParameters.molecular_search.output_score_method = "prob_score"
@@ -95,33 +113,87 @@ def lcms_cal_assign(parser,interval,timerange,internal_cal_setting):
         if(internal_cal_setting=='Y'):
 
             MzDomainCalibration(mass_spectrum, refmasslist,mzsegment=[0,1000]).run()
-           # MzDomainCalibration(mass_spectrum, refmasslist,mzsegment=[0,450]).run()
 
         #Assign molecular formula based on specified elemental criteria
 
         #First assignment iteration (CHON with adducts)
-        mass_spectrum.molecular_search_settings.min_dbe = -1
-        mass_spectrum.molecular_search_settings.max_dbe = 20
+        #mass_spectrum.molecular_search_settings.min_dbe = 0
+        #mass_spectrum.molecular_search_settings.max_dbe = 20
         #Note: Adduct tuple needs to have at least two elements..
-        mass_spectrum.molecular_search_settings.adduct_atoms_pos = ('Na',)
+        #mass_spectrum.molecular_search_settings.adduct_atoms_pos = ('Na',)
 
-        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 40)
-        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 80)
+        #mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
+        #mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
+        #mass_spectrum.molecular_search_settings.usedAtoms['O'] = (1, 16)
+        #mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 2)
+        #mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 0)
+        #mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 0)
+        #mass_spectrum.molecular_search_settings.usedAtoms['Na'] = (0, 0)
+        #mass_spectrum.molecular_search_settings.usedAtoms['Si'] = (0, 0)
+        #mass_spectrum.molecular_search_settings.isProtonated = True
+        #mass_spectrum.molecular_search_settings.isRadical = False
+        #mass_spectrum.molecular_search_settings.isAdduct = False
+        #mass_spectrum.molecular_search_settings.max_oc_filter=1.2
+        #mass_spectrum.molecular_search_settings.max_hc_filter=3
+    
+        #SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum(externalclass=mflibrary)
+        SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
+        mass_spectrum.percentile_assigned(report_error=True)
+
+        '''
+        #Second assignment iteration (Sulfur containing)
+        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
+        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
         mass_spectrum.molecular_search_settings.usedAtoms['O'] = (1, 20)
-        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 4)
-        mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['S'] = (1, 3)
         mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 0)
-        mass_spectrum.molecular_search_settings.usedAtoms['Na'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['Na'] = (0, 1)
         mass_spectrum.molecular_search_settings.usedAtoms['Si'] = (0, 0)
         mass_spectrum.molecular_search_settings.isProtonated = True
         mass_spectrum.molecular_search_settings.isRadical = False
         mass_spectrum.molecular_search_settings.isAdduct = False
         mass_spectrum.molecular_search_settings.max_oc_filter=1.2
         mass_spectrum.molecular_search_settings.max_hc_filter=3
-    
+
         SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
         mass_spectrum.percentile_assigned(report_error=True)
 
+        #Third assignment iteration (Organo-Phosphates)
+        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
+        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
+        mass_spectrum.molecular_search_settings.usedAtoms['O'] = (1, 20)
+        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 8)
+        mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['P'] = (1, 1)
+        mass_spectrum.molecular_search_settings.usedAtoms['Na'] = (0, 1)
+        mass_spectrum.molecular_search_settings.usedAtoms['Si'] = (0, 0)
+        mass_spectrum.molecular_search_settings.isProtonated = True
+        mass_spectrum.molecular_search_settings.isRadical = False
+        mass_spectrum.molecular_search_settings.isAdduct = False
+        mass_spectrum.molecular_search_settings.max_oc_filter=1.2
+        mass_spectrum.molecular_search_settings.max_hc_filter=3
+
+        SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
+        mass_spectrum.percentile_assigned(report_error=True)
+        
+        #Fourth assignment iteration (Siloxanes)
+        mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 40)
+        mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 80)
+        mass_spectrum.molecular_search_settings.usedAtoms['O'] = (1, 20)
+        mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 0)
+        mass_spectrum.molecular_search_settings.usedAtoms['Si'] = (1, 10)
+        mass_spectrum.molecular_search_settings.isProtonated = True
+        mass_spectrum.molecular_search_settings.isRadical = False
+        mass_spectrum.molecular_search_settings.isAdduct = False
+        mass_spectrum.molecular_search_settings.max_oc_filter=2
+        mass_spectrum.molecular_search_settings.max_hc_filter=6
+
+        SearchMolecularFormulas(mass_spectrum, first_hit=True).run_worker_mass_spectrum()
+        mass_spectrum.percentile_assigned(report_error=True)
+        '''
 
         calibrated_spectra[timestart]=mass_spectrum
     
@@ -232,10 +304,9 @@ plt.show()
 
 if (Save_calibration=='Y'):
     #Here, we create a new reference mass list.
-    cal_list=results[results['Confidence Score']>.6]
-    cal_list=results[results['S/N']>20]
-
     cal_list=results[results['Ion Charge']==1]
+    #cal_list=cal_list[cal_list['Confidence Score']>.6]
+
     cal_list=cal_list[cal_list['Molecular class']!='Isotope'].drop_duplicates(subset=['Molecular Formula'])
 
     fig, (ax1) = plt.subplots(1,1)
