@@ -81,11 +81,12 @@ class SearchMolecularFormulas:
         search_molfrom = SearchMolecularFormulaWorker(find_isotopologues=self.find_isotopologues)
         
         for ms_peak in mspeaks:
-
+            
             # already assigned a molecular formula
             if self.first_hit:
 
                 if ms_peak.is_assigned:
+
                     continue
             
             ms_peak_indexes = search_molfrom.find_formulas(get_formulas(), min_abundance, self.mass_spectrum_obj, ms_peak, ion_type, adduct_atom)    
@@ -419,15 +420,17 @@ class SearchMolecularFormulaWorker:
 
                 possible_mf_class = False    
 
-        for possible_formula in formulas:
 
+        for possible_formula in formulas:
+            
             if possible_formula:
                 mass_a = mass_by_ion_type(possible_formula, ms_peak.ion_charge)
                 
                 error = self.calc_error(ms_peak_mz_exp, mass_a)                
-
+                
                 if min_ppm_error <= error <= max_ppm_error:
-                    #print(possible_formula, mass_a, error)
+                    
+                    #print(possible_formula, ms_peak_mz_exp, mass_a, error)
                     # update the error
                     
                     self.set_last_error(error, mass_spectrum_obj)
@@ -515,7 +518,9 @@ class SearchMolecularFormulaWorker:
                                         molecular_formula.mspeak_mf_isotopologues_indexes.append((ms_peak_iso.index, x))
                                         # add mspeaks mono isotopic index to the isotopologue MolecularFormula obj
 
-                    y = ms_peak.add_molecular_formula(molecular_formula)            
+                    y = ms_peak.add_molecular_formula(molecular_formula)   
+
+                    ms_peak.n_candidates = ms_peak.n_candidates + 1         
 
                     mspeak_assigned_index.append((ms_peak.index, y))
 

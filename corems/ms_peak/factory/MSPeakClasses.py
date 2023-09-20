@@ -30,7 +30,7 @@ class _MSPeak(MSPeakCalculation):
         self.start_scan = int(indexes[0]) 
         self.apex_scan = int(indexes[1])
         self.final_scan = int(indexes[2]) 
-        
+        self.n_candidates = int(0)
         #mass spec obj index
         self.index = int(index)
         # parent mass spectrum obj instance

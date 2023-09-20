@@ -5,6 +5,9 @@ import numpy as np
 import warnings
 from datetime import date, datetime
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 warnings.filterwarnings('ignore')
 from pathlib import Path
@@ -19,7 +22,7 @@ from corems.molecular_id.search.molecularFormulaSearch import SearchMolecularFor
 from corems.encapsulation.factory.parameters import MSParameters
 from corems.encapsulation.constant import Atoms
 from corems.mass_spectrum.calc.Calibration import MzDomainCalibration
-os.chdir('/Users/christiandewey/data-temp/tricho/test')
+os.chdir('/Users/christiandewey/data-temp/bats')
 
 
 def assign_formula(esifile, times):
@@ -55,23 +58,27 @@ def assign_formula(esifile, times):
 	tic_df=pd.DataFrame({'time': tic.time,'scan': tic.scans})
 	results = []
 	refmasslist = "/Users/christiandewey/CoreMS/db/nom_pos.ref"
+
+	mz_nform = pd.DataFrame(columns=['timestart','mz_exp','n_candidates'])
 	
 	for timestart in times:
 
 		scans=tic_df[tic_df.time.between(timestart,timestart+interval)].scan.tolist()
 		mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans) 
 
-		#MzDomainCalibration(mass_spectrum, refmasslist,mzsegment=[100,800]).run()
+		MzDomainCalibration(mass_spectrum, refmasslist,mzsegment=[100,800]).run()
 
 		#first search settings
 		mass_spectrum.molecular_search_settings.min_dbe = 0
-		mass_spectrum.molecular_search_settings.max_dbe = 30
-		mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 50)
-		mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 100)
-		mass_spectrum.molecular_search_settings.usedAtoms['O'] = (1, 20)
+		mass_spectrum.molecular_search_settings.max_dbe = 20
+		mass_spectrum.molecular_search_settings.error_method = 'None'
+		mass_spectrum.molecular_search_settings.usedAtoms['C'] = (1, 40)
+		mass_spectrum.molecular_search_settings.usedAtoms['H'] = (4, 80)
+		mass_spectrum.molecular_search_settings.usedAtoms['O'] = (0, 20)
 		mass_spectrum.molecular_search_settings.usedAtoms['N'] = (0, 8)
 		mass_spectrum.molecular_search_settings.usedAtoms['S'] = (0, 2)
 		mass_spectrum.molecular_search_settings.usedAtoms['P'] = (0, 2)
+		mass_spectrum.molecular_search_settings.usedAtoms['Cu'] = (0, 1)
 
 
 		mass_spectrum.molecular_search_settings.isProtonated = True
@@ -83,10 +90,13 @@ def assign_formula(esifile, times):
 		                                                                'O': 2,
 		                                                                'N': 3,
                                                                         'S': 2,
-                                                                        'P': 3}
+                                                                        'P': 3,
+																		'Cu':2 }
 
 		SearchMolecularFormulas(mass_spectrum,first_hit = False).run_worker_mass_spectrum()
 
+		for mspeak in mass_spectrum.sort_by_mz():
+			mz_nform = mz_nform.append({'timestart': timestart, 'mz_exp':mspeak.mz_exp, 'n_candidates': mspeak.n_candidates},ignore_index = True) 
 
 		mass_spectrum.percentile_assigned(report_error=True)
 		assignments=mass_spectrum.to_dataframe()
@@ -95,18 +105,29 @@ def assign_formula(esifile, times):
 
 	results=pd.concat(results,ignore_index=True)
 
+	mz_nform.to_csv('n_candidates.csv', index = False)
+
+	_, ax = plt.subplots()
+
+	#ax = sns.barplot(data = mz_nform, x = 'mz_exp', y = 'n_candidates', ax = ax)
+	ax.bar(mz_nform['mz_exp'],mz_nform['n_candidates'])
+	ax.set_xlim(100,800)
+	ax.xaxis.set_major_locator(ticker.MultipleLocator(100))
+	
+	plt.savefig('barplt.pdf') 
+	
 	return(results)
 
 
 
 if __name__ == '__main__':
 
-	data_dir = '/Users/christiandewey/data-temp/tricho/test/'
+	data_dir = '/Users/christiandewey/data-temp/bats/'
 	results = []
 
 	interval = 2
-	time_min = 2
-	time_max = 30
+	time_min = 10
+	time_max = 12
 
 	times = list(range(time_min,time_max,interval))
 
