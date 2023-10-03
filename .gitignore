@@ -2,6 +2,11 @@ venv/
 test_env/ 
 venvwsl/
 tmp_data/ 
+env/
+env3.8/
+env-arm64/
+venvwsl/
+tmp_data/ 
 .pyc  
 .pyo
 *.hdf5

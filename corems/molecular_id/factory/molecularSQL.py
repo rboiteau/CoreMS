@@ -13,12 +13,13 @@ from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql.operators import exists
-from sqlalchemy import event, and_
+from sqlalchemy import event, and_, or_
 from sqlalchemy import func
 
 from corems.encapsulation.constant import Atoms, Labels
 import json
 from corems.encapsulation.factory.processingSetting import MolecularFormulaSearchSettings
+from corems.encapsulation.factory.parameters import MSParameters
 from sqlalchemy.orm.scoping import scoped_session
 from corems import chunks
 import tqdm
@@ -229,7 +230,7 @@ class MolForm_SQL:
         
         return self
     
-    def get_dict_by_classes(self, classes, ion_type, nominal_mzs, ion_charge, molecular_search_settings, adducts=None):
+    def get_dict_by_classes(self, classes, ion_type, nominal_mzs,  molecular_search_settings, polarity, adducts=None): 
                                     
         '''Known issue, when using SQLite:
          if the number of classes and nominal_m/zs are higher than 999 the query will fail
@@ -258,11 +259,11 @@ class MolForm_SQL:
                 )
             )
 
-        def add_dict_formula(formulas, ion_type, ion_charge, adduct_atom=None):
+        def add_dict_formula(formulas, ion_type, adduct_atom=None):
             "organize data by heteroatom classes"
             dict_res = {}
-
-            def nominal_mass_by_ion_type(formula_obj):
+            #print('\td %s' %z)
+            def nominal_mass_by_ion_type(formula_obj,ion_charge):
                 
                 if ion_type == Labels.protonated_de_ion:
                 
@@ -278,47 +279,53 @@ class MolForm_SQL:
             
             for formula_obj, ch_obj, classe_obj in tqdm.tqdm(formulas, desc="Loading molecular formula database"):
                 
-                nominal_mz = nominal_mass_by_ion_type(formula_obj)
+                charge_min = molecular_search_settings.min_ion_charge * polarity
+                charge_max = molecular_search_settings.max_ion_charge * polarity
+                ion_charge_list = [charge_min, charge_max]
                 
-                if self.type != 'normal':
-                    if not nominal_mz in nominal_mzs:
-                        continue
-                classe = classe_obj.name
+                for ion_charge in ion_charge_list:
 
-                # classe_str = formula.classe_string
+                    nominal_mz = nominal_mass_by_ion_type(formula_obj,ion_charge)
                 
-                # pbar.set_description_str(desc="Loading molecular formula database for class %s " % classe_str)
-                
-                formula_dict = formula_obj.to_dict()
+                    if self.type != 'normal':
+                        if not nominal_mz in nominal_mzs:
+                            continue
+                    classe = classe_obj.name
 
-                if formula_dict.get("O"):
+                    # classe_str = formula.classe_string
+                
+                    # pbar.set_description_str(desc="Loading molecular formula database for class %s " % classe_str)
+                
+                    formula_dict = formula_obj.to_dict()
+
+                    if formula_dict.get("O"):
                     
-                    if formula_dict.get("O") / formula_dict.get("C") >= molecular_search_settings.max_oc_filter:
-                        # print(formula_dict.get("O") / formula_dict.get("C"), molecular_search_settings.max_oc_filter)
-                        continue
-                    elif formula_dict.get("O") / formula_dict.get("C") <= molecular_search_settings.min_oc_filter:
-                        # print(formula_dict.get("O") / formula_dict.get("C"), molecular_search_settings.min_oc_filter)
-                        continue
-                    #if formula_dict.get("P"):
+                        if formula_dict.get("O") / formula_dict.get("C") >= molecular_search_settings.max_oc_filter:
+                            # print(formula_dict.get("O") / formula_dict.get("C"), molecular_search_settings.max_oc_filter)
+                            continue
+                        elif formula_dict.get("O") / formula_dict.get("C") <= molecular_search_settings.min_oc_filter:
+                            # print(formula_dict.get("O") / formula_dict.get("C"), molecular_search_settings.min_oc_filter)
+                            continue
+                        #if formula_dict.get("P"):
 
-                    #    if  not (formula_dict.get("O") -2)/ formula_dict.get("P") >= molecular_search_settings.min_op_filter:
+                        #    if  not (formula_dict.get("O") -2)/ formula_dict.get("P") >= molecular_search_settings.min_op_filter:
                             
-                    #        continue
+                        #        continue
         
-                if classe in dict_res.keys():
+                    if classe in dict_res.keys():
                     
-                    if nominal_mz in dict_res[classe].keys():
+                        if nominal_mz in dict_res[classe].keys():
                         
-                        dict_res.get(classe).get(nominal_mz).append(formula_obj)
+                            dict_res.get(classe).get(nominal_mz).append(formula_obj)
                     
-                    else:
+                        else:
 
-                        dict_res.get(classe)[nominal_mz] = [formula_obj ]  
+                            dict_res.get(classe)[nominal_mz] = [formula_obj ]  
             
-                else:
+                    else:
                     
-                    dict_res[classe] = {nominal_mz: [formula_obj] }     
-            
+                        dict_res[classe] = {nominal_mz: [formula_obj] }     
+            #print(dict_res)
             return dict_res
         
         
@@ -328,16 +335,29 @@ class MolForm_SQL:
         
         query = query_normal(classes, len_adducts)
 
+        charge_min = molecular_search_settings.min_ion_charge * polarity
+        charge_max = molecular_search_settings.max_ion_charge * polarity
+
+        ion_charge_list = [charge_min, charge_max]
+        
         if ion_type == Labels.protonated_de_ion:
             if self.type == 'normal':
-                query = query.filter(and_(
-                                MolecularFormulaLink._protonated_mz(ion_charge).cast(Integer).in_(nominal_mzs)
-                                ))
-            return add_dict_formula(query, ion_type, ion_charge)
+                mflinks = []
+                for ion_charge in ion_charge_list:
+                    mflinks.append(MolecularFormulaLink._protonated_mz(ion_charge).cast(Integer).in_(nominal_mzs))
+
+                query = query.filter(or_(*mflinks))
+
+            return add_dict_formula(query, ion_type) #, ion_charge)
         
         if ion_type == Labels.radical_ion:
             if self.type == 'normal':
-                query = query.filter(MolecularFormulaLink._radical_mz(ion_charge).cast(Integer).in_(nominal_mzs))    
+                mflinks = []
+                for ion_charge in ion_charge_list:
+                    mflinks.append(MolecularFormulaLink._radical_mz(ion_charge).cast(Integer).in_(nominal_mzs))
+
+                query = query.filter(or_(*mflinks))
+            
             return add_dict_formula(query, ion_type, ion_charge)
         
         if ion_type == Labels.adduct_ion:
@@ -345,8 +365,13 @@ class MolForm_SQL:
             if adducts: 
                 for atom in adducts:
                     if self.type == 'normal':
-                        query = query.filter(MolecularFormulaLink._adduct_mz(ion_charge, atom).cast(Integer).in_(nominal_mzs))    
-                    dict_res[atom] = add_dict_formula(query, ion_type, ion_charge, adduct_atom=atom)
+                        mflinks = []
+                        for ion_charge in ion_charge_list:
+                            mflinks.append(MolecularFormulaLink._adduct_mz(ion_charge).cast(Integer).in_(nominal_mzs))
+
+                        query = query.filter(or_(*mflinks))
+
+                    dict_res[atom] = add_dict_formula(query, ion_type, adduct_atom=atom)
                 return dict_res
         # dump all objs to memory
         self.session.expunge_all()

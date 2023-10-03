@@ -19,6 +19,7 @@ class _MSPeak(MSPeakCalculation):
 
         self._ms_parent = ms_parent
         # needed to create the object
+
         self.ion_charge = int(ion_charge)
         self._mz_exp = float(mz_exp)
         self.mass = float(mz_exp) / float(ion_charge)
@@ -29,7 +30,7 @@ class _MSPeak(MSPeakCalculation):
         self.start_scan = int(indexes[0]) 
         self.apex_scan = int(indexes[1])
         self.final_scan = int(indexes[2]) 
-        
+        self.n_candidates = int(0)
         #mass spec obj index
         self.index = int(index)
         # parent mass spectrum obj instance

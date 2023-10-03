@@ -170,10 +170,10 @@ class MassSpectrumSetting:
     log_nsigma_bins: int = 500 # bins for the histogram for the noise
 
     min_noise_mz: float = 50
-    max_noise_mz: float = 1200.0
+    max_noise_mz: float = 1600.0
 
     min_picking_mz: float = 50
-    max_picking_mz: float = 1200.0
+    max_picking_mz: float = 1600.0
 
     calib_minimize_method: str = 'Powell'
     calib_pol_order: int = 2
@@ -358,7 +358,7 @@ class MolecularLookupDictSettings:
 
         self.min_mz = 50
 
-        self.max_mz = 1200
+        self.max_mz = 1600
 
         self.min_dbe = 0
 
@@ -422,7 +422,11 @@ class MolecularFormulaSearchSettings:
     db_chunk_size: int = 300
 
     '''query setting'''
-    ion_charge: int = -1
+    default_ion_charge: int = -1
+
+    min_ion_charge: int = -1
+
+    max_ion_charge: int = -2
 
     min_hc_filter: float = 0.3
 

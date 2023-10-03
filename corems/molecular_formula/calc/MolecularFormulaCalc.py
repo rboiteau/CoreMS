@@ -474,7 +474,7 @@ class MolecularFormulaCalc:
                 atoms_count.append(formula_dict.get(atom_label))
                 masses_list_tuples.append(masses)
                 props_list_tuples.append(props)
-        
+
         iso = IsoSpecPy.IsoSpec(atoms_count,masses_list_tuples,props_list_tuples, cut_off_to_IsoSpeccPy)
         
         conf = iso.getConfs()

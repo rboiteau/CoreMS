@@ -124,7 +124,6 @@ class MassSpecBase(MassSpecCalc, KendrickGrouping):
                     exp_freq=None,
                     ms_parent=None
                 ):
-
         mspeak = MSPeak(
                 ion_charge,
                 mz_exp,

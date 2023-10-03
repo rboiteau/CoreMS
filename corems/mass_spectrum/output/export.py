@@ -13,7 +13,6 @@ from corems.encapsulation.constant import Labels
 from corems.encapsulation.output import parameter_to_dict
 from corems.mass_spectrum.factory.MassSpectrumClasses import MassSpecfromFreq
 
-
 class HighResMassSpecExport(Thread):
 
     def __init__(self, out_file_path, mass_spectrum, output_type='excel'):
@@ -37,6 +36,7 @@ class HighResMassSpecExport(Thread):
         self.atoms_order_list = self.get_all_used_atoms_in_order(self.mass_spectrum)
 
         self._init_columns()
+
 
     def _init_columns(self):
 
@@ -102,6 +102,7 @@ class HighResMassSpecExport(Thread):
         columns = self.columns_label + self.get_all_used_atoms_in_order(self.mass_spectrum)
         dict_data_list = self.get_list_dict_data(self.mass_spectrum)
         df = DataFrame(dict_data_list, columns=columns)
+        df.replace(-99999, NaN,inplace=True)
         df.name = self.output_file
         return df
 
